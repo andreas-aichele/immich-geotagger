@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
+import 'l10n/app_localizations.dart';
 import 'screens/home_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'services/settings_service.dart';
@@ -16,9 +18,23 @@ class ImmichGeoTaggerApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Immich GeoTagger',
+      onGenerateTitle: (context) => context.l10n.t('appName'),
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
+      supportedLocales: AppLocalizations.supportedLocales,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      localeResolutionCallback: (locale, supported) {
+        if (locale == null) return const Locale('en');
+        for (final candidate in supported) {
+          if (candidate.languageCode == locale.languageCode) return candidate;
+        }
+        return const Locale('en');
+      },
       home: const _StartupGate(),
     );
   }
