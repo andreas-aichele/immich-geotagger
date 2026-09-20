@@ -364,7 +364,7 @@ class AppLocalizations {
         : 'en';
     var value = _values[language]?[key] ?? _values['en']![key] ?? key;
     for (final entry in params.entries) {
-      value = value.replaceAll('{' + entry.key + '}', entry.value.toString());
+      value = value.replaceAll('{\${entry.key}}', entry.value.toString());
     }
     return value;
   }
