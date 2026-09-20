@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/app_localizations.dart';
 import '../services/database_service.dart';
 import '../services/sync_service.dart';
 import '../services/tracking_service.dart';
@@ -107,6 +108,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _header(BuildContext context) {
+    final l = context.l10n;
     return Row(
       children: [
         Container(
@@ -119,24 +121,30 @@ class _HomeScreenState extends State<HomeScreen> {
           child: const Icon(Icons.location_on_rounded, color: Colors.white),
         ),
         const SizedBox(width: 13),
-        const Expanded(
+        Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Immich GeoTagger',
-                style: TextStyle(fontSize: 21, fontWeight: FontWeight.w800),
+                l.t('appName'),
+                style: const TextStyle(
+                  fontSize: 21,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
-              SizedBox(height: 2),
+              const SizedBox(height: 2),
               Text(
-                'Camera location timeline',
-                style: TextStyle(color: Color(0xFF73737D), fontSize: 13),
+                l.t('appSubtitle'),
+                style: const TextStyle(
+                  color: Color(0xFF73737D),
+                  fontSize: 13,
+                ),
               ),
             ],
           ),
         ),
         IconButton.filledTonal(
-          tooltip: 'Settings',
+          tooltip: l.t('settings'),
           onPressed: () => Navigator.of(context).push(
             MaterialPageRoute(builder: (_) => const SettingsScreen()),
           ),
@@ -147,6 +155,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _trackingHero(BuildContext context) {
+    final l = context.l10n;
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -174,7 +183,7 @@ class _HomeScreenState extends State<HomeScreen> {
               _StatusPill(active: _tracking),
               const Spacer(),
               Text(
-                '${_points.toString()} points',
+                l.t('points', {'count': _points}),
                 style: const TextStyle(
                   color: Color(0xFFD8D8E3),
                   fontWeight: FontWeight.w600,
@@ -184,7 +193,9 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: 30),
           Text(
-            _tracking ? 'Your route is being recorded.' : 'Ready for your next photo walk.',
+            _tracking
+                ? l.t('trackingHeroActive')
+                : l.t('trackingHeroStopped'),
             style: const TextStyle(
               color: Colors.white,
               fontSize: 28,
@@ -195,8 +206,8 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 10),
           Text(
             _tracking
-                ? 'GeoTagger keeps recording while the app is in the background.'
-                : 'Start tracking before you begin shooting. You can leave the app afterwards.',
+                ? l.t('trackingHeroActiveDesc')
+                : l.t('trackingHeroStoppedDesc'),
             style: const TextStyle(
               color: Color(0xFFD1D1DC),
               fontSize: 15,
@@ -216,7 +227,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 _tracking ? Icons.stop_rounded : Icons.play_arrow_rounded,
               ),
               label: Text(
-                _tracking ? 'Stop tracking' : 'Start tracking',
+                _tracking ? l.t('stopTracking') : l.t('startTracking'),
               ),
             ),
           ),
@@ -226,20 +237,24 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _syncCard(BuildContext context) {
+    final l = context.l10n;
     return AppSurface(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SectionEyebrow('Immich'),
+          SectionEyebrow(l.t('immich')),
           const SizedBox(height: 10),
-          const Text(
-            'Match & sync',
-            style: TextStyle(fontSize: 23, fontWeight: FontWeight.w800),
+          Text(
+            l.t('matchSync'),
+            style: const TextStyle(
+              fontSize: 23,
+              fontWeight: FontWeight.w800,
+            ),
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Photos without GPS are matched to your recorded timeline. Existing locations are never overwritten.',
-            style: TextStyle(
+          Text(
+            l.t('matchSyncDesc'),
+            style: const TextStyle(
               color: Color(0xFF686873),
               height: 1.45,
             ),
@@ -258,9 +273,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      '${_lastSync!.updated} updated · '
-                      '${_lastSync!.skippedWithLocation} already located · '
-                      '${_lastSync!.skippedWithoutTrack} without safe match',
+                      l.t(
+                        'syncSummary',
+                        {
+                          'updated': _lastSync!.updated,
+                          'located': _lastSync!.skippedWithLocation,
+                          'unmatched': _lastSync!.skippedWithoutTrack,
+                        },
+                      ),
                     ),
                   ),
                 ],
@@ -277,7 +297,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Icon(Icons.sync_rounded),
-            label: const Text('Sync with Immich'),
+            label: Text(l.t('syncWithImmich')),
           ),
           const SizedBox(height: 8),
           TextButton.icon(
@@ -285,7 +305,7 @@ class _HomeScreenState extends State<HomeScreen> {
               MaterialPageRoute(builder: (_) => const HistoryScreen()),
             ),
             icon: const Icon(Icons.photo_library_outlined),
-            label: const Text('Updated photos'),
+            label: Text(l.t('updatedPhotos')),
           ),
         ],
       ),
@@ -325,6 +345,7 @@ class _StatusPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
@@ -339,13 +360,15 @@ class _StatusPill extends StatelessWidget {
             width: 8,
             height: 8,
             decoration: BoxDecoration(
-              color: active ? const Color(0xFF75E5AA) : const Color(0xFFB9B9C6),
+              color: active
+                  ? const Color(0xFF75E5AA)
+                  : const Color(0xFFB9B9C6),
               shape: BoxShape.circle,
             ),
           ),
           const SizedBox(width: 8),
           Text(
-            active ? 'Tracking active' : 'Tracking stopped',
+            active ? l.t('trackingActive') : l.t('trackingStopped'),
             style: const TextStyle(
               color: Colors.white,
               fontSize: 13,
