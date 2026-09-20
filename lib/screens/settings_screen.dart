@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/app_localizations.dart';
 import '../services/immich_service.dart';
 import '../services/settings_service.dart';
 import '../theme/app_theme.dart';
@@ -46,9 +47,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final value = await _settings.load();
     _url.text = value.immichUrl;
     _key.text = value.apiKey;
-    _retention.text = '${value.retentionDays}';
-    _interval.text = '${value.trackingIntervalSeconds}';
-    _maxGap.text = '${value.maxInterpolationGapMinutes}';
+    _retention.text = value.retentionDays.toString();
+    _interval.text = value.trackingIntervalSeconds.toString();
+    _maxGap.text = value.maxInterpolationGapMinutes.toString();
     if (mounted) setState(() => _loading = false);
   }
 
@@ -64,7 +65,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (!_formKey.currentState!.validate()) return;
     await _settings.save(_value());
     if (!mounted) return;
-    setState(() => _status = 'Settings saved.');
+    setState(() => _status = context.l10n.t('settingsSaved'));
   }
 
   Future<void> _test() async {
@@ -81,7 +82,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (!mounted) return;
       setState(() {
         _testSuccess = true;
-        _status = 'Connection and API permissions verified.';
+        _status = context.l10n.t('connectionVerified');
       });
     } catch (e) {
       if (!mounted) return;
@@ -95,11 +96,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Settings',
-          style: TextStyle(fontWeight: FontWeight.w800),
+        title: Text(
+          l.t('settings'),
+          style: const TextStyle(fontWeight: FontWeight.w800),
         ),
       ),
       body: _loading
@@ -109,9 +111,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
                 children: [
-                  const Text(
-                    'Connect GeoTagger to your Immich server and tune how the location timeline behaves.',
-                    style: TextStyle(
+                  Text(
+                    l.t('settingsIntro'),
+                    style: const TextStyle(
                       color: Color(0xFF6A6A75),
                       fontSize: 15,
                       height: 1.45,
@@ -122,11 +124,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const SectionEyebrow('Immich'),
+                        SectionEyebrow(l.t('immich')),
                         const SizedBox(height: 8),
-                        const Text(
-                          'Server connection',
-                          style: TextStyle(
+                        Text(
+                          l.t('serverConnection'),
+                          style: const TextStyle(
                             fontSize: 21,
                             fontWeight: FontWeight.w800,
                           ),
@@ -134,31 +136,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         const SizedBox(height: 18),
                         TextFormField(
                           controller: _url,
-                          decoration: const InputDecoration(
-                            labelText: 'Immich URL',
+                          decoration: InputDecoration(
+                            labelText: l.t('immichUrl'),
                             hintText: 'https://immich.example.com',
-                            prefixIcon: Icon(Icons.language_rounded),
+                            prefixIcon: const Icon(Icons.language_rounded),
                           ),
                           keyboardType: TextInputType.url,
                           autocorrect: false,
                           validator: (v) =>
                               (v == null || !v.startsWith('http'))
-                                  ? 'Enter a valid http(s) URL'
+                                  ? l.t('validUrl')
                                   : null,
                         ),
                         const SizedBox(height: 12),
                         TextFormField(
                           controller: _key,
-                          decoration: const InputDecoration(
-                            labelText: 'API key',
-                            prefixIcon: Icon(Icons.key_rounded),
+                          decoration: InputDecoration(
+                            labelText: l.t('apiKey'),
+                            prefixIcon: const Icon(Icons.key_rounded),
                           ),
                           obscureText: true,
                           autocorrect: false,
                           enableSuggestions: false,
                           validator: (v) =>
                               (v == null || v.trim().isEmpty)
-                                  ? 'API key is required'
+                                  ? l.t('apiKeyRequired')
                                   : null,
                         ),
                         const SizedBox(height: 14),
@@ -189,7 +191,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   ),
                                 )
                               : const Icon(Icons.wifi_tethering_rounded),
-                          label: const Text('Test connection'),
+                          label: Text(l.t('testConnection')),
                         ),
                       ],
                     ),
@@ -199,11 +201,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const SectionEyebrow('Tracking'),
+                        SectionEyebrow(l.t('tracking')),
                         const SizedBox(height: 8),
-                        const Text(
-                          'Timeline behavior',
-                          style: TextStyle(
+                        Text(
+                          l.t('timelineBehavior'),
+                          style: const TextStyle(
                             fontSize: 21,
                             fontWeight: FontWeight.w800,
                           ),
@@ -211,10 +213,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         const SizedBox(height: 18),
                         TextFormField(
                           controller: _interval,
-                          decoration: const InputDecoration(
-                            labelText: 'Tracking interval',
-                            suffixText: 'seconds',
-                            prefixIcon: Icon(Icons.timer_outlined),
+                          decoration: InputDecoration(
+                            labelText: l.t('trackingInterval'),
+                            suffixText: l.t('seconds'),
+                            prefixIcon: const Icon(Icons.timer_outlined),
                           ),
                           keyboardType: TextInputType.number,
                           validator: _positiveInt,
@@ -222,10 +224,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         const SizedBox(height: 12),
                         TextFormField(
                           controller: _maxGap,
-                          decoration: const InputDecoration(
-                            labelText: 'Maximum interpolation gap',
-                            suffixText: 'minutes',
-                            prefixIcon: Icon(Icons.timeline_rounded),
+                          decoration: InputDecoration(
+                            labelText: l.t('maximumInterpolationGap'),
+                            suffixText: l.t('minutes'),
+                            prefixIcon: const Icon(Icons.timeline_rounded),
                           ),
                           keyboardType: TextInputType.number,
                           validator: _positiveInt,
@@ -233,10 +235,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         const SizedBox(height: 12),
                         TextFormField(
                           controller: _retention,
-                          decoration: const InputDecoration(
-                            labelText: 'Keep location history',
-                            suffixText: 'days',
-                            prefixIcon: Icon(Icons.history_rounded),
+                          decoration: InputDecoration(
+                            labelText: l.t('keepLocationHistory'),
+                            suffixText: l.t('days'),
+                            prefixIcon: const Icon(Icons.history_rounded),
                           ),
                           keyboardType: TextInputType.number,
                           validator: _positiveInt,
@@ -248,7 +250,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   FilledButton.icon(
                     onPressed: _save,
                     icon: const Icon(Icons.check_rounded),
-                    label: const Text('Save settings'),
+                    label: Text(l.t('saveSettings')),
                   ),
                 ],
               ),
@@ -258,12 +260,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   String? _positiveInt(String? value) {
     final n = int.tryParse(value ?? '');
-    return n == null || n <= 0 ? 'Enter a positive number' : null;
+    return n == null || n <= 0
+        ? context.l10n.t('positiveNumber')
+        : null;
   }
 }
 
 class _ScopeChip extends StatelessWidget {
   const _ScopeChip(this.label);
+
   final String label;
 
   @override
@@ -309,7 +314,9 @@ class _StatusBox extends StatelessWidget {
       child: Row(
         children: [
           Icon(
-            success ? Icons.check_circle_outline : Icons.info_outline,
+            success
+                ? Icons.check_circle_outline
+                : Icons.info_outline,
             color: color,
           ),
           const SizedBox(width: 10),
