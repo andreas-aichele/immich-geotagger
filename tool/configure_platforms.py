@@ -12,6 +12,7 @@ def configure_android() -> None:
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     """
     if "android.permission.ACCESS_BACKGROUND_LOCATION" not in manifest_text:
