@@ -2,6 +2,8 @@ name: Release
 
 on:
   push:
+    branches:
+      - main
     tags:
       - "v*"
   workflow_dispatch:
@@ -26,6 +28,35 @@ jobs:
 
       - name: Configure platform permissions
         run: python3 tool/configure_platforms.py
+
+      - name: Configure Android signing
+        run: python3 tool/configure_android_signing.py
+
+      - name: Restore Android signing key
+        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+        shell: bash
+        run: |
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/upload-keystore.jks
+          cat > android/key.properties <<EOF
+          storePassword=$ANDROID_STORE_PASSWORD
+          keyPassword=$ANDROID_KEY_PASSWORD
+          keyAlias=$ANDROID_KEY_ALIAS
+          storeFile=upload-keystore.jks
+          EOF
+
+      - name: Signing status
+        shell: bash
+        run: |
+          if [[ -f android/key.properties ]]; then
+            echo "Using persistent Android release signing key."
+          else
+            echo "::warning::Android signing secrets are not configured; using Flutter template debug signing for this test build."
+          fi
 
       - run: flutter pub get
       - run: flutter analyze
@@ -121,4 +152,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
-          gh release create "${GITHUB_REF_NAME}" dist/*             --repo "${GITHUB_REPOSITORY}"             --title "${GITHUB_REF_NAME}"             --generate-notes
+          gh release create "${GITHUB_REF_NAME}" dist/* \
+            --repo "${GITHUB_REPOSITORY}" \
+            --title "${GITHUB_REF_NAME}" \
+            --generate-notes
