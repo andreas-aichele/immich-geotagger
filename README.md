@@ -42,9 +42,13 @@ flutter run
 7. Start tracking.
 8. After importing DSLR/mirrorless photos into Immich, tap **Sync now**.
 
+## Installation
+
+Prebuilt packages are available from the repository's [GitHub Releases](https://github.com/andreas-aichele/immich-geotagger/releases). Android users can install the APK directly. iOS builds are currently provided unsigned and require manual signing.
+
 ## Releases
 
-Pushing a semantic version tag beginning with `v` creates a GitHub Release automatically.
+Version tags beginning with `v` create a GitHub Release automatically.
 
 ```bash
 git tag v0.1.0
@@ -59,25 +63,9 @@ The release workflow builds and publishes:
 
 The iOS package is intentionally marked **unsigned**. A distributable iOS IPA requires Apple signing credentials and a provisioning profile.
 
-### Android release signing
+## Development status
 
-The workflow supports a persistent private Android signing key through GitHub Actions secrets. Configure these repository secrets:
-
-- `ANDROID_KEYSTORE_BASE64` — base64-encoded JKS/keystore
-- `ANDROID_KEY_ALIAS`
-- `ANDROID_KEY_PASSWORD`
-- `ANDROID_STORE_PASSWORD`
-
-If these secrets are configured, APK and AAB releases use that persistent key. If they are missing, non-tag/manual test builds fall back to Flutter's template debug signing and should not be used as the long-term update signature.
-
-Keep the original keystore and passwords backed up securely. Losing the signing key means future APK updates cannot be installed over an existing installation signed with that key.
-
-## Current MVP limitations
-
-- Sync is user-triggered. A later version can schedule sync periodically.
-- Tracking is intended for an explicitly active photo trip/session; mobile OS background restrictions still apply.
-- The app currently matches every image without GPS in the tracked time range. Camera make/model filters are a planned enhancement.
-- The native Android/iOS runner files are generated with `flutter create` so the repository stays focused on application code.
+Immich GeoTagger is under active development. Sync is currently user-triggered, background behavior is subject to mobile operating-system restrictions, and camera-specific filtering is not yet available.
 
 ## Privacy
 
