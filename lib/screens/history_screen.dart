@@ -39,7 +39,7 @@ class HistoryScreen extends StatelessWidget {
               final item = items[index];
               final local = item.captureTime.toLocal();
               final date = material.formatMediumDate(local);
-              final time = material.formatTime(
+              final time = material.formatTimeOfDay(
                 TimeOfDay.fromDateTime(local),
                 alwaysUse24HourFormat: MediaQuery.alwaysUse24HourFormatOf(
                   context,
