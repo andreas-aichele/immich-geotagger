@@ -9,7 +9,9 @@ class ImmichService {
   final http.Client _client;
 
   Uri _uri(String baseUrl, String path) {
-    final base = baseUrl.endsWith('/') ? baseUrl.substring(0, baseUrl.length - 1) : baseUrl;
+    final base = baseUrl.endsWith('/')
+        ? baseUrl.substring(0, baseUrl.length - 1)
+        : baseUrl;
     return Uri.parse('$base/api$path');
   }
 
@@ -20,9 +22,44 @@ class ImmichService {
       };
 
   Future<void> verifyConnection(String baseUrl, String apiKey) async {
-    final response = await _client.get(_uri(baseUrl, '/server/ping'), headers: _headers(apiKey));
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw StateError('Immich returned HTTP ${response.statusCode}');
+    final readResponse = await _client.post(
+      _uri(baseUrl, '/search/metadata'),
+      headers: _headers(apiKey),
+      body: jsonEncode({
+        'page': 1,
+        'size': 1,
+        'withExif': true,
+        'type': 'IMAGE',
+      }),
+    );
+
+    if (readResponse.statusCode == 401 || readResponse.statusCode == 403) {
+      throw StateError(
+        'API key rejected. Make sure the key is valid and has asset.read.',
+      );
+    }
+    if (readResponse.statusCode < 200 || readResponse.statusCode >= 300) {
+      throw StateError(
+        'Immich connection failed with HTTP ${readResponse.statusCode}.',
+      );
+    }
+
+    const missingAssetId = '00000000-0000-0000-0000-000000000000';
+    final updateResponse = await _client.put(
+      _uri(baseUrl, '/assets/$missingAssetId'),
+      headers: _headers(apiKey),
+      body: jsonEncode({'latitude': 0.0, 'longitude': 0.0}),
+    );
+
+    if (updateResponse.statusCode == 401 || updateResponse.statusCode == 403) {
+      throw StateError(
+        'The API key can read assets but is missing asset.update.',
+      );
+    }
+    if (updateResponse.statusCode >= 500) {
+      throw StateError(
+        'Immich returned HTTP ${updateResponse.statusCode} while checking asset.update.',
+      );
     }
   }
 
@@ -34,6 +71,7 @@ class ImmichService {
   }) async {
     final assets = <ImmichAsset>[];
     var page = 1;
+
     while (true) {
       final response = await _client.post(
         _uri(baseUrl, '/search/metadata'),
@@ -47,12 +85,19 @@ class ImmichService {
           'size': 500,
         }),
       );
+
       if (response.statusCode < 200 || response.statusCode >= 300) {
-        throw StateError('Immich search failed with HTTP ${response.statusCode}: ${response.body}');
+        throw StateError(
+          'Immich search failed with HTTP ${response.statusCode}: ${response.body}',
+        );
       }
+
       final decoded = jsonDecode(response.body) as Map<String, dynamic>;
-      final assetsNode = decoded['assets'] as Map<String, dynamic>? ?? decoded;
-      final items = (assetsNode['items'] as List<dynamic>? ?? const []).whereType<Map<String, dynamic>>();
+      final assetsNode =
+          decoded['assets'] as Map<String, dynamic>? ?? decoded;
+      final items = (assetsNode['items'] as List<dynamic>? ?? const [])
+          .whereType<Map<String, dynamic>>();
+
       for (final item in items) {
         try {
           assets.add(ImmichAsset.fromJson(item));
@@ -60,10 +105,14 @@ class ImmichService {
           // Ignore assets without a reliable timestamp.
         }
       }
+
       final nextPage = assetsNode['nextPage'];
       if (nextPage == null) break;
-      page = nextPage is int ? nextPage : int.tryParse('$nextPage') ?? (page + 1);
+      page = nextPage is int
+          ? nextPage
+          : int.tryParse('$nextPage') ?? (page + 1);
     }
+
     return assets;
   }
 
@@ -74,13 +123,29 @@ class ImmichService {
     required double latitude,
     required double longitude,
   }) async {
-    final body = jsonEncode({'latitude': latitude, 'longitude': longitude});
-    var response = await _client.put(_uri(baseUrl, '/assets/$assetId'), headers: _headers(apiKey), body: body);
+    final body = jsonEncode({
+      'latitude': latitude,
+      'longitude': longitude,
+    });
+
+    var response = await _client.put(
+      _uri(baseUrl, '/assets/$assetId'),
+      headers: _headers(apiKey),
+      body: body,
+    );
+
     if (response.statusCode == 404 || response.statusCode == 405) {
-      response = await _client.patch(_uri(baseUrl, '/assets/$assetId'), headers: _headers(apiKey), body: body);
+      response = await _client.patch(
+        _uri(baseUrl, '/assets/$assetId'),
+        headers: _headers(apiKey),
+        body: body,
+      );
     }
+
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw StateError('Updating asset $assetId failed with HTTP ${response.statusCode}: ${response.body}');
+      throw StateError(
+        'Updating asset $assetId failed with HTTP ${response.statusCode}: ${response.body}',
+      );
     }
   }
 }
