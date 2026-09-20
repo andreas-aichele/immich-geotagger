@@ -24,7 +24,9 @@ jobs:
           cache: true
 
       - name: Generate Android runner
-        run: flutter create --platforms=android .
+        run: |
+          flutter create --platforms=android .
+          rm -f test/widget_test.dart
 
       - name: Configure platform permissions
         run: python3 tool/configure_platforms.py
@@ -105,7 +107,9 @@ jobs:
           cache: true
 
       - name: Generate iOS runner
-        run: flutter create --platforms=ios .
+        run: |
+          flutter create --platforms=ios .
+          rm -f test/widget_test.dart
 
       - name: Configure platform permissions
         run: python3 tool/configure_platforms.py
