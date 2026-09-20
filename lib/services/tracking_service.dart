@@ -43,23 +43,28 @@ class TrackingService {
       distanceFilter: 0,
     );
 
-    final backgroundEnabled = await _location.enableBackgroundMode(enable: true);
+    final backgroundEnabled =
+        await _location.enableBackgroundMode(enable: true);
     if (!backgroundEnabled) {
       throw StateError('Background location mode could not be enabled');
     }
 
     await _subscription?.cancel();
     _subscription = _location.onLocationChanged.listen((data) async {
-      final lat = data.latitude;
-      final lon = data.longitude;
-      if (lat == null || lon == null) return;
-
       final timestamp = data.time == null
           ? DateTime.now().toUtc()
-          : DateTime.fromMillisecondsSinceEpoch(data.time!.round(), isUtc: true);
+          : DateTime.fromMillisecondsSinceEpoch(
+              data.time!.round(),
+              isUtc: true,
+            );
 
       await _database.insertLocation(
-        LocationPoint(timestamp: timestamp, latitude: lat, longitude: lon, accuracy: data.accuracy),
+        LocationPoint(
+          timestamp: timestamp,
+          latitude: data.latitude,
+          longitude: data.longitude,
+          accuracy: data.accuracy,
+        ),
       );
     });
   }
