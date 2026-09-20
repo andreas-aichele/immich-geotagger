@@ -1,0 +1,124 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  android:
+    name: Build Android
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Generate Android runner
+        run: flutter create --platforms=android .
+
+      - name: Configure platform permissions
+        run: python3 tool/configure_platforms.py
+
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test
+
+      - name: Derive version
+        id: version
+        shell: bash
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          if [[ "${GITHUB_REF_TYPE}" != "tag" ]]; then
+            TAG="v0.0.0-dev"
+          fi
+          echo "name=${TAG#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Build APK
+        run: flutter build apk --release --build-name="${{ steps.version.outputs.name }}" --build-number="${{ github.run_number }}"
+
+      - name: Build AAB
+        run: flutter build appbundle --release --build-name="${{ steps.version.outputs.name }}" --build-number="${{ github.run_number }}"
+
+      - name: Prepare Android artifacts
+        shell: bash
+        run: |
+          mkdir -p dist
+          cp build/app/outputs/flutter-apk/app-release.apk "dist/immich-geotagger-${GITHUB_REF_NAME}-android.apk"
+          cp build/app/outputs/bundle/release/app-release.aab "dist/immich-geotagger-${GITHUB_REF_NAME}-android.aab"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android
+          path: dist/*
+
+  ios:
+    name: Build iOS unsigned
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Generate iOS runner
+        run: flutter create --platforms=ios .
+
+      - name: Configure platform permissions
+        run: python3 tool/configure_platforms.py
+
+      - run: flutter pub get
+
+      - name: Derive version
+        id: version
+        shell: bash
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          if [[ "${GITHUB_REF_TYPE}" != "tag" ]]; then
+            TAG="v0.0.0-dev"
+          fi
+          echo "name=${TAG#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Build unsigned iOS app
+        run: flutter build ios --release --no-codesign --build-name="${{ steps.version.outputs.name }}" --build-number="${{ github.run_number }}"
+
+      - name: Package unsigned IPA
+        shell: bash
+        run: |
+          mkdir -p Payload dist
+          cp -R build/ios/iphoneos/Runner.app Payload/
+          zip -qry "dist/immich-geotagger-${GITHUB_REF_NAME}-ios-unsigned.ipa" Payload
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ios-unsigned
+          path: dist/*
+
+  release:
+    name: Publish GitHub Release
+    if: github.ref_type == 'tag'
+    needs:
+      - android
+      - ios
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          gh release create "${GITHUB_REF_NAME}" dist/*             --repo "${GITHUB_REPOSITORY}"             --title "${GITHUB_REF_NAME}"             --generate-notes
