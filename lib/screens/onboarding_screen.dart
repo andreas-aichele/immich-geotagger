@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/app_localizations.dart';
 import '../services/immich_service.dart';
 import '../services/settings_service.dart';
 import '../services/tracking_service.dart';
@@ -53,7 +54,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       if (!mounted) return;
       setState(() {
         _permissionReady = true;
-        _message = 'Background location access is ready.';
+        _message = context.l10n.t('permissionReady');
       });
     } catch (e) {
       if (!mounted) return;
@@ -65,7 +66,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   Future<void> _testConnection() async {
     if (_url.text.trim().isEmpty || _key.text.trim().isEmpty) {
-      setState(() => _message = 'Enter your Immich URL and API key first.');
+      setState(() => _message = context.l10n.t('enterImmichCredentials'));
       return;
     }
 
@@ -90,7 +91,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       if (!mounted) return;
       setState(() {
         _connectionReady = true;
-        _message = 'Connection and API permissions verified.';
+        _message = context.l10n.t('connectionVerified');
       });
     } catch (e) {
       if (!mounted) return;
@@ -110,6 +111,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -125,13 +127,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       color: Theme.of(context).colorScheme.primary,
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    child: const Icon(Icons.location_on_rounded, color: Colors.white),
+                    child: const Icon(
+                      Icons.location_on_rounded,
+                      color: Colors.white,
+                    ),
                   ),
                   const SizedBox(width: 12),
-                  const Expanded(
+                  Expanded(
                     child: Text(
-                      'Immich GeoTagger',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+                      l.t('appName'),
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ),
                   Text('${_page + 1} / 3'),
@@ -213,178 +221,195 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  Widget _introPage(BuildContext context) => _pageShell(
-        icon: Icon(
-          Icons.route_rounded,
-          color: Theme.of(context).colorScheme.primary,
-          size: 30,
-        ),
-        title: 'GPS for cameras without GPS.',
-        body:
-            'Keep your camera workflow unchanged. GeoTagger records a private location timeline and matches it to photos in Immich by capture time.',
-        children: [
-          const AppSurface(
-            child: Column(
-              children: [
-                _FeatureRow(
-                  icon: Icons.my_location_rounded,
-                  title: 'Background tracking',
-                  subtitle: 'Location points stay on your device.',
-                ),
-                SizedBox(height: 18),
-                _FeatureRow(
-                  icon: Icons.timeline_rounded,
-                  title: 'Safe interpolation',
-                  subtitle: 'Photos between two points get an interpolated position.',
-                ),
-                SizedBox(height: 18),
-                _FeatureRow(
-                  icon: Icons.shield_outlined,
-                  title: 'Existing GPS is preserved',
-                  subtitle: 'Only assets without coordinates are changed.',
-                ),
-              ],
-            ),
+  Widget _introPage(BuildContext context) {
+    final l = context.l10n;
+    return _pageShell(
+      icon: Icon(
+        Icons.route_rounded,
+        color: Theme.of(context).colorScheme.primary,
+        size: 30,
+      ),
+      title: l.t('introTitle'),
+      body: l.t('introBody'),
+      children: [
+        AppSurface(
+          child: Column(
+            children: [
+              _FeatureRow(
+                icon: Icons.my_location_rounded,
+                title: l.t('backgroundTracking'),
+                subtitle: l.t('backgroundTrackingDesc'),
+              ),
+              const SizedBox(height: 18),
+              _FeatureRow(
+                icon: Icons.timeline_rounded,
+                title: l.t('safeInterpolation'),
+                subtitle: l.t('safeInterpolationDesc'),
+              ),
+              const SizedBox(height: 18),
+              _FeatureRow(
+                icon: Icons.shield_outlined,
+                title: l.t('existingGpsPreserved'),
+                subtitle: l.t('existingGpsPreservedDesc'),
+              ),
+            ],
           ),
-          const SizedBox(height: 28),
-          FilledButton(onPressed: _next, child: const Text('Continue')),
-        ],
-      );
-
-  Widget _permissionPage(BuildContext context) => _pageShell(
-        icon: Icon(
-          Icons.location_searching_rounded,
-          color: Theme.of(context).colorScheme.primary,
-          size: 30,
         ),
-        title: 'Allow location in the background.',
-        body:
-            'GeoTagger needs precise location while the app is not visible. Android may show two separate steps: location access first, then “Allow all the time”.',
-        children: [
-          AppSurface(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SectionEyebrow('Required'),
-                const SizedBox(height: 12),
-                const _FeatureRow(
-                  icon: Icons.location_on_outlined,
-                  title: 'Precise location',
-                  subtitle: 'Used to record each track point.',
-                ),
+        const SizedBox(height: 28),
+        FilledButton(
+          onPressed: _next,
+          child: Text(l.t('continue')),
+        ),
+      ],
+    );
+  }
+
+  Widget _permissionPage(BuildContext context) {
+    final l = context.l10n;
+    return _pageShell(
+      icon: Icon(
+        Icons.location_searching_rounded,
+        color: Theme.of(context).colorScheme.primary,
+        size: 30,
+      ),
+      title: l.t('allowLocationTitle'),
+      body: l.t('allowLocationBody'),
+      children: [
+        AppSurface(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SectionEyebrow(l.t('required')),
+              const SizedBox(height: 12),
+              _FeatureRow(
+                icon: Icons.location_on_outlined,
+                title: l.t('preciseLocation'),
+                subtitle: l.t('preciseLocationDesc'),
+              ),
+              const SizedBox(height: 18),
+              _FeatureRow(
+                icon: Icons.phone_android_rounded,
+                title: l.t('backgroundLocation'),
+                subtitle: l.t('backgroundLocationDesc'),
+              ),
+              if (_message != null) ...[
                 const SizedBox(height: 18),
-                const _FeatureRow(
-                  icon: Icons.phone_android_rounded,
-                  title: 'Background location',
-                  subtitle: 'Keeps recording while you use the camera.',
+                _StatusMessage(
+                  text: _message!,
+                  success: _permissionReady,
                 ),
-                if (_message != null) ...[
-                  const SizedBox(height: 18),
-                  _StatusMessage(text: _message!, success: _permissionReady),
-                ],
               ],
-            ),
+            ],
           ),
-          const SizedBox(height: 20),
-          FilledButton.icon(
-            onPressed: _permissionBusy ? null : _requestPermissions,
-            icon: _permissionBusy
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.lock_open_rounded),
-            label: Text(
-              _permissionReady ? 'Permission granted' : 'Allow location access',
-            ),
-          ),
-          if (!_permissionReady)
-            TextButton(
-              onPressed: _tracker.openSystemSettings,
-              child: const Text('Open app settings'),
-            ),
-          const SizedBox(height: 8),
-          FilledButton.tonal(
-            onPressed: _permissionReady ? _next : null,
-            child: const Text('Continue'),
-          ),
-        ],
-      );
-
-  Widget _immichPage(BuildContext context) => _pageShell(
-        icon: Icon(
-          Icons.photo_library_outlined,
-          color: Theme.of(context).colorScheme.primary,
-          size: 30,
         ),
-        title: 'Connect your Immich library.',
-        body:
-            'Create a dedicated API key in Immich. For the smallest permission set, enable exactly the two permissions below.',
-        children: [
-          const AppSurface(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SectionEyebrow('API key permissions'),
-                SizedBox(height: 12),
-                _PermissionCode(
-                  label: 'asset.read',
-                  description: 'Search photos and read capture metadata.',
-                ),
-                SizedBox(height: 12),
-                _PermissionCode(
-                  label: 'asset.update',
-                  description: 'Write latitude and longitude to matched photos.',
-                ),
-              ],
-            ),
+        const SizedBox(height: 20),
+        FilledButton.icon(
+          onPressed: _permissionBusy ? null : _requestPermissions,
+          icon: _permissionBusy
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.lock_open_rounded),
+          label: Text(
+            _permissionReady
+                ? l.t('permissionGranted')
+                : l.t('allowLocationAccess'),
           ),
-          const SizedBox(height: 18),
-          TextField(
-            controller: _url,
-            keyboardType: TextInputType.url,
-            autocorrect: false,
-            decoration: const InputDecoration(
-              labelText: 'Immich URL',
-              hintText: 'https://immich.example.com',
-              prefixIcon: Icon(Icons.language_rounded),
-            ),
+        ),
+        if (!_permissionReady)
+          TextButton(
+            onPressed: _tracker.openSystemSettings,
+            child: Text(l.t('openAppSettings')),
           ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _key,
-            obscureText: true,
-            autocorrect: false,
-            enableSuggestions: false,
-            decoration: const InputDecoration(
-              labelText: 'API key',
-              prefixIcon: Icon(Icons.key_rounded),
-            ),
+        const SizedBox(height: 8),
+        FilledButton.tonal(
+          onPressed: _permissionReady ? _next : null,
+          child: Text(l.t('continue')),
+        ),
+      ],
+    );
+  }
+
+  Widget _immichPage(BuildContext context) {
+    final l = context.l10n;
+    return _pageShell(
+      icon: Icon(
+        Icons.photo_library_outlined,
+        color: Theme.of(context).colorScheme.primary,
+        size: 30,
+      ),
+      title: l.t('connectImmichTitle'),
+      body: l.t('connectImmichBody'),
+      children: [
+        AppSurface(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SectionEyebrow(l.t('apiKeyPermissions')),
+              const SizedBox(height: 12),
+              _PermissionCode(
+                label: 'asset.read',
+                description: l.t('assetReadDesc'),
+              ),
+              const SizedBox(height: 12),
+              _PermissionCode(
+                label: 'asset.update',
+                description: l.t('assetUpdateDesc'),
+              ),
+            ],
           ),
-          if (_message != null) ...[
-            const SizedBox(height: 14),
-            _StatusMessage(text: _message!, success: _connectionReady),
-          ],
-          const SizedBox(height: 20),
-          FilledButton.icon(
-            onPressed: _testBusy ? null : _testConnection,
-            icon: _testBusy
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.wifi_tethering_rounded),
-            label: const Text('Test connection'),
+        ),
+        const SizedBox(height: 18),
+        TextField(
+          controller: _url,
+          keyboardType: TextInputType.url,
+          autocorrect: false,
+          decoration: InputDecoration(
+            labelText: l.t('immichUrl'),
+            hintText: 'https://immich.example.com',
+            prefixIcon: const Icon(Icons.language_rounded),
           ),
-          const SizedBox(height: 10),
-          FilledButton.tonal(
-            onPressed: _connectionReady ? _finish : null,
-            child: const Text('Finish setup'),
+        ),
+        const SizedBox(height: 12),
+        TextField(
+          controller: _key,
+          obscureText: true,
+          autocorrect: false,
+          enableSuggestions: false,
+          decoration: InputDecoration(
+            labelText: l.t('apiKey'),
+            prefixIcon: const Icon(Icons.key_rounded),
+          ),
+        ),
+        if (_message != null) ...[
+          const SizedBox(height: 14),
+          _StatusMessage(
+            text: _message!,
+            success: _connectionReady,
           ),
         ],
-      );
+        const SizedBox(height: 20),
+        FilledButton.icon(
+          onPressed: _testBusy ? null : _testConnection,
+          icon: _testBusy
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.wifi_tethering_rounded),
+          label: Text(l.t('testConnection')),
+        ),
+        const SizedBox(height: 10),
+        FilledButton.tonal(
+          onPressed: _connectionReady ? _finish : null,
+          child: Text(l.t('finishSetup')),
+        ),
+      ],
+    );
+  }
 }
 
 class _FeatureRow extends StatelessWidget {
@@ -403,13 +428,20 @@ class _FeatureRow extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 22, color: Theme.of(context).colorScheme.primary),
+        Icon(
+          icon,
+          size: 22,
+          color: Theme.of(context).colorScheme.primary,
+        ),
         const SizedBox(width: 14),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
+              Text(
+                title,
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
               const SizedBox(height: 3),
               Text(
                 subtitle,
@@ -440,7 +472,10 @@ class _PermissionCode extends StatelessWidget {
     return Row(
       children: [
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+          padding: const EdgeInsets.symmetric(
+            horizontal: 10,
+            vertical: 7,
+          ),
           decoration: BoxDecoration(
             color: const Color(0xFFECECFB),
             borderRadius: BorderRadius.circular(10),
@@ -490,7 +525,9 @@ class _StatusMessage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(
-            success ? Icons.check_circle_outline : Icons.info_outline,
+            success
+                ? Icons.check_circle_outline
+                : Icons.info_outline,
             size: 20,
             color: color,
           ),
