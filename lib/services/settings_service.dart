@@ -20,6 +20,7 @@ class AppSettings {
 class SettingsService {
   static const _secure = FlutterSecureStorage();
   static const _apiKey = 'immich_api_key';
+  static const _onboardingComplete = 'onboarding_complete';
 
   Future<AppSettings> load() async {
     final prefs = await SharedPreferences.getInstance();
@@ -46,5 +47,15 @@ class SettingsService {
       settings.maxInterpolationGapMinutes,
     );
     await _secure.write(key: _apiKey, value: settings.apiKey.trim());
+  }
+
+  Future<bool> isOnboardingComplete() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_onboardingComplete) ?? false;
+  }
+
+  Future<void> setOnboardingComplete(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_onboardingComplete, value);
   }
 }
