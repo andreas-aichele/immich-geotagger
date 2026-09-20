@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:location/location.dart';
+import 'package:permission_handler/permission_handler.dart' as ph;
 
 import '../models/location_point.dart';
 import 'database_service.dart';
@@ -22,10 +24,31 @@ class TrackingService {
 
   bool get isTracking => _subscription != null;
 
-  Future<void> start() async {
+  Future<void> requestRequiredPermissions() async {
     var enabled = await _location.serviceEnabled();
     if (!enabled) enabled = await _location.requestService();
-    if (!enabled) throw StateError('Location services are disabled');
+    if (!enabled) {
+      throw StateError('Location services are disabled on this device.');
+    }
+
+    if (Platform.isAndroid) {
+      final foreground = await ph.Permission.locationWhenInUse.request();
+      if (!foreground.isGranted) {
+        throw StateError(
+          'Precise location permission is required before background access can be requested.',
+        );
+      }
+
+      final background = await ph.Permission.locationAlways.request();
+      if (!background.isGranted) {
+        throw StateError(
+          'Background location permission is required. In Android settings, choose “Allow all the time”.',
+        );
+      }
+
+      await ph.Permission.notification.request();
+      return;
+    }
 
     var permission = await _location.hasPermission();
     if (permission == PermissionStatus.denied) {
@@ -33,8 +56,14 @@ class TrackingService {
     }
     if (permission != PermissionStatus.granted &&
         permission != PermissionStatus.grantedLimited) {
-      throw StateError('Location permission not granted');
+      throw StateError('Location permission is required.');
     }
+  }
+
+  Future<void> openSystemSettings() => ph.openAppSettings();
+
+  Future<void> start() async {
+    await requestRequiredPermissions();
 
     final settings = await _settings.load();
     await _location.changeSettings(
@@ -46,7 +75,9 @@ class TrackingService {
     final backgroundEnabled =
         await _location.enableBackgroundMode(enable: true);
     if (!backgroundEnabled) {
-      throw StateError('Background location mode could not be enabled');
+      throw StateError(
+        'Background tracking could not be enabled. Check the app location permissions.',
+      );
     }
 
     await _subscription?.cancel();
