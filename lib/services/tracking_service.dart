@@ -60,7 +60,9 @@ class TrackingService {
     }
   }
 
-  Future<void> openSystemSettings() => ph.openAppSettings();
+  Future<void> openSystemSettings() async {
+    await ph.openAppSettings();
+  }
 
   Future<void> start() async {
     await requestRequiredPermissions();
