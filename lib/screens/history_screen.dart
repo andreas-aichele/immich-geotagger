@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 import '../l10n/app_localizations.dart';
 import '../models/geotagged_asset.dart';
@@ -11,7 +10,7 @@ class HistoryScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
-    final locale = Localizations.localeOf(context).toLanguageTag();
+    final material = MaterialLocalizations.of(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -38,11 +37,20 @@ class HistoryScreen extends StatelessWidget {
             separatorBuilder: (_, __) => const Divider(height: 1),
             itemBuilder: (context, index) {
               final item = items[index];
+              final local = item.captureTime.toLocal();
+              final date = material.formatMediumDate(local);
+              final time = material.formatTime(
+                TimeOfDay.fromDateTime(local),
+                alwaysUse24HourFormat: MediaQuery.alwaysUse24HourFormatOf(
+                  context,
+                ),
+              );
+
               return ListTile(
                 leading: const Icon(Icons.location_on_outlined),
                 title: Text(item.fileName),
                 subtitle: Text(
-                  '${DateFormat.yMd(locale).add_Hms().format(item.captureTime.toLocal())}\n'
+                  '$date, $time\n'
                   '${item.latitude.toStringAsFixed(6)}, '
                   '${item.longitude.toStringAsFixed(6)}',
                 ),
