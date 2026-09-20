@@ -1,4 +1,12 @@
-# Immich GeoTagger
+<p align="center">
+  <img src="docs/assets/logo.svg" alt="Immich GeoTagger" width="720">
+</p>
+
+<p align="center">
+  <a href="https://github.com/andreas-aichele/immich-geotagger/releases/latest"><strong>Download the latest release</strong></a>
+  ·
+  <a href="https://github.com/andreas-aichele/immich-geotagger/issues">Report an issue</a>
+</p>
 
 **Give photos from cameras without GPS the location they were actually taken at.**
 
