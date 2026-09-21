@@ -30,7 +30,6 @@ class ImmichService {
         'page': 1,
         'size': 1,
         'withExif': true,
-        'type': 'IMAGE',
       }),
     );
 
@@ -97,50 +96,56 @@ class ImmichService {
     required DateTime from,
     required DateTime to,
   }) async {
-    final assets = <ImmichAsset>[];
-    var page = 1;
+    final assetsById = <String, ImmichAsset>{};
 
-    while (true) {
-      final response = await _client.post(
-        _uri(baseUrl, '/search/metadata'),
-        headers: _headers(apiKey),
-        body: jsonEncode({
-          'takenAfter': from.toUtc().toIso8601String(),
-          'takenBefore': to.toUtc().toIso8601String(),
-          'type': 'IMAGE',
-          'withExif': true,
-          'page': page,
-          'size': 500,
-        }),
-      );
+    for (final assetType in const ['IMAGE', 'VIDEO']) {
+      var page = 1;
 
-      if (response.statusCode < 200 || response.statusCode >= 300) {
-        throw StateError(
-          'Immich search failed with HTTP ${response.statusCode}: ${response.body}',
+      while (true) {
+        final response = await _client.post(
+          _uri(baseUrl, '/search/metadata'),
+          headers: _headers(apiKey),
+          body: jsonEncode({
+            'takenAfter': from.toUtc().toIso8601String(),
+            'takenBefore': to.toUtc().toIso8601String(),
+            'type': assetType,
+            'withExif': true,
+            'page': page,
+            'size': 500,
+          }),
         );
-      }
 
-      final decoded = jsonDecode(response.body) as Map<String, dynamic>;
-      final assetsNode =
-          decoded['assets'] as Map<String, dynamic>? ?? decoded;
-      final items = (assetsNode['items'] as List<dynamic>? ?? const [])
-          .whereType<Map<String, dynamic>>();
-
-      for (final item in items) {
-        try {
-          assets.add(ImmichAsset.fromJson(item));
-        } on FormatException {
-          // Ignore assets without a reliable timestamp.
+        if (response.statusCode < 200 || response.statusCode >= 300) {
+          throw StateError(
+            'Immich search failed with HTTP ${response.statusCode}: ${response.body}',
+          );
         }
-      }
 
-      final nextPage = assetsNode['nextPage'];
-      if (nextPage == null) break;
-      page = nextPage is int
-          ? nextPage
-          : int.tryParse('$nextPage') ?? (page + 1);
+        final decoded = jsonDecode(response.body) as Map<String, dynamic>;
+        final assetsNode =
+            decoded['assets'] as Map<String, dynamic>? ?? decoded;
+        final items = (assetsNode['items'] as List<dynamic>? ?? const [])
+            .whereType<Map<String, dynamic>>();
+
+        for (final item in items) {
+          try {
+            final asset = ImmichAsset.fromJson(item);
+            assetsById[asset.id] = asset;
+          } on FormatException {
+            // Ignore assets without a reliable timestamp.
+          }
+        }
+
+        final nextPage = assetsNode['nextPage'];
+        if (nextPage == null) break;
+        page = nextPage is int
+            ? nextPage
+            : int.tryParse('$nextPage') ?? (page + 1);
+      }
     }
 
+    final assets = assetsById.values.toList()
+      ..sort((a, b) => a.takenAt.compareTo(b.takenAt));
     return assets;
   }
 
