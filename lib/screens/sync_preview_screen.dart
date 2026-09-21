@@ -420,6 +420,7 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
 
     String reason(SyncUnmatched item) {
       return switch (item.reason) {
+        UnmatchedReason.noTrackData => l.t('unmatchedNoTrackData'),
         UnmatchedReason.beforeTrack => l.t('unmatchedBeforeTrack'),
         UnmatchedReason.afterTrack => l.t('unmatchedAfterTrack'),
         UnmatchedReason.unsafeGap => l.t('unmatchedUnsafeGap'),
