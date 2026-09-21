@@ -58,7 +58,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       }
 
       final active = desired &&
-          (await _tracker.isBackgroundModeEnabled() || _tracker.isTracking);
+          (await _tracker.isBackgroundModeEnabled() || await _tracker.isTracking);
 
       if (mounted) {
         setState(() => _tracking = active);
@@ -208,7 +208,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         color: _tracking ? primary : AppTheme.primarySoft,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: _tracking ? primary : const Color(0xFFDDE0F0),
+          color: _tracking ? primary : const Color(0xFFDCEEFF),
         ),
       ),
       child: Column(
@@ -396,7 +396,7 @@ class _StatusPill extends StatelessWidget {
         border: Border.all(
           color: active
               ? Colors.white.withValues(alpha: 0.18)
-              : const Color(0xFFD7DAEC),
+              : const Color(0xFFCFE6FF),
         ),
       ),
       child: Row(

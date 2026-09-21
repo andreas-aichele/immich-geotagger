@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 
 class AppTheme {
   // Immich UI primary color.
-  static const primary = Color(0xFF4250AF);
-  static const primarySoft = Color(0xFFF0F1F8);
-  static const primarySoftStrong = Color(0xFFE4E7F6);
+  static const primary = Color(0xFF1E83F7);
+  static const primarySoft = Color(0xFFF2F8FF);
+  static const primarySoftStrong = Color(0xFFDCEEFF);
   static const ink = Color(0xFF333333);
   static const muted = Color(0xFF737373);
   static const background = Color(0xFFFAFAFA);
@@ -93,7 +93,7 @@ class AppTheme {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: primary,
-          side: const BorderSide(color: Color(0xFFD7DAEC)),
+          side: const BorderSide(color: Color(0xFFCFE6FF)),
           minimumSize: const Size.fromHeight(48),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
