@@ -4,6 +4,7 @@ import 'database_service.dart';
 import 'immich_service.dart';
 import 'interpolation_service.dart';
 import 'settings_service.dart';
+import 'tracking_service.dart';
 
 class SyncResult {
   const SyncResult({
@@ -25,15 +26,18 @@ class SyncService {
     SettingsService? settings,
     ImmichService? immich,
     InterpolationService? interpolation,
+    TrackingService? tracking,
   })  : _database = database ?? DatabaseService.instance,
         _settings = settings ?? SettingsService(),
         _immich = immich ?? ImmichService(),
-        _interpolation = interpolation ?? const InterpolationService();
+        _interpolation = interpolation ?? const InterpolationService(),
+        _tracking = tracking ?? TrackingService();
 
   final DatabaseService _database;
   final SettingsService _settings;
   final ImmichService _immich;
   final InterpolationService _interpolation;
+  final TrackingService _tracking;
 
   Future<SyncPreview> prepareSync() async {
     final settings = await _settings.load();
@@ -44,25 +48,36 @@ class SyncService {
     final retention = Duration(days: settings.retentionDays);
     await _database.purgeLocationsOlderThan(retention);
 
+    // Close the current route with a fresh point before matching. This is
+    // especially important while stationary, where Android may suppress normal
+    // movement-based location callbacks.
+    if (await _tracking.isTracking) {
+      await _tracking.captureCurrentPoint();
+    }
+
     final to = DateTime.now().toUtc();
     final from = to.subtract(retention);
     final points = await _database.locationsBetween(from, to);
 
-    if (points.length < 2) {
-      return const SyncPreview(
-        candidates: [],
-        scanned: 0,
-        skippedWithLocation: 0,
-        skippedWithoutTrack: 0,
-      );
-    }
-
+    // Search the whole configured retention window. Previously this search
+    // ended at the last GPS point, which could hide newer Immich assets while
+    // the phone was stationary.
     final assets = await _immich.assetsTakenBetween(
       baseUrl: settings.immichUrl,
       apiKey: settings.apiKey,
-      from: points.first.timestamp,
-      to: points.last.timestamp,
+      from: from,
+      to: to,
     );
+
+    if (points.length < 2) {
+      final existing = assets.where((asset) => asset.hasLocation).length;
+      return SyncPreview(
+        candidates: const [],
+        scanned: assets.length,
+        skippedWithLocation: existing,
+        skippedWithoutTrack: assets.length - existing,
+      );
+    }
 
     final candidates = <SyncCandidate>[];
     var existing = 0;
