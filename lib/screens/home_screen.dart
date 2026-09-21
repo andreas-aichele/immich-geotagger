@@ -24,7 +24,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   final _sync = SyncService();
   final _settings = SettingsService();
 
-  bool _busy = false;
+  bool _trackingBusy = false;
+  bool _syncBusy = false;
   bool _tracking = false;
   int _points = 0;
   SyncResult? _lastSync;
@@ -87,7 +88,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   Future<void> _toggleTracking() async {
     setState(() {
-      _busy = true;
+      _trackingBusy = true;
       _error = null;
     });
 
@@ -106,13 +107,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         () => _error = e.toString().replaceFirst('Bad state: ', ''),
       );
     } finally {
-      if (mounted) setState(() => _busy = false);
+      if (mounted) setState(() => _trackingBusy = false);
     }
   }
 
   Future<void> _runSync() async {
     setState(() {
-      _busy = true;
+      _syncBusy = true;
       _error = null;
     });
 
@@ -120,7 +121,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       final preview = await _sync.prepareSync();
       if (!mounted) return;
 
-      setState(() => _busy = false);
+      setState(() => _syncBusy = false);
 
       final result = await Navigator.of(context).push<SyncResult>(
         MaterialPageRoute(
@@ -138,7 +139,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         () => _error = e.toString().replaceFirst('Bad state: ', ''),
       );
     } finally {
-      if (mounted && _busy) setState(() => _busy = false);
+      if (mounted && _syncBusy) setState(() => _syncBusy = false);
     }
   }
 
@@ -281,7 +282,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 backgroundColor: _tracking ? Colors.white : primary,
                 foregroundColor: _tracking ? primary : Colors.white,
               ),
-              onPressed: _busy ? null : _toggleTracking,
+              onPressed: _trackingBusy ? null : _toggleTracking,
               icon: Icon(
                 _tracking ? Icons.stop_rounded : Icons.play_arrow_rounded,
               ),
@@ -394,8 +395,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           ],
           const SizedBox(height: 22),
           FilledButton.icon(
-            onPressed: _busy ? null : _runSync,
-            icon: _busy
+            onPressed: _syncBusy ? null : _runSync,
+            icon: _syncBusy
                 ? const SizedBox(
                     width: 18,
                     height: 18,
