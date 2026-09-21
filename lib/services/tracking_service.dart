@@ -1,86 +1,73 @@
-import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 
-import 'package:location/location.dart';
+import 'package:background_locator_neo/background_locator.dart';
+import 'package:background_locator_neo/settings/android_settings.dart';
+import 'package:background_locator_neo/settings/ios_settings.dart';
+import 'package:background_locator_neo/settings/locator_settings.dart';
 import 'package:permission_handler/permission_handler.dart' as ph;
 
-import '../models/location_point.dart';
-import 'database_service.dart';
+import 'background_location_callback.dart';
 import 'settings_service.dart';
 
 class TrackingService {
-  TrackingService({
-    DatabaseService? database,
-    SettingsService? settings,
-    Location? location,
-  })  : _database = database ?? DatabaseService.instance,
-        _settings = settings ?? SettingsService(),
-        _location = location ?? Location();
+  TrackingService({SettingsService? settings})
+      : _settings = settings ?? SettingsService();
 
-  final DatabaseService _database;
   final SettingsService _settings;
-  final Location _location;
-  StreamSubscription<LocationData>? _subscription;
 
-  bool get isTracking => _subscription != null;
+  bool _initialized = false;
+
+  Future<void> initialize() async {
+    if (_initialized) return;
+    await BackgroundLocator.initialize();
+    _initialized = true;
+  }
+
+  Future<bool> get isTracking async {
+    await initialize();
+    return BackgroundLocator.isServiceRunning();
+  }
+
+  Future<bool> requestForegroundLocationPermission() async {
+    final foreground = await ph.Permission.locationWhenInUse.request();
+    return foreground.isGranted;
+  }
+
+  Future<bool> isBackgroundLocationGranted() async {
+    if (Platform.isAndroid || Platform.isIOS) {
+      return ph.Permission.locationAlways.isGranted;
+    }
+    return true;
+  }
 
   Future<void> requestRequiredPermissions() async {
-    var enabled = await _location.serviceEnabled();
-    if (!enabled) enabled = await _location.requestService();
-    if (!enabled) {
-      throw StateError('Location services are disabled on this device.');
+    final foreground = await ph.Permission.locationWhenInUse.request();
+    if (!foreground.isGranted) {
+      throw StateError(
+        'Precise location permission is required before background access can be enabled.',
+      );
     }
 
     if (Platform.isAndroid) {
-      final foreground = await ph.Permission.locationWhenInUse.request();
-      if (!foreground.isGranted) {
-        throw StateError(
-          'Precise location permission is required before background access can be enabled.',
-        );
-      }
-
       if (!await isBackgroundLocationGranted()) {
         throw StateError(
           'Background location is not enabled. Open the app settings and choose “Allow all the time”.',
         );
       }
-
       await ph.Permission.notification.request();
       return;
     }
 
-    var permission = await _location.hasPermission();
-    if (permission == PermissionStatus.denied) {
-      permission = await _location.requestPermission();
-    }
-    if (permission != PermissionStatus.granted &&
-        permission != PermissionStatus.grantedLimited) {
-      throw StateError('Location permission is required.');
-    }
-  }
-
-  Future<bool> requestForegroundLocationPermission() async {
-    var enabled = await _location.serviceEnabled();
-    if (!enabled) enabled = await _location.requestService();
-    if (!enabled) return false;
-
-    if (!Platform.isAndroid) {
-      var permission = await _location.hasPermission();
-      if (permission == PermissionStatus.denied) {
-        permission = await _location.requestPermission();
+    if (Platform.isIOS) {
+      var always = await ph.Permission.locationAlways.status;
+      if (!always.isGranted) {
+        always = await ph.Permission.locationAlways.request();
       }
-      return permission == PermissionStatus.granted ||
-          permission == PermissionStatus.grantedLimited;
+      if (!always.isGranted) {
+        throw StateError('Background location permission is required.');
+      }
     }
-
-    final status = await ph.Permission.locationWhenInUse.request();
-    return status.isGranted;
-  }
-
-  Future<bool> isBackgroundLocationGranted() async {
-    if (!Platform.isAndroid) return true;
-    return ph.Permission.locationAlways.isGranted;
   }
 
   Future<bool> isBatteryOptimizationIgnored() async {
@@ -95,8 +82,8 @@ class TrackingService {
   }
 
   Future<bool> isBackgroundModeEnabled() async {
-    if (!Platform.isAndroid && !Platform.isIOS) return isTracking;
-    return _location.isBackgroundModeEnabled();
+    await initialize();
+    return BackgroundLocator.isServiceRunning();
   }
 
   Future<void> openSystemSettings() async {
@@ -104,63 +91,54 @@ class TrackingService {
   }
 
   Future<bool> resumeIfNeeded() async {
+    await initialize();
     if (!await _settings.isTrackingDesired()) return false;
+    if (await BackgroundLocator.isServiceRunning()) return true;
     await start(persistDesiredState: false);
     return true;
   }
 
   Future<void> start({bool persistDesiredState = true}) async {
+    await initialize();
     await requestRequiredPermissions();
 
+    if (await BackgroundLocator.isServiceRunning()) {
+      if (persistDesiredState) {
+        await _settings.setTrackingDesired(true);
+      }
+      return;
+    }
+
     final settings = await _settings.load();
-    final intervalMs = settings.trackingIntervalSeconds * 1000;
+    final notification = _notificationCopy();
 
-    await _location.changeSettings(
-      accuracy: LocationAccuracy.high,
-      interval: intervalMs,
-      backgroundInterval: intervalMs,
-      distanceFilter: 0,
-      pausesLocationUpdatesAutomatically: false,
-    );
-
-    if (Platform.isAndroid) {
-      final notification = _notificationCopy();
-      await _location.changeNotificationOptions(
-        channelName: notification.channel,
-        title: notification.title,
-        subtitle: notification.subtitle,
-        description: notification.description,
-        iconName: 'ic_launcher_geotagger',
-        onTapBringToFront: true,
-      );
-    }
-
-    final backgroundEnabled =
-        await _location.enableBackgroundMode(enable: true);
-    if (!backgroundEnabled) {
-      throw StateError(
-        'Background tracking could not be enabled. Check the app location permissions.',
-      );
-    }
-
-    await _subscription?.cancel();
-    _subscription = _location.onLocationChanged.listen((data) async {
-      final timestamp = data.time == null
-          ? DateTime.now().toUtc()
-          : DateTime.fromMillisecondsSinceEpoch(
-              data.time!.round(),
-              isUtc: true,
-            );
-
-      await _database.insertLocation(
-        LocationPoint(
-          timestamp: timestamp,
-          latitude: data.latitude,
-          longitude: data.longitude,
-          accuracy: data.accuracy,
+    await BackgroundLocator.registerLocationUpdate(
+      backgroundLocationCallback,
+      initCallback: backgroundLocationInitCallback,
+      disposeCallback: backgroundLocationDisposeCallback,
+      iosSettings: IOSSettings(
+        accuracy: LocationAccuracy.NAVIGATION,
+        distanceFilter: 0,
+        stopWithTerminate: false,
+        pausesLocationUpdatesAutomatically: false,
+        showsBackgroundLocationIndicator: true,
+        activityType: LocationActivityType.other,
+      ),
+      androidSettings: AndroidSettings(
+        accuracy: LocationAccuracy.NAVIGATION,
+        interval: settings.trackingIntervalSeconds,
+        distanceFilter: 0,
+        client: LocationClient.google,
+        wakeLockTime: 60,
+        androidNotificationSettings: AndroidNotificationSettings(
+          notificationChannelName: notification.channel,
+          notificationTitle: notification.title,
+          notificationMsg: notification.subtitle,
+          notificationBigMsg: notification.description,
+          notificationTapCallback: backgroundNotificationTapCallback,
         ),
-      );
-    });
+      ),
+    );
 
     if (persistDesiredState) {
       await _settings.setTrackingDesired(true);
@@ -168,9 +146,8 @@ class TrackingService {
   }
 
   Future<void> stop() async {
-    await _subscription?.cancel();
-    _subscription = null;
-    await _location.enableBackgroundMode(enable: false);
+    await initialize();
+    await BackgroundLocator.unRegisterLocationUpdate();
     await _settings.setTrackingDesired(false);
   }
 
