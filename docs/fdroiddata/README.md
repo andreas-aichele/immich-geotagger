@@ -1,6 +1,6 @@
 # F-Droid submission
 
-The release candidate for the official F-Droid repository is **v1.0.0**.
+The release candidate for the official F-Droid repository is **v1.0.1**.
 
 ## fdroiddata metadata
 
@@ -28,9 +28,9 @@ docs/fdroiddata/metadata/io.github.andreasaichele.immichgeotagger.yml
 ## Release details
 
 - Application ID: `io.github.andreasaichele.immichgeotagger`
-- Version: `1.0.0`
-- Version code: `1000000`
-- Tag: `v1.0.0`
+- Version: `1.0.1`
+- Version code: `1000001`
+- Tag: `v1.0.1`
 - Flutter: `3.47.5`
 - License: MIT
 - Google Play Services: not required

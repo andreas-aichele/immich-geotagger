@@ -1,0 +1,1 @@
+Voegt F-Droid-storemetadata, het app-icoon en schermafbeeldingen toe voor de openbare vermelding.
