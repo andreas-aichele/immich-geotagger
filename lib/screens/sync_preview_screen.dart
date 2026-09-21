@@ -99,59 +99,67 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
       appBar: AppBar(
         title: Text(l.t('syncPreviewTitle')),
       ),
-      body: ListView(
+      body: ListView.builder(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
-        children: [
-          AppSurface(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SectionEyebrow(l.t('syncPreview')),
-                const SizedBox(height: 8),
-                Text(
-                  l.t(
-                    'syncPreviewSummary',
-                    {
-                      'ready': widget.preview.candidates.length,
-                      'located': widget.preview.skippedWithLocation,
-                      'unmatched': widget.preview.skippedWithoutTrack,
-                    },
-                  ),
-                  style: const TextStyle(
-                    color: AppTheme.muted,
-                    height: 1.45,
-                  ),
-                ),
-                const SizedBox(height: 14),
-                Row(
+        itemCount: widget.preview.candidates.isEmpty
+            ? 2
+            : widget.preview.candidates.length + 1,
+        itemBuilder: (context, index) {
+          if (index == 0) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: AppSurface(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    TextButton(
-                      onPressed: _selectAll,
-                      child: Text(l.t('selectAll')),
-                    ),
-                    TextButton(
-                      onPressed: _selectNone,
-                      child: Text(l.t('selectNone')),
-                    ),
-                    const Spacer(),
+                    SectionEyebrow(l.t('syncPreview')),
+                    const SizedBox(height: 8),
                     Text(
                       l.t(
-                        'selectedCount',
-                        {'count': _selected.length},
+                        'syncPreviewSummary',
+                        {
+                          'ready': widget.preview.candidates.length,
+                          'located': widget.preview.skippedWithLocation,
+                          'unmatched': widget.preview.skippedWithoutTrack,
+                        },
                       ),
                       style: const TextStyle(
                         color: AppTheme.muted,
-                        fontWeight: FontWeight.w600,
+                        height: 1.45,
                       ),
+                    ),
+                    const SizedBox(height: 14),
+                    Row(
+                      children: [
+                        TextButton(
+                          onPressed: _selectAll,
+                          child: Text(l.t('selectAll')),
+                        ),
+                        TextButton(
+                          onPressed: _selectNone,
+                          child: Text(l.t('selectNone')),
+                        ),
+                        const Spacer(),
+                        Text(
+                          l.t(
+                            'selectedCount',
+                            {'count': _selected.length},
+                          ),
+                          style: const TextStyle(
+                            color: AppTheme.muted,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-          if (widget.preview.candidates.isEmpty)
-            AppSurface(
+              ),
+            );
+          }
+
+          if (widget.preview.candidates.isEmpty) {
+            return AppSurface(
               child: Text(
                 l.t('noSyncCandidates'),
                 style: const TextStyle(
@@ -159,10 +167,11 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
                   height: 1.4,
                 ),
               ),
-            )
-          else
-            ...widget.preview.candidates.map(_candidateCard),
-        ],
+            );
+          }
+
+          return _candidateCard(widget.preview.candidates[index - 1]);
+        },
       ),
       bottomSheet: SafeArea(
         top: false,
