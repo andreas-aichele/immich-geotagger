@@ -122,7 +122,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       appBar: AppBar(
         title: Text(
           l.t('settings'),
-          style: const TextStyle(fontWeight: FontWeight.w800),
+          style: const TextStyle(fontWeight: FontWeight.w700),
         ),
       ),
       body: _loading
@@ -135,7 +135,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Text(
                     l.t('settingsIntro'),
                     style: const TextStyle(
-                      color: Color(0xFF6A6A75),
+                      color: AppTheme.muted,
                       fontSize: 15,
                       height: 1.45,
                     ),
@@ -151,7 +151,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           l.t('serverConnection'),
                           style: const TextStyle(
                             fontSize: 21,
-                            fontWeight: FontWeight.w800,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                         const SizedBox(height: 18),
@@ -228,7 +228,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           l.t('timelineBehavior'),
                           style: const TextStyle(
                             fontSize: 21,
-                            fontWeight: FontWeight.w800,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                         const SizedBox(height: 18),
@@ -278,14 +278,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           l.t('batteryProtection'),
                           style: const TextStyle(
                             fontSize: 21,
-                            fontWeight: FontWeight.w800,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                         const SizedBox(height: 10),
                         Text(
                           l.t('batteryProtectionDesc'),
                           style: const TextStyle(
-                            color: Color(0xFF686873),
+                            color: AppTheme.muted,
                             height: 1.45,
                           ),
                         ),
@@ -349,7 +349,7 @@ class _ScopeChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
-        color: const Color(0xFFECECFB),
+        color: const AppTheme.primarySoft,
         borderRadius: BorderRadius.circular(10),
       ),
       child: Text(
@@ -382,7 +382,7 @@ class _StatusBox extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         children: [
