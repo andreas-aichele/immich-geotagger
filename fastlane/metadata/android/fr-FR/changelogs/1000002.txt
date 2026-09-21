@@ -1,0 +1,1 @@
+Améliore la compatibilité avec F-Droid en supprimant les métadonnées de dépendances Android des builds de publication.
