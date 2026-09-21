@@ -58,7 +58,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       }
 
       final active = desired &&
-          (await _tracker.isBackgroundModeEnabled() || _tracker.isTracking);
+          (await _tracker.isBackgroundModeEnabled() || await _tracker.isTracking);
 
       if (mounted) {
         setState(() => _tracking = active);
