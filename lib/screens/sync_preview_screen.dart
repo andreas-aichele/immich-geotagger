@@ -28,6 +28,7 @@ class SyncPreviewScreen extends StatefulWidget {
 class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
   static const _tileUrl = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
   static const _userAgent = 'io.github.andreasaichele.immichgeotagger';
+  static const _minMapZoom = 2.0;
 
   final _settings = SettingsService();
   final _immich = ImmichService();
@@ -413,19 +414,25 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
                 _tileLayer(),
                 MarkerLayer(
                   markers: [
-                    for (final candidate in candidates)
+                    for (final group in _groupCandidates(candidates))
                       Marker(
                         point: LatLng(
-                          candidate.latitude,
-                          candidate.longitude,
+                          group.first.latitude,
+                          group.first.longitude,
                         ),
-                        width: 42,
-                        height: 42,
+                        width: group.length > 1 ? 52 : 42,
+                        height: group.length > 1 ? 52 : 42,
                         child: GestureDetector(
-                          onTap: () => _showCandidateMap(candidate),
-                          child: _mapMarker(
-                            selected: _selected.contains(candidate.asset.id),
-                          ),
+                          onTap: () => group.length == 1
+                              ? _showCandidateMap(group.first)
+                              : _showCandidateGroup(group),
+                          child: group.length == 1
+                              ? _mapMarker(
+                                  selected: _selected.contains(
+                                    group.first.asset.id,
+                                  ),
+                                )
+                              : _groupMapMarker(group),
                         ),
                       ),
                   ],
@@ -695,6 +702,93 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
           fontWeight: FontWeight.w700,
         ),
       ),
+    );
+  }
+
+  List<List<SyncCandidate>> _groupCandidates(
+    List<SyncCandidate> candidates,
+  ) {
+    const precision = 100000.0;
+    final groups = <String, List<SyncCandidate>>{};
+
+    for (final candidate in candidates) {
+      final lat = (candidate.latitude * precision).round();
+      final lon = (candidate.longitude * precision).round();
+      final key = '${lat}:${lon}';
+      groups.putIfAbsent(key, () => []).add(candidate);
+    }
+    return groups.values.toList();
+  }
+
+  Widget _groupMapMarker(List<SyncCandidate> group) {
+    final selected = group.where(
+      (candidate) => _selected.contains(candidate.asset.id),
+    ).length;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: selected > 0 ? AppTheme.primary : const Color(0xFF8A8A8A),
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white, width: 3),
+        boxShadow: const [
+          BoxShadow(
+            blurRadius: 8,
+            offset: Offset(0, 2),
+            color: Color(0x33000000),
+          ),
+        ],
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        '${group.length}',
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 14,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showCandidateGroup(List<SyncCandidate> group) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      useSafeArea: true,
+      showDragHandle: true,
+      builder: (sheetContext) {
+        return ListView(
+          shrinkWrap: true,
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+          children: [
+            Text(
+              context.l10n.t(
+                'photosAtLocation',
+                {'count': group.length},
+              ),
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 12),
+            for (final candidate in group)
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: _thumbnailView(candidate.asset.id, size: 52),
+                title: Text(
+                  candidate.asset.fileName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () {
+                  Navigator.of(sheetContext).pop();
+                  _showCandidateMap(candidate);
+                },
+              ),
+          ],
+        );
+      },
     );
   }
 
