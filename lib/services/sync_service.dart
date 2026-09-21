@@ -1,6 +1,8 @@
 import 'dart:math' as math;
 
 import '../models/geotagged_asset.dart';
+import '../models/immich_asset.dart';
+import '../models/location_point.dart';
 import '../models/sync_preview.dart';
 import 'database_service.dart';
 import 'immich_service.dart';
@@ -53,7 +55,8 @@ class SyncService {
     // Close the current route with a fresh point before matching. This is
     // especially important while stationary, where Android may suppress normal
     // movement-based location callbacks.
-    if (await _tracking.isTracking) {
+    final trackingActive = await _tracking.isTracking;
+    if (trackingActive) {
       // A fresh point closes the currently active route. Keep this best-effort
       // and short so opening the preview never waits for the full 20-second
       // location timeout.
@@ -92,6 +95,7 @@ class SyncService {
     );
 
     final candidates = <SyncCandidate>[];
+    final unmatched = <SyncUnmatched>[];
     var existing = 0;
     var noTrack = 0;
 
@@ -108,7 +112,29 @@ class SyncService {
       );
 
       if (match == null) {
+        final fallback = _lastKnownLocationFallback(
+          assetTime: asset.takenAt,
+          points: points,
+          trackingActive: trackingActive,
+        );
+
+        if (fallback != null) {
+          candidates.add(
+            SyncCandidate(
+              asset: asset,
+              latitude: fallback.latitude,
+              longitude: fallback.longitude,
+              before: fallback.timestamp,
+              after: fallback.timestamp,
+              reliability: MatchReliability.low,
+              usedLastKnownLocation: true,
+            ),
+          );
+          continue;
+        }
+
         noTrack++;
+        unmatched.add(_diagnoseUnmatched(asset, points, settings));
         continue;
       }
 
@@ -129,6 +155,89 @@ class SyncService {
       scanned: assets.length,
       skippedWithLocation: existing,
       skippedWithoutTrack: noTrack,
+      unmatched: unmatched,
+    );
+  }
+
+  LocationPoint? _lastKnownLocationFallback({
+    required DateTime assetTime,
+    required List<LocationPoint> points,
+    required bool trackingActive,
+  }) {
+    if (!trackingActive || points.length < 2) return null;
+
+    final target = assetTime.toUtc();
+    final last = points.last;
+    final previous = points[points.length - 2];
+    final lastTime = last.timestamp.toUtc();
+
+    if (!target.isAfter(lastTime)) return null;
+    if (target.difference(lastTime) > const Duration(minutes: 10)) return null;
+
+    final movement = _distanceMeters(
+      previous.latitude,
+      previous.longitude,
+      last.latitude,
+      last.longitude,
+    );
+    if (movement > 50) return null;
+
+    return last;
+  }
+
+  SyncUnmatched _diagnoseUnmatched(
+    ImmichAsset asset,
+    List<LocationPoint> points,
+    AppSettings settings,
+  ) {
+    final target = asset.takenAt.toUtc();
+    final first = points.first.timestamp.toUtc();
+    final last = points.last.timestamp.toUtc();
+
+    if (target.isBefore(first)) {
+      return SyncUnmatched(
+        asset: asset,
+        reason: UnmatchedReason.beforeTrack,
+        after: points.first.timestamp,
+      );
+    }
+
+    if (target.isAfter(last)) {
+      return SyncUnmatched(
+        asset: asset,
+        reason: UnmatchedReason.afterTrack,
+        before: points.last.timestamp,
+      );
+    }
+
+    for (var i = 0; i < points.length - 1; i++) {
+      final a = points[i];
+      final b = points[i + 1];
+      final at = a.timestamp.toUtc();
+      final bt = b.timestamp.toUtc();
+      if (target.isBefore(at) || target.isAfter(bt)) continue;
+
+      final gap = bt.difference(at);
+      final movement = _distanceMeters(
+        a.latitude,
+        a.longitude,
+        b.latitude,
+        b.longitude,
+      );
+      if (gap > Duration(minutes: settings.maxInterpolationGapMinutes) &&
+          movement > 50) {
+        return SyncUnmatched(
+          asset: asset,
+          reason: UnmatchedReason.unsafeGap,
+          before: a.timestamp,
+          after: b.timestamp,
+        );
+      }
+    }
+
+    return SyncUnmatched(
+      asset: asset,
+      reason: UnmatchedReason.noSegment,
     );
   }
 
