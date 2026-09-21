@@ -16,7 +16,6 @@ class TrackingService {
   bool _initialized = false;
   StreamSubscription<Position>? _positionSubscription;
   StreamSubscription<HeartbeatEvent>? _heartbeatSubscription;
-  Timer? _samplingTimer;
 
   Future<void> initialize() async {
     if (_initialized) return;
@@ -133,10 +132,11 @@ class TrackingService {
       return;
     }
 
+    final settings = await _settings.load();
     final notification = _notificationCopy();
 
     await LibreLocation.start(
-      preset: TrackingPreset.high,
+      preset: _presetFor(settings.trackingQuality),
       config: LocationConfig(
         notification: NotificationConfig(
           title: notification.title,
@@ -177,8 +177,9 @@ class TrackingService {
 
   Future<void> stop() async {
     await initialize();
-    _samplingTimer?.cancel();
-    _samplingTimer = null;
+    if (await LibreLocation.isTracking) {
+      await captureCurrentPoint();
+    }
     await _positionSubscription?.cancel();
     _positionSubscription = null;
     await _heartbeatSubscription?.cancel();
@@ -195,16 +196,22 @@ class TrackingService {
     _heartbeatSubscription ??= LibreLocation.onHeartbeat.listen(
       (event) => saveLibreLocationPosition(event.position),
     );
+  }
 
-    if (_samplingTimer != null) return;
-
+  Future<void> applyConfiguredPreset() async {
+    await initialize();
+    if (!await LibreLocation.isTracking) return;
     final settings = await _settings.load();
-    final seconds = settings.trackingIntervalSeconds.clamp(15, 3600).toInt();
+    await LibreLocation.setPreset(_presetFor(settings.trackingQuality));
+  }
 
-    _samplingTimer = Timer.periodic(
-      Duration(seconds: seconds),
-      (_) => captureCurrentPoint(),
-    );
+  TrackingPreset _presetFor(TrackingQuality quality) {
+    switch (quality) {
+      case TrackingQuality.balanced:
+        return TrackingPreset.balanced;
+      case TrackingQuality.precise:
+        return TrackingPreset.high;
+    }
   }
 
   _NotificationCopy _notificationCopy() {
