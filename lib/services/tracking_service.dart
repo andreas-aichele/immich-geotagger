@@ -149,8 +149,11 @@ class TrackingService {
       ),
     );
 
-    await captureCurrentPoint();
     await _ensureForegroundListeners();
+
+    // LibreLocation will emit positions after start. Request one immediately as
+    // a best-effort seed, but do not block the UI while waiting for a GPS fix.
+    unawaited(captureCurrentPoint(timeoutSeconds: 5));
 
     if (persistDesiredState) {
       await _settings.setTrackingDesired(true);
@@ -178,7 +181,7 @@ class TrackingService {
   Future<void> stop() async {
     await initialize();
     if (await LibreLocation.isTracking) {
-      await captureCurrentPoint();
+      await captureCurrentPoint(timeoutSeconds: 5);
     }
     await _positionSubscription?.cancel();
     _positionSubscription = null;
