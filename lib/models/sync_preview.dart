@@ -1,5 +1,11 @@
 import 'immich_asset.dart';
 
+enum MatchReliability {
+  high,
+  medium,
+  low,
+}
+
 class SyncCandidate {
   const SyncCandidate({
     required this.asset,
@@ -7,6 +13,7 @@ class SyncCandidate {
     required this.longitude,
     required this.before,
     required this.after,
+    required this.reliability,
   });
 
   final ImmichAsset asset;
@@ -14,6 +21,7 @@ class SyncCandidate {
   final double longitude;
   final DateTime before;
   final DateTime after;
+  final MatchReliability reliability;
 }
 
 class SyncPreview {
