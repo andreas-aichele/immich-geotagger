@@ -18,11 +18,11 @@
 
 ---
 
-**Give photos from cameras without GPS the location they were actually taken at.**
+**Give photos and videos from cameras without GPS the location they were actually taken at.**
 
-Immich GeoTagger is a small companion app for **Immich**. It was created for people who take photos with a DSLR, mirrorless camera, or any other camera without reliable GPS and still want their photos to appear at the correct places on the Immich map.
+Immich GeoTagger is a small companion app for **Immich**. It was created for people who take photos with a DSLR, mirrorless camera, or any other camera without reliable GPS and still want their photos and videos to appear at the correct places on the Immich map.
 
-Instead of manually assigning locations to photos afterwards, you simply take your phone with you. GeoTagger records where you were and later matches that information with the capture time of your photos. You can choose between a battery-friendly **Balanced** mode for all-day tracking and a more detailed **Precise** mode for dedicated photo trips.
+Instead of manually assigning locations to photos and videos afterwards, you simply take your phone with you. GeoTagger records where you were and later matches that information with the capture time of your photos and videos. You can choose between a battery-friendly **Balanced** mode for all-day tracking and a more detailed **Precise** mode for dedicated photo trips.
 
 ## Get Immich GeoTagger
 
@@ -53,28 +53,28 @@ The workflow is intentionally simple — GeoTagger stays out of the way of your 
 1. **Start tracking before taking photos.**  
    GeoTagger records your location in the background while your phone stays in your pocket.
 
-2. **Take photos as usual.**  
+2. **Take photos and videos as usual.**  
    Use your DSLR or mirrorless camera exactly as you normally would.
 
-3. **Import the photos into Immich.**  
+3. **Import the photos and videos into Immich.**  
    Your normal photo workflow does not change.
 
-> **Important:** Before taking photos, make sure your **camera and phone use the same time and the same time zone**. GeoTagger matches photos to your recorded route using the capture timestamp. Even a small clock difference can assign a photo to the wrong place.
+> **Important:** Before taking photos, make sure your **camera and phone use the same time and the same time zone**. GeoTagger matches media to your recorded route using the capture timestamp. Even a small clock difference can assign a photo to the wrong place.
 
-4. **Let GeoTagger match the photos.**  
-   The app compares the capture time of photos without a location with your recorded location history.
+4. **Let GeoTagger match the media.**  
+   The app compares the capture time of photos and videos without a location with your recorded location history.
 
 5. **Review the proposed matches.**  
    Before anything is changed, GeoTagger shows a preview with Immich thumbnails, capture times, the proposed locations on an interactive **OpenStreetMap** map, and a reliability indicator for each match. You can inspect individual markers, deselect photos, or keep the full selection.
 
 6. **Apply only what you approve.**  
-   Only the selected photos receive their calculated position and can then appear correctly on the Immich map.
+   Only the selected media items receive their calculated position and can then appear correctly on the Immich map.
 
-### What if a photo was taken between two recorded locations?
+### What if media was captured between two recorded locations?
 
 Your phone does not need to record GPS every second.
 
-For example, if GeoTagger knows where you were at **10:00** and again at **10:10**, a photo taken at **10:05** can be placed between those two positions.
+For example, if GeoTagger knows where you were at **10:00** and again at **10:10**, a photo or video captured at **10:05** can be placed between those two positions.
 
 GeoTagger only does this when it has enough information for a safe match. It does not guess a position outside the recorded route, and you can configure how large the gap between location measurements may be.
 
@@ -82,9 +82,9 @@ GeoTagger only does this when it has enough information for a safe match. It doe
 
 GeoTagger is designed to complement the location data already in your photo library.
 
-**Photos that already have a GPS location are left untouched.**
+**Photos and videos that already have a GPS location are left untouched.**
 
-Only photos without location information are considered for matching.
+Only photos and videos without location information are considered for matching.
 
 ## Privacy and Google-free tracking
 
@@ -92,7 +92,7 @@ Your location history is stored **on your phone**. You can choose how long GeoTa
 
 On Android, GeoTagger uses the standard **AOSP LocationManager** through the open-source `libre_location` stack. It does **not require Google Play Services** for location tracking and is designed to work on de-Googled Android systems as well. Location previews use **OpenStreetMap** tiles through the open-source `flutter_map` package.
 
-GeoTagger does not require its own cloud service. When a photo is matched, only the calculated location is sent to **your own Immich server**.
+GeoTagger does not require its own cloud service. When a media item is matched, only the calculated location is sent to **your own Immich server**.
 
 ## What you need
 
@@ -119,7 +119,7 @@ The Android codebase is prepared for F-Droid: the application uses a stable pack
 
 Immich GeoTagger is a young open-source project and is still being actively developed.
 
-The core workflow is already implemented: recording a location timeline, safely matching photos by capture time, previewing proposed location updates with thumbnails, selecting which photos should be changed, preserving existing GPS data, and applying confirmed locations to Immich.
+The core workflow is already implemented: recording a location timeline, safely matching photos and videos by capture time, previewing proposed location updates with thumbnails, selecting which media items should be changed, preserving existing GPS data, and applying confirmed locations to Immich.
 
 If you find a problem or have an idea for an improvement, feel free to open an issue.
 
