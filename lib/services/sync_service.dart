@@ -54,32 +54,36 @@ class SyncService {
     // especially important while stationary, where Android may suppress normal
     // movement-based location callbacks.
     if (await _tracking.isTracking) {
-      await _tracking.captureCurrentPoint();
+      // A fresh point closes the currently active route. Keep this best-effort
+      // and short so opening the preview never waits for the full 20-second
+      // location timeout.
+      await _tracking.captureCurrentPoint(timeoutSeconds: 5);
     }
 
-    final to = DateTime.now().toUtc();
-    final from = to.subtract(retention);
-    final points = await _database.locationsBetween(from, to);
+    final now = DateTime.now().toUtc();
+    final retentionStart = now.subtract(retention);
+    final points = await _database.locationsBetween(retentionStart, now);
 
-    // Search the whole configured retention window. Previously this search
-    // ended at the last GPS point, which could hide newer Immich assets while
-    // the phone was stationary.
+    if (points.length < 2) {
+      return const SyncPreview(
+        candidates: [],
+        scanned: 0,
+        skippedWithLocation: 0,
+        skippedWithoutTrack: 0,
+      );
+    }
+
+    // Only assets inside the recorded route can ever be interpolated. Searching
+    // the complete retention period made preview generation unnecessarily slow
+    // on larger Immich libraries.
+    final searchFrom = points.first.timestamp.toUtc();
+    final searchTo = points.last.timestamp.toUtc();
     final assets = await _immich.assetsTakenBetween(
       baseUrl: settings.immichUrl,
       apiKey: settings.apiKey,
-      from: from,
-      to: to,
+      from: searchFrom,
+      to: searchTo,
     );
-
-    if (points.length < 2) {
-      final existing = assets.where((asset) => asset.hasLocation).length;
-      return SyncPreview(
-        candidates: const [],
-        scanned: assets.length,
-        skippedWithLocation: existing,
-        skippedWithoutTrack: assets.length - existing,
-      );
-    }
 
     final candidates = <SyncCandidate>[];
     var existing = 0;
