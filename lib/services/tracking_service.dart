@@ -199,7 +199,7 @@ class TrackingService {
     if (_samplingTimer != null) return;
 
     final settings = await _settings.load();
-    final seconds = settings.trackingIntervalSeconds.clamp(15, 3600);
+    final seconds = settings.trackingIntervalSeconds.clamp(15, 3600).toInt();
 
     _samplingTimer = Timer.periodic(
       Duration(seconds: seconds),
