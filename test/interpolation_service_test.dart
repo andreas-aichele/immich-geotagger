@@ -30,6 +30,23 @@ void main() {
     expect(result, isNull);
   });
 
+  test('allows a long gap when both points are at nearly the same place', () {
+    final start = DateTime.utc(2026, 9, 19, 10, 0);
+    final result = service.interpolate(
+      timestamp: start.add(const Duration(minutes: 30)),
+      points: [
+        LocationPoint(timestamp: start, latitude: 48.400000, longitude: 10.950000),
+        LocationPoint(
+          timestamp: start.add(const Duration(hours: 1)),
+          latitude: 48.400100,
+          longitude: 10.950100,
+        ),
+      ],
+      maxGap: const Duration(minutes: 15),
+    );
+    expect(result, isNotNull);
+  });
+
   test('does not extrapolate outside the track', () {
     final start = DateTime.utc(2026, 9, 19, 10, 0);
     final result = service.interpolate(
