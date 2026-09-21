@@ -1,0 +1,1 @@
+Verbessert die F-Droid-Kompatibilität, indem Android-Abhängigkeitsmetadaten aus Release-Builds entfernt werden.
