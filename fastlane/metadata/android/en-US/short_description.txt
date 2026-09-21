@@ -1,0 +1,1 @@
+Add GPS locations to camera photos in Immich.
