@@ -65,7 +65,7 @@ The workflow is intentionally simple — GeoTagger stays out of the way of your 
    The app compares the capture time of photos without a location with your recorded location history.
 
 5. **Review the proposed matches.**  
-   Before anything is changed, GeoTagger shows a preview with Immich thumbnails, capture times, and the calculated coordinates. You can deselect individual photos or keep the full selection.
+   Before anything is changed, GeoTagger shows a preview with Immich thumbnails, capture times, and the proposed locations on an interactive **OpenStreetMap** map. You can inspect individual markers, deselect photos, or keep the full selection.
 
 6. **Apply only what you approve.**  
    Only the selected photos receive their calculated position and can then appear correctly on the Immich map.
@@ -90,7 +90,7 @@ Only photos without location information are considered for matching.
 
 Your location history is stored **on your phone**. You can choose how long GeoTagger should keep it before deleting old points automatically.
 
-On Android, GeoTagger uses the standard **AOSP LocationManager** through the open-source `libre_location` stack. It does **not require Google Play Services** for location tracking and is designed to work on de-Googled Android systems as well.
+On Android, GeoTagger uses the standard **AOSP LocationManager** through the open-source `libre_location` stack. It does **not require Google Play Services** for location tracking and is designed to work on de-Googled Android systems as well. Location previews use **OpenStreetMap** tiles through the open-source `flutter_map` package.
 
 GeoTagger does not require its own cloud service. When a photo is matched, only the calculated location is sent to **your own Immich server**.
 
