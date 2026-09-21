@@ -111,33 +111,40 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
         ),
         body: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-              child: _summaryCard(),
-            ),
-            TabBar(
-              tabs: [
-                Tab(
-                  icon: const Icon(Icons.map_outlined),
-                  text: l.t('syncTabMap'),
-                ),
-                Tab(
-                  icon: const Icon(Icons.photo_library_outlined),
-                  text: l.t(
-                    'syncTabAssignable',
-                    {'count': widget.preview.candidates.length},
+            Container(
+              color: Colors.white,
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                    child: _summaryCard(),
                   ),
-                ),
-                Tab(
-                  icon: const Icon(Icons.location_off_outlined),
-                  text: l.t(
-                    'syncTabUnmatched',
-                    {'count': widget.preview.unmatched.length},
+                  TabBar(
+                    labelPadding: EdgeInsets.zero,
+                    tabs: [
+                      Tab(
+                        height: 52,
+                        child: _tabLabel(l.t('syncTabMap')),
+                      ),
+                      Tab(
+                        height: 52,
+                        child: _tabLabel(
+                          l.t('syncAssignable'),
+                          count: widget.preview.candidates.length,
+                        ),
+                      ),
+                      Tab(
+                        height: 52,
+                        child: _tabLabel(
+                          l.t('syncUnmatched'),
+                          count: widget.preview.unmatched.length,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-            const Divider(height: 1),
             Expanded(
               child: TabBarView(
                 children: [
@@ -184,8 +191,8 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
   Widget _summaryCard() {
     final l = context.l10n;
 
-    return AppSurface(
-      padding: const EdgeInsets.all(14),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -247,6 +254,34 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _tabLabel(String label, {int? count}) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        if (count != null) ...[
+          const SizedBox(height: 2),
+          Text(
+            '$count',
+            style: const TextStyle(
+              fontSize: 11,
+              color: AppTheme.muted,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ],
     );
   }
 
@@ -336,75 +371,71 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
     final center = _centerOf(candidates);
     final zoom = _zoomFor(candidates);
 
-    return AppSurface(
-      padding: const EdgeInsets.all(12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(4, 4, 4, 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(2, 0, 2, 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l.t('mapOverview'),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                l.t('mapOverviewHint'),
+                style: const TextStyle(
+                  color: AppTheme.muted,
+                  fontSize: 13,
+                ),
+              ),
+            ],
+          ),
+        ),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: SizedBox(
+            height: 300,
+            child: FlutterMap(
+              options: MapOptions(
+                initialCenter: center,
+                initialZoom: zoom,
+                interactionOptions: const InteractionOptions(
+                  flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
+                ),
+              ),
               children: [
-                Text(
-                  l.t('mapOverview'),
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                  ),
+                _tileLayer(),
+                MarkerLayer(
+                  markers: [
+                    for (final candidate in candidates)
+                      Marker(
+                        point: LatLng(
+                          candidate.latitude,
+                          candidate.longitude,
+                        ),
+                        width: 42,
+                        height: 42,
+                        child: GestureDetector(
+                          onTap: () => _showCandidateMap(candidate),
+                          child: _mapMarker(
+                            selected: _selected.contains(candidate.asset.id),
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  l.t('mapOverviewHint'),
-                  style: const TextStyle(
-                    color: AppTheme.muted,
-                    fontSize: 13,
-                  ),
-                ),
+                _attribution(),
               ],
             ),
           ),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: SizedBox(
-              height: 270,
-              child: FlutterMap(
-                options: MapOptions(
-                  initialCenter: center,
-                  initialZoom: zoom,
-                  interactionOptions: const InteractionOptions(
-                    flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
-                  ),
-                ),
-                children: [
-                  _tileLayer(),
-                  MarkerLayer(
-                    markers: [
-                      for (final candidate in candidates)
-                        Marker(
-                          point: LatLng(
-                            candidate.latitude,
-                            candidate.longitude,
-                          ),
-                          width: 42,
-                          height: 42,
-                          child: GestureDetector(
-                            onTap: () => _showCandidateMap(candidate),
-                            child: _mapMarker(
-                              selected:
-                                  _selected.contains(candidate.asset.id),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                  _attribution(),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
