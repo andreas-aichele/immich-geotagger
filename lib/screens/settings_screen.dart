@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import '../services/immich_service.dart';
 import '../services/settings_service.dart';
+import '../services/tracking_service.dart';
 import '../theme/app_theme.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -21,10 +22,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final _maxGap = TextEditingController();
   final _settings = SettingsService();
   final _immich = ImmichService();
+  final _tracker = TrackingService();
 
   bool _loading = true;
   bool _testing = false;
   bool _testSuccess = false;
+  bool _batteryProtected = true;
+  bool _batteryBusy = false;
   String? _status;
 
   @override
@@ -50,7 +54,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _retention.text = value.retentionDays.toString();
     _interval.text = value.trackingIntervalSeconds.toString();
     _maxGap.text = value.maxInterpolationGapMinutes.toString();
-    if (mounted) setState(() => _loading = false);
+    final batteryProtected = await _tracker.isBatteryOptimizationIgnored();
+    if (mounted) {
+      setState(() {
+        _batteryProtected = batteryProtected;
+        _loading = false;
+      });
+    }
   }
 
   AppSettings _value() => AppSettings(
@@ -66,6 +76,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await _settings.save(_value());
     if (!mounted) return;
     setState(() => _status = context.l10n.t('settingsSaved'));
+  }
+
+  Future<void> _requestBatteryProtection() async {
+    setState(() => _batteryBusy = true);
+    final protected =
+        await _tracker.requestBatteryOptimizationExemption();
+    if (!mounted) return;
+    setState(() {
+      _batteryProtected = protected;
+      _batteryBusy = false;
+    });
   }
 
   Future<void> _test() async {
@@ -243,6 +264,58 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           keyboardType: TextInputType.number,
                           validator: _positiveInt,
                         ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  AppSurface(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SectionEyebrow(l.t('batteryProtection')),
+                        const SizedBox(height: 8),
+                        Text(
+                          l.t('batteryProtection'),
+                          style: const TextStyle(
+                            fontSize: 21,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          l.t('batteryProtectionDesc'),
+                          style: const TextStyle(
+                            color: Color(0xFF686873),
+                            height: 1.45,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        _StatusBox(
+                          text: _batteryProtected
+                              ? l.t('batteryProtected')
+                              : l.t('batteryRestricted'),
+                          success: _batteryProtected,
+                        ),
+                        if (!_batteryProtected) ...[
+                          const SizedBox(height: 14),
+                          OutlinedButton.icon(
+                            onPressed: _batteryBusy
+                                ? null
+                                : _requestBatteryProtection,
+                            icon: _batteryBusy
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Icon(Icons.battery_saver_outlined),
+                            label: Text(
+                              l.t('allowUnrestrictedBattery'),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),
