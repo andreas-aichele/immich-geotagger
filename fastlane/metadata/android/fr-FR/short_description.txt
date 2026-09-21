@@ -1,0 +1,1 @@
+Ajoutez une position GPS aux photos de votre appareil dans Immich.
