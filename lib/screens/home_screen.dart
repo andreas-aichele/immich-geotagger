@@ -395,8 +395,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SectionEyebrow(l.t('immich')),
-          const SizedBox(height: 10),
           Text(
             l.t('matchSync'),
             style: const TextStyle(
