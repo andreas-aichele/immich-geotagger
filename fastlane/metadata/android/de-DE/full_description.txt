@@ -1,0 +1,9 @@
+Immich GeoTagger ergänzt Standortinformationen bei Fotos von Kameras ohne GPS.
+
+Starte das Tracking vor dem Fotografieren, nimm dein Smartphone mit und importiere die Bilder anschließend wie gewohnt in Immich. GeoTagger vergleicht die Aufnahmezeit der Fotos mit deinem aufgezeichneten Standortverlauf, berechnet einen passenden Standort und zeigt vor jeder Änderung eine Vorschau.
+
+Du kannst Thumbnails prüfen, einzelne Bilder abwählen und nur die gewünschten Standorte übernehmen. Fotos mit bereits vorhandenen GPS-Daten bleiben unverändert.
+
+Wichtig: Kamera und Smartphone müssen dieselbe Uhrzeit und Zeitzone verwenden, damit die Zuordnung korrekt funktioniert.
+
+Die Standortaufzeichnung erfolgt lokal auf deinem Gerät. Unter Android wird der freie AOSP LocationManager verwendet; Google Play Services werden nicht benötigt.
