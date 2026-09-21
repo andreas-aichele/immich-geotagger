@@ -310,6 +310,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> with WidgetsBinding
                 title: l.t('existingGpsPreserved'),
                 subtitle: l.t('existingGpsPreservedDesc'),
               ),
+              const SizedBox(height: 18),
+              _FeatureRow(
+                icon: Icons.schedule_rounded,
+                title: l.t('cameraTimeTipTitle'),
+                subtitle: l.t('cameraTimeTipBody'),
+              ),
             ],
           ),
         ),
