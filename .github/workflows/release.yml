@@ -58,17 +58,31 @@ jobs:
         id: version
         shell: bash
         run: |
-          TAG="${GITHUB_REF_NAME}"
           if [[ "${GITHUB_REF_TYPE}" != "tag" ]]; then
-            TAG="v0.0.0-dev"
+            echo "name=0.0.0-dev" >> "$GITHUB_OUTPUT"
+            echo "code=1" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
-          echo "name=${TAG#v}" >> "$GITHUB_OUTPUT"
+
+          VERSION="${GITHUB_REF_NAME#v}"
+          if [[ ! "$VERSION" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+            echo "::error::Release tags must use vMAJOR.MINOR.PATCH, for example v0.1.2."
+            exit 1
+          fi
+
+          MAJOR="${BASH_REMATCH[1]}"
+          MINOR="${BASH_REMATCH[2]}"
+          PATCH="${BASH_REMATCH[3]}"
+          CODE=$((10#$MAJOR * 1000000 + 10#$MINOR * 1000 + 10#$PATCH))
+
+          echo "name=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "code=$CODE" >> "$GITHUB_OUTPUT"
 
       - name: Build APK
-        run: flutter build apk --release --build-name="${{ steps.version.outputs.name }}" --build-number="${{ github.run_number }}"
+        run: flutter build apk --release --build-name="${{ steps.version.outputs.name }}" --build-number="${{ steps.version.outputs.code }}"
 
       - name: Build AAB
-        run: flutter build appbundle --release --build-name="${{ steps.version.outputs.name }}" --build-number="${{ github.run_number }}"
+        run: flutter build appbundle --release --build-name="${{ steps.version.outputs.name }}" --build-number="${{ steps.version.outputs.code }}"
 
       - name: Prepare Android artifacts
         shell: bash
@@ -107,14 +121,28 @@ jobs:
         id: version
         shell: bash
         run: |
-          TAG="${GITHUB_REF_NAME}"
           if [[ "${GITHUB_REF_TYPE}" != "tag" ]]; then
-            TAG="v0.0.0-dev"
+            echo "name=0.0.0-dev" >> "$GITHUB_OUTPUT"
+            echo "code=1" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
-          echo "name=${TAG#v}" >> "$GITHUB_OUTPUT"
+
+          VERSION="${GITHUB_REF_NAME#v}"
+          if [[ ! "$VERSION" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+            echo "::error::Release tags must use vMAJOR.MINOR.PATCH, for example v0.1.2."
+            exit 1
+          fi
+
+          MAJOR="${BASH_REMATCH[1]}"
+          MINOR="${BASH_REMATCH[2]}"
+          PATCH="${BASH_REMATCH[3]}"
+          CODE=$((10#$MAJOR * 1000000 + 10#$MINOR * 1000 + 10#$PATCH))
+
+          echo "name=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "code=$CODE" >> "$GITHUB_OUTPUT"
 
       - name: Build unsigned iOS app
-        run: flutter build ios --release --no-codesign --build-name="${{ steps.version.outputs.name }}" --build-number="${{ github.run_number }}"
+        run: flutter build ios --release --no-codesign --build-name="${{ steps.version.outputs.name }}" --build-number="${{ steps.version.outputs.code }}"
 
       - name: Package unsigned IPA
         shell: bash
