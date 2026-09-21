@@ -128,7 +128,7 @@ class TrackingService {
         accuracy: LocationAccuracy.NAVIGATION,
         interval: settings.trackingIntervalSeconds,
         distanceFilter: 0,
-        client: LocationClient.google,
+        client: LocationClient.android,
         wakeLockTime: 60,
         androidNotificationSettings: AndroidNotificationSettings(
           notificationChannelName: notification.channel,
