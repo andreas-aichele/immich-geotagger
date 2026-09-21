@@ -1,0 +1,1 @@
+Voeg GPS-locaties toe aan camerafoto’s in Immich.
