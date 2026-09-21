@@ -349,7 +349,7 @@ class _ScopeChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
-        color: const AppTheme.primarySoft,
+        color: AppTheme.primarySoft,
         borderRadius: BorderRadius.circular(10),
       ),
       child: Text(
