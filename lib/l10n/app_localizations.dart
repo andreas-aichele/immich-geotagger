@@ -135,6 +135,8 @@ class AppLocalizations {
       'showOnMap': 'Show on map',
       'proposedLocation': 'Proposed photo location',
       'noPhotosUpdated': 'No photos updated yet.',
+      'locationAlreadyApplied': 'Location already applied',
+      'appliedLocation': 'Applied photo location',
     },
     'de': {
       'appName': 'Immich GeoTagger',
@@ -250,6 +252,8 @@ class AppLocalizations {
       'showOnMap': 'Auf Karte anzeigen',
       'proposedLocation': 'Vorgeschlagener Fotostandort',
       'noPhotosUpdated': 'Noch keine Fotos aktualisiert.',
+      'locationAlreadyApplied': 'Standort bereits übernommen',
+      'appliedLocation': 'Übernommener Fotostandort',
     },
     'fr': {
       'appName': 'Immich GeoTagger',
@@ -364,6 +368,8 @@ class AppLocalizations {
       'showOnMap': 'Afficher sur la carte',
       'proposedLocation': 'Position proposée de la photo',
       'noPhotosUpdated': 'Aucune photo mise à jour pour le moment.',
+      'locationAlreadyApplied': 'Position déjà appliquée',
+      'appliedLocation': 'Position appliquée à la photo',
     },
     'es': {
       'appName': 'Immich GeoTagger',
@@ -479,6 +485,8 @@ class AppLocalizations {
       'showOnMap': 'Mostrar en el mapa',
       'proposedLocation': 'Ubicación propuesta de la foto',
       'noPhotosUpdated': 'Todavía no se ha actualizado ninguna foto.',
+      'locationAlreadyApplied': 'Ubicación ya aplicada',
+      'appliedLocation': 'Ubicación aplicada a la foto',
     },
     'nl': {
       'appName': 'Immich GeoTagger',
@@ -594,6 +602,8 @@ class AppLocalizations {
       'showOnMap': 'Op kaart tonen',
       'proposedLocation': 'Voorgestelde fotolocatie',
       'noPhotosUpdated': 'Nog geen foto’s bijgewerkt.',
+      'locationAlreadyApplied': 'Locatie al toegepast',
+      'appliedLocation': 'Toegepaste fotolocatie',
     },
   };
 
