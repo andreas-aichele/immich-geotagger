@@ -648,4 +648,3 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
     );
   }
 }
-}
