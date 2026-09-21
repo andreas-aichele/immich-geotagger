@@ -47,4 +47,12 @@ Localized Fastlane metadata and changelogs are included for:
 - Spanish
 - Dutch
 
-Screenshots and a PNG store icon can be added upstream as follow-up store metadata. They are not part of the build recipe itself.
+Store graphics are included upstream in the Fastlane metadata:
+
+```text
+fastlane/metadata/android/en-US/images/icon.png
+fastlane/metadata/android/en-US/images/phoneScreenshots/1.jpg
+fastlane/metadata/android/en-US/images/phoneScreenshots/2.jpg
+```
+
+`en-US` is F-Droid's fallback locale, so these graphics are available even when a localized text description is selected. The current screenshots show the active tracking dashboard and the location review workflow before photos are updated.
