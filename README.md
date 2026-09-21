@@ -112,6 +112,10 @@ The core workflow is already implemented: recording a location timeline, safely 
 
 If you find a problem or have an idea for an improvement, feel free to open an issue.
 
+## Development
+
+For local setup and the shared GitHub/local workflow, see [Platform setup](docs/PLATFORM_SETUP.md).
+
 ## License
 
 Immich GeoTagger is open source and available under the **MIT License**.

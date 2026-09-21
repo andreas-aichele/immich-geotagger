@@ -6,7 +6,9 @@ build/
 .vscode/
 .flutter-plugins
 .flutter-plugins-dependencies
-.metadata
+# iOS is still generated during setup and release builds.
+/ios/
+/devtools_options.yaml
 android/.gradle/
 ios/Pods/
 ios/.symlinks/

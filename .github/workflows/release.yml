@@ -21,17 +21,6 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Generate Android runner
-        run: |
-          flutter create --platforms=android .
-          rm -f test/widget_test.dart
-
-      - name: Configure platform permissions
-        run: python3 tool/configure_platforms.py
-
-      - name: Configure Android signing
-        run: python3 tool/configure_android_signing.py
-
       - name: Restore Android signing key
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
