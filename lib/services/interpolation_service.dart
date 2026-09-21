@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import '../models/location_point.dart';
 
 class InterpolationResult {
@@ -33,7 +35,12 @@ class InterpolationService {
 
       if (target.isBefore(at) || target.isAfter(bt)) continue;
       final gap = bt.difference(at);
-      if (gap <= Duration.zero || gap > maxGap) return null;
+      if (gap <= Duration.zero) return null;
+
+      // Balanced background tracking may intentionally produce sparse points
+      // while the device is stationary. A long time gap is still safe when
+      // both measurements are effectively at the same place.
+      if (gap > maxGap && _distanceMeters(a, b) > 50) return null;
 
       final elapsedMs = target.difference(at).inMilliseconds;
       final ratio = elapsedMs / gap.inMilliseconds;
@@ -46,5 +53,21 @@ class InterpolationService {
       );
     }
     return null;
+  }
+
+  double _distanceMeters(LocationPoint a, LocationPoint b) {
+    const earthRadius = 6371000.0;
+    final phi1 = a.latitude * math.pi / 180;
+    final phi2 = b.latitude * math.pi / 180;
+    final deltaPhi = (b.latitude - a.latitude) * math.pi / 180;
+    final deltaLambda = (b.longitude - a.longitude) * math.pi / 180;
+
+    final h = math.sin(deltaPhi / 2) * math.sin(deltaPhi / 2) +
+        math.cos(phi1) *
+            math.cos(phi2) *
+            math.sin(deltaLambda / 2) *
+            math.sin(deltaLambda / 2);
+    final angle = 2 * math.atan2(math.sqrt(h), math.sqrt(1 - h));
+    return earthRadius * angle;
   }
 }
