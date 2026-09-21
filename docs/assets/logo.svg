@@ -1,10 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="900" height="220" viewBox="0 0 900 220" role="img" aria-labelledby="title desc">
   <title id="title">Immich GeoTagger</title>
   <desc id="desc">Immich GeoTagger logo with a location pin and photo motif.</desc>
-  <rect x="20" y="20" width="180" height="180" rx="38" fill="#4250AF"/>
+  <rect x="20" y="20" width="180" height="180" rx="38" fill="#1E83F7"/>
   <path d="M110 56c-28 0-50 22-50 50 0 37 50 86 50 86s50-49 50-86c0-28-22-50-50-50z" fill="#FFFFFF"/>
-  <circle cx="110" cy="106" r="20" fill="#4250AF"/>
-  <path d="M62 150l27-25 18 15 16-14 34 31H62z" fill="#DDE0F0"/>
+  <circle cx="110" cy="106" r="20" fill="#1E83F7"/>
+  <path d="M62 150l27-25 18 15 16-14 34 31H62z" fill="#DCEEFF"/>
   <text x="240" y="102" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="64" font-weight="700" fill="#333333">Immich GeoTagger</text>
   <text x="244" y="151" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="28" font-weight="500" fill="#737373">GPS for cameras without GPS</text>
 </svg>
