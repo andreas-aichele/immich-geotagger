@@ -59,6 +59,8 @@ The workflow is intentionally simple — GeoTagger stays out of the way of your 
 3. **Import the photos into Immich.**  
    Your normal photo workflow does not change.
 
+> **Important:** Before taking photos, make sure your **camera and phone use the same time and the same time zone**. GeoTagger matches photos to your recorded route using the capture timestamp. Even a small clock difference can assign a photo to the wrong place.
+
 4. **Let GeoTagger match the photos.**  
    The app compares the capture time of photos without a location with your recorded location history.
 
@@ -92,7 +94,7 @@ GeoTagger does not require its own cloud service. When a photo is matched, only 
 - an Android phone or iPhone
 - your own Immich installation
 - an Immich API key
-- a camera whose clock is set correctly
+- a camera whose **clock and time zone match your phone**
 
 During the first start, GeoTagger guides you through the required location permission and Immich connection.
 
@@ -108,7 +110,7 @@ GeoTagger automatically uses the language configured on your device. Unsupported
 
 Immich GeoTagger is a young open-source project and is still being actively developed.
 
-The core workflow is already implemented: recording a location timeline, safely matching photos by capture time, preserving existing GPS data, and applying new locations to Immich.
+The core workflow is already implemented: recording a location timeline, safely matching photos by capture time, previewing proposed location updates with thumbnails, selecting which photos should be changed, preserving existing GPS data, and applying confirmed locations to Immich.
 
 If you find a problem or have an idea for an improvement, feel free to open an issue.
 
