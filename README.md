@@ -64,8 +64,11 @@ The workflow is intentionally simple — GeoTagger stays out of the way of your 
 4. **Let GeoTagger match the photos.**  
    The app compares the capture time of photos without a location with your recorded location history.
 
-5. **The location is added to Immich.**  
-   Matching photos receive their calculated position and can then appear correctly on the Immich map.
+5. **Review the proposed matches.**  
+   Before anything is changed, GeoTagger shows a preview with Immich thumbnails, capture times, and the calculated coordinates. You can deselect individual photos or keep the full selection.
+
+6. **Apply only what you approve.**  
+   Only the selected photos receive their calculated position and can then appear correctly on the Immich map.
 
 ### What if a photo was taken between two recorded locations?
 
@@ -83,9 +86,11 @@ GeoTagger is designed to complement the location data already in your photo libr
 
 Only photos without location information are considered for matching.
 
-## Privacy
+## Privacy and Google-free tracking
 
 Your location history is stored **on your phone**. You can choose how long GeoTagger should keep it before deleting old points automatically.
+
+On Android, GeoTagger uses the standard **AOSP LocationManager** through the open-source `libre_location` stack. It does **not require Google Play Services** for location tracking and is designed to work on de-Googled Android systems as well.
 
 GeoTagger does not require its own cloud service. When a photo is matched, only the calculated location is sent to **your own Immich server**.
 
@@ -105,6 +110,10 @@ The app currently supports:
 **English · Deutsch · Français · Español · Nederlands**
 
 GeoTagger automatically uses the language configured on your device. Unsupported languages fall back to English.
+
+## F-Droid
+
+The Android codebase is prepared for F-Droid: the application uses a stable package ID, includes localized Fastlane/F-Droid metadata, and does not depend on Google Play Services for location tracking. Submission to the official F-Droid repository is still pending.
 
 ## Current status
 
