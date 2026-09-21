@@ -156,7 +156,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           height: 46,
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.primary,
-            borderRadius: BorderRadius.circular(15),
+            borderRadius: BorderRadius.circular(12),
           ),
           child: const Icon(Icons.location_on_rounded, color: Colors.white),
         ),
@@ -168,15 +168,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               Text(
                 l.t('appName'),
                 style: const TextStyle(
-                  fontSize: 21,
-                  fontWeight: FontWeight.w800,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
               const SizedBox(height: 2),
               Text(
                 l.t('appSubtitle'),
                 style: const TextStyle(
-                  color: Color(0xFF73737D),
+                  color: AppTheme.muted,
                   fontSize: 13,
                 ),
               ),
@@ -196,24 +196,20 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   Widget _trackingHero(BuildContext context) {
     final l = context.l10n;
+    final primary = Theme.of(context).colorScheme.primary;
+    final foreground = _tracking ? Colors.white : AppTheme.ink;
+    final secondary = _tracking
+        ? Colors.white.withValues(alpha: 0.78)
+        : AppTheme.muted;
+
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: _tracking
-              ? const [Color(0xFF4E4ECD), Color(0xFF7777E8)]
-              : const [Color(0xFF20202B), Color(0xFF363646)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+        color: _tracking ? primary : AppTheme.primarySoft,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: _tracking ? primary : const Color(0xFFDDE0F0),
         ),
-        borderRadius: BorderRadius.circular(28),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x1A20202B),
-            blurRadius: 24,
-            offset: Offset(0, 12),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -224,23 +220,24 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               const Spacer(),
               Text(
                 l.t('points', {'count': _points}),
-                style: const TextStyle(
-                  color: Color(0xFFD8D8E3),
+                style: TextStyle(
+                  color: secondary,
+                  fontSize: 13,
                   fontWeight: FontWeight.w600,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 30),
+          const SizedBox(height: 28),
           Text(
             _tracking
                 ? l.t('trackingHeroActive')
                 : l.t('trackingHeroStopped'),
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 28,
-              height: 1.1,
-              fontWeight: FontWeight.w800,
+            style: TextStyle(
+              color: foreground,
+              fontSize: 27,
+              height: 1.12,
+              fontWeight: FontWeight.w700,
             ),
           ),
           const SizedBox(height: 10),
@@ -248,19 +245,19 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             _tracking
                 ? l.t('trackingHeroActiveDesc')
                 : l.t('trackingHeroStoppedDesc'),
-            style: const TextStyle(
-              color: Color(0xFFD1D1DC),
+            style: TextStyle(
+              color: secondary,
               fontSize: 15,
               height: 1.45,
             ),
           ),
-          const SizedBox(height: 26),
+          const SizedBox(height: 24),
           SizedBox(
             width: double.infinity,
             child: FilledButton.icon(
               style: FilledButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: const Color(0xFF262632),
+                backgroundColor: _tracking ? Colors.white : primary,
+                foregroundColor: _tracking ? primary : Colors.white,
               ),
               onPressed: _busy ? null : _toggleTracking,
               icon: Icon(
@@ -287,15 +284,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           Text(
             l.t('matchSync'),
             style: const TextStyle(
-              fontSize: 23,
-              fontWeight: FontWeight.w800,
+              fontSize: 21,
+              fontWeight: FontWeight.w700,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             l.t('matchSyncDesc'),
             style: const TextStyle(
-              color: Color(0xFF686873),
+              color: AppTheme.muted,
               height: 1.45,
             ),
           ),
@@ -304,8 +301,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: const Color(0xFFF1F1F7),
-                borderRadius: BorderRadius.circular(16),
+                color: AppTheme.primarySoft,
+                borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
                 children: [
@@ -386,12 +383,21 @@ class _StatusPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
+    final primary = Theme.of(context).colorScheme.primary;
+    final foreground = active ? Colors.white : primary;
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.12),
+        color: active
+            ? Colors.white.withValues(alpha: 0.14)
+            : Colors.white.withValues(alpha: 0.72),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+        border: Border.all(
+          color: active
+              ? Colors.white.withValues(alpha: 0.18)
+              : const Color(0xFFD7DAEC),
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -400,17 +406,15 @@ class _StatusPill extends StatelessWidget {
             width: 8,
             height: 8,
             decoration: BoxDecoration(
-              color: active
-                  ? const Color(0xFF75E5AA)
-                  : const Color(0xFFB9B9C6),
+              color: active ? const Color(0xFF7ED9A7) : primary,
               shape: BoxShape.circle,
             ),
           ),
           const SizedBox(width: 8),
           Text(
             active ? l.t('trackingActive') : l.t('trackingStopped'),
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: foreground,
               fontSize: 13,
               fontWeight: FontWeight.w700,
             ),
