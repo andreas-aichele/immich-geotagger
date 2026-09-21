@@ -168,6 +168,8 @@ Future<void> showPhotoLocationSheet(
                     options: MapOptions(
                       initialCenter: point,
                       initialZoom: 16,
+                      minZoom: 2,
+                      maxZoom: 19,
                       interactionOptions: const InteractionOptions(
                         flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
                       ),
@@ -176,7 +178,11 @@ Future<void> showPhotoLocationSheet(
                       TileLayer(
                         urlTemplate: tileUrl,
                         userAgentPackageName: userAgent,
+                        minZoom: 2,
+                        maxZoom: 19,
+                        minNativeZoom: 0,
                         maxNativeZoom: 19,
+                        keepBuffer: 4,
                       ),
                       MarkerLayer(
                         markers: [
