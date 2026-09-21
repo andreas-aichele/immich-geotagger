@@ -1,0 +1,1 @@
+Première version stable d’Immich GeoTagger. Inclut le suivi de localisation adaptatif en arrière-plan, la synchronisation Immich avec aperçu et sélection, la vérification sur carte, une interface multilingue et un suivi Android sans Google Play Services.
