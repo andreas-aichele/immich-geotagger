@@ -133,7 +133,6 @@ class TrackingService {
       return;
     }
 
-    final settings = await _settings.load();
     final notification = _notificationCopy();
 
     await LibreLocation.start(
