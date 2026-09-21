@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
 
@@ -114,6 +115,25 @@ class ImmichService {
     }
 
     return assets;
+  }
+
+  Future<Uint8List> thumbnail({
+    required String baseUrl,
+    required String apiKey,
+    required String assetId,
+  }) async {
+    final response = await _client.get(
+      _uri(baseUrl, '/assets/$assetId/thumbnail?size=thumbnail'),
+      headers: _headers(apiKey),
+    );
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw StateError(
+        'Loading thumbnail for asset $assetId failed with HTTP ${response.statusCode}.',
+      );
+    }
+
+    return response.bodyBytes;
   }
 
   Future<void> updateLocation({
