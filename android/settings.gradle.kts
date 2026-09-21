@@ -15,6 +15,13 @@ pluginManagement {
         mavenCentral()
         gradlePluginPortal()
     }
+
+    // maplibre_android 0.3.6 currently applies the ktlint plugin without
+    // declaring a version. Supplying it here keeps consumer builds working
+    // until the upstream package fixes its Android Gradle configuration.
+    plugins {
+        id("org.jlleitschuh.gradle.ktlint") version "14.2.0"
+    }
 }
 
 plugins {
