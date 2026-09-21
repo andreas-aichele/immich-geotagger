@@ -48,15 +48,38 @@ class SettingsService {
   }
 
   Future<void> save(AppSettings settings) async {
+    await saveConnection(
+      immichUrl: settings.immichUrl,
+      apiKey: settings.apiKey,
+    );
+    await saveTrackingPreferences(
+      retentionDays: settings.retentionDays,
+      trackingQuality: settings.trackingQuality,
+      maxInterpolationGapMinutes: settings.maxInterpolationGapMinutes,
+    );
+  }
+
+  Future<void> saveConnection({
+    required String immichUrl,
+    required String apiKey,
+  }) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('immich_url', settings.immichUrl.trim());
-    await prefs.setInt('retention_days', settings.retentionDays);
-    await prefs.setString(_trackingQuality, settings.trackingQuality.name);
+    await prefs.setString('immich_url', immichUrl.trim());
+    await _secure.write(key: _apiKey, value: apiKey.trim());
+  }
+
+  Future<void> saveTrackingPreferences({
+    required int retentionDays,
+    required TrackingQuality trackingQuality,
+    required int maxInterpolationGapMinutes,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('retention_days', retentionDays);
+    await prefs.setString(_trackingQuality, trackingQuality.name);
     await prefs.setInt(
       'max_interpolation_gap_minutes',
-      settings.maxInterpolationGapMinutes,
+      maxInterpolationGapMinutes,
     );
-    await _secure.write(key: _apiKey, value: settings.apiKey.trim());
   }
 
   Future<bool> isOnboardingComplete() async {
