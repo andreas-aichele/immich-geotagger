@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
@@ -27,6 +29,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   int _points = 0;
   SyncResult? _lastSync;
   String? _error;
+  Timer? _statsTimer;
 
   @override
   void initState() {
@@ -34,10 +37,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     _refreshStats();
     _restoreTracking();
+    _statsTimer = Timer.periodic(
+      const Duration(seconds: 15),
+      (_) => _refreshStats(),
+    );
   }
 
   @override
   void dispose() {
+    _statsTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
