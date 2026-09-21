@@ -360,6 +360,8 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
+                  _reliabilityChip(candidate.reliability),
+                  const SizedBox(height: 4),
                   TextButton.icon(
                     onPressed: () => _showCandidateMap(candidate),
                     style: TextButton.styleFrom(
@@ -385,6 +387,43 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
               },
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _reliabilityChip(MatchReliability reliability) {
+    final l = context.l10n;
+    final (label, color, background) = switch (reliability) {
+      MatchReliability.high => (
+          l.t('reliabilityHigh'),
+          const Color(0xFF157A4A),
+          const Color(0xFFEAF7F0),
+        ),
+      MatchReliability.medium => (
+          l.t('reliabilityMedium'),
+          const Color(0xFF9A6700),
+          const Color(0xFFFFF6DD),
+        ),
+      MatchReliability.low => (
+          l.t('reliabilityLow'),
+          const Color(0xFFA13A2E),
+          const Color(0xFFFFECE9),
+        ),
+    };
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        l.t('reliabilityLabel', {'value': label}),
+        style: TextStyle(
+          color: color,
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
         ),
       ),
     );
