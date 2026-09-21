@@ -14,12 +14,16 @@ class PhotoThumbnail extends StatelessWidget {
     required this.assetId,
     required this.loader,
     this.size = 84,
+    this.isVideo = false,
+    this.duration,
     super.key,
   });
 
   final String assetId;
   final ThumbnailLoader? loader;
   final double size;
+  final bool isVideo;
+  final Duration? duration;
 
   @override
   Widget build(BuildContext context) {
@@ -40,12 +44,52 @@ class PhotoThumbnail extends StatelessWidget {
         if (snapshot.hasData) {
           return ClipRRect(
             borderRadius: BorderRadius.circular(12),
-            child: Image.memory(
-              snapshot.data!,
-              width: size,
-              height: size,
-              fit: BoxFit.cover,
-              gaplessPlayback: true,
+            child: Stack(
+              children: [
+                Image.memory(
+                  snapshot.data!,
+                  width: size,
+                  height: size,
+                  fit: BoxFit.cover,
+                  gaplessPlayback: true,
+                ),
+                if (isVideo)
+                  Positioned(
+                    left: 6,
+                    bottom: 6,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xCC000000),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.play_arrow_rounded,
+                            color: Colors.white,
+                            size: 14,
+                          ),
+                          if (duration != null) ...[
+                            const SizedBox(width: 2),
+                            Text(
+                              _formatDuration(duration!),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
             ),
           );
         }
@@ -70,6 +114,16 @@ class PhotoThumbnail extends StatelessWidget {
     );
   }
 
+  String _formatDuration(Duration value) {
+    final hours = value.inHours;
+    final minutes = value.inMinutes.remainder(60);
+    final seconds = value.inSeconds.remainder(60);
+    if (hours > 0) {
+      return '$hours:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+    }
+    return '$minutes:${seconds.toString().padLeft(2, '0')}';
+  }
+
   Widget _placeholder(Widget child) {
     return Container(
       width: size,
@@ -92,6 +146,8 @@ Future<void> showPhotoLocationSheet(
   required double longitude,
   required String subtitle,
   required ThumbnailLoader? thumbnailLoader,
+  bool isVideo = false,
+  Duration? duration,
 }) async {
   const mapStyle = 'https://tiles.openfreemap.org/styles/liberty';
   final point = LatLng(latitude, longitude);
@@ -126,6 +182,8 @@ Future<void> showPhotoLocationSheet(
                     assetId: assetId,
                     loader: thumbnailLoader,
                     size: 58,
+                    isVideo: isVideo,
+                    duration: duration,
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -239,7 +297,7 @@ class PhotoLocationMarker extends StatelessWidget {
         ],
       ),
       child: const Icon(
-        Icons.photo_camera_outlined,
+        Icons.perm_media_outlined,
         color: Colors.white,
         size: 20,
       ),
