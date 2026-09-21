@@ -439,16 +439,19 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             ),
           ],
           const SizedBox(height: 22),
-          FilledButton.icon(
-            onPressed: _syncBusy ? null : _runSync,
-            icon: _syncBusy
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.sync_rounded),
-            label: Text(l.t('syncWithImmich')),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: _syncBusy ? null : _runSync,
+              icon: _syncBusy
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.sync_rounded),
+              label: Text(l.t('syncWithImmich')),
+            ),
           ),
           const SizedBox(height: 8),
           TextButton.icon(
