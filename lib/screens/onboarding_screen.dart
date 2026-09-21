@@ -14,7 +14,7 @@ class OnboardingScreen extends StatefulWidget {
   State<OnboardingScreen> createState() => _OnboardingScreenState();
 }
 
-class _OnboardingScreenState extends State<OnboardingScreen> {
+class _OnboardingScreenState extends State<OnboardingScreen> with WidgetsBindingObserver {
   final _controller = PageController();
   final _settings = SettingsService();
   final _tracker = TrackingService();
@@ -25,12 +25,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   int _page = 0;
   bool _permissionBusy = false;
   bool _permissionReady = false;
+  bool _foregroundReady = false;
+  bool _needsBackgroundSettings = false;
   bool _testBusy = false;
   bool _connectionReady = false;
   String? _message;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _controller.dispose();
     _url.dispose();
     _key.dispose();
@@ -44,28 +53,73 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed &&
+        _foregroundReady &&
+        !_permissionReady) {
+      _checkBackgroundPermission();
+    }
+  }
+
   Future<void> _requestPermissions() async {
     setState(() {
       _permissionBusy = true;
       _message = null;
     });
+
     try {
-      await _tracker.requestRequiredPermissions();
-      final batteryProtected =
-          await _tracker.requestBatteryOptimizationExemption();
+      final foreground =
+          await _tracker.requestForegroundLocationPermission();
       if (!mounted) return;
-      setState(() {
-        _permissionReady = true;
-        _message = batteryProtected
-            ? context.l10n.t('permissionReady')
-            : context.l10n.t('batteryRestricted');
-      });
+
+      if (!foreground) {
+        setState(() {
+          _foregroundReady = false;
+          _message = context.l10n.t('foregroundLocationDenied');
+        });
+        return;
+      }
+
+      _foregroundReady = true;
+      await _checkBackgroundPermission();
     } catch (e) {
       if (!mounted) return;
       setState(() => _message = e.toString().replaceFirst('Bad state: ', ''));
     } finally {
       if (mounted) setState(() => _permissionBusy = false);
     }
+  }
+
+  Future<void> _checkBackgroundPermission() async {
+    final backgroundGranted =
+        await _tracker.isBackgroundLocationGranted();
+    if (!mounted) return;
+
+    if (!backgroundGranted) {
+      setState(() {
+        _needsBackgroundSettings = true;
+        _permissionReady = false;
+        _message = context.l10n.t('backgroundSettingsInstruction');
+      });
+      return;
+    }
+
+    final batteryProtected =
+        await _tracker.requestBatteryOptimizationExemption();
+    if (!mounted) return;
+
+    setState(() {
+      _needsBackgroundSettings = false;
+      _permissionReady = true;
+      _message = batteryProtected
+          ? context.l10n.t('permissionReady')
+          : context.l10n.t('batteryRestricted');
+    });
+  }
+
+  Future<void> _openBackgroundSettings() async {
+    await _tracker.openSystemSettings();
   }
 
   Future<void> _testConnection() async {
@@ -308,25 +362,42 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         ),
         const SizedBox(height: 20),
         FilledButton.icon(
-          onPressed: _permissionBusy ? null : _requestPermissions,
+          onPressed: _permissionBusy
+              ? null
+              : (_needsBackgroundSettings
+                  ? _openBackgroundSettings
+                  : _requestPermissions),
           icon: _permissionBusy
               ? const SizedBox(
                   width: 18,
                   height: 18,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Icon(Icons.lock_open_rounded),
+              : Icon(
+                  _needsBackgroundSettings
+                      ? Icons.settings_outlined
+                      : Icons.lock_open_rounded,
+                ),
           label: Text(
             _permissionReady
                 ? l.t('permissionGranted')
-                : l.t('allowLocationAccess'),
+                : (_needsBackgroundSettings
+                    ? l.t('openLocationSettings')
+                    : l.t('allowLocationAccess')),
           ),
         ),
-        if (!_permissionReady)
-          TextButton(
-            onPressed: _tracker.openSystemSettings,
-            child: Text(l.t('openAppSettings')),
+        if (_needsBackgroundSettings) ...[
+          const SizedBox(height: 8),
+          Text(
+            l.t('backgroundSettingsHint'),
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: AppTheme.muted,
+              fontSize: 13,
+              height: 1.4,
+            ),
           ),
+        ],
         const SizedBox(height: 8),
         FilledButton.tonal(
           onPressed: _permissionReady ? _next : null,
