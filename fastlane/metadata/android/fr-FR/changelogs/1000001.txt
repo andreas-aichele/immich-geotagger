@@ -1,0 +1,1 @@
+Ajoute les métadonnées F-Droid, l’icône de l’application et des captures d’écran pour la fiche publique.
