@@ -157,14 +157,14 @@ class TrackingService {
     }
   }
 
-  Future<Position?> captureCurrentPoint() async {
+  Future<Position?> captureCurrentPoint({int timeoutSeconds = 20}) async {
     await initialize();
 
     try {
       final position = await LibreLocation.getCurrentPosition(
         accuracy: Accuracy.high,
         samples: 1,
-        timeout: 20,
+        timeout: timeoutSeconds,
         maximumAge: 30,
         persist: false,
       );
