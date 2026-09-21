@@ -299,47 +299,92 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Widget _cameraClockTip(BuildContext context) {
     final l = context.l10n;
     return AppSurface(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: AppTheme.primarySoft,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(
-              Icons.schedule_rounded,
-              color: AppTheme.primary,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l.t('cameraTimeTipTitle'),
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                  ),
+      padding: EdgeInsets.zero,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: () => _showCameraClockSheet(context),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+          child: Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: AppTheme.primarySoft,
+                  borderRadius: BorderRadius.circular(11),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  l.t('cameraTimeTipBody'),
-                  style: const TextStyle(
-                    color: AppTheme.muted,
-                    height: 1.4,
-                    fontSize: 13,
-                  ),
+                child: const Icon(
+                  Icons.schedule_rounded,
+                  color: AppTheme.primary,
+                  size: 21,
                 ),
-                const SizedBox(height: 12),
-                const _PhoneClock(),
-              ],
-            ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l.t('cameraTimeTipTitle'),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      l.t('cameraTimeTipCompact'),
+                      style: const TextStyle(
+                        color: AppTheme.muted,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(
+                Icons.chevron_right_rounded,
+                color: AppTheme.muted,
+              ),
+            ],
           ),
-        ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showCameraClockSheet(BuildContext context) async {
+    final l = context.l10n;
+    await showModalBottomSheet<void>(
+      context: context,
+      useSafeArea: true,
+      showDragHandle: true,
+      builder: (sheetContext) => Padding(
+        padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l.t('cameraTimeTipTitle'),
+              style: const TextStyle(
+                fontSize: 21,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              l.t('cameraTimeTipBody'),
+              style: const TextStyle(
+                color: AppTheme.muted,
+                height: 1.45,
+                fontSize: 13,
+              ),
+            ),
+            const SizedBox(height: 16),
+            const _PhoneClock(),
+          ],
+        ),
       ),
     );
   }
