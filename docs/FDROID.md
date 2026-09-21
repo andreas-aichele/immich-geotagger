@@ -40,7 +40,7 @@ build/app/outputs/flutter-apk/app-release.apk
 
 ## Version codes
 
-Release tags use `vMAJOR.MINOR.PATCH`.
+Release tags use `vMAJOR.MINOR.PATCH`. The first F-Droid candidate is **v1.0.0** with Android version code **1000000**.
 
 The deterministic Android version code is:
 
@@ -50,8 +50,8 @@ MAJOR * 1,000,000 + MINOR * 1,000 + PATCH
 
 Examples:
 
-- `v0.1.2` -> `1002`
-- `v0.2.0` -> `2000`
+- `v1.0.0` -> `1000000`
+- `v1.1.0` -> `1001000`
 - `v1.0.0` -> `1000000`
 
 GitHub release builds use the same mapping so F-Droid can reproduce the version metadata.
