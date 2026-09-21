@@ -370,9 +370,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> with WidgetsBinding
         FilledButton.icon(
           onPressed: _permissionBusy
               ? null
-              : (_needsBackgroundSettings
-                  ? _openBackgroundSettings
-                  : _requestPermissions),
+              : (_permissionReady
+                  ? _next
+                  : (_needsBackgroundSettings
+                      ? _openBackgroundSettings
+                      : _requestPermissions)),
           icon: _permissionBusy
               ? const SizedBox(
                   width: 18,
@@ -380,19 +382,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> with WidgetsBinding
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
               : Icon(
-                  _needsBackgroundSettings
-                      ? Icons.settings_outlined
-                      : Icons.lock_open_rounded,
+                  _permissionReady
+                      ? Icons.arrow_forward_rounded
+                      : (_needsBackgroundSettings
+                          ? Icons.settings_outlined
+                          : Icons.lock_open_rounded),
                 ),
           label: Text(
             _permissionReady
-                ? l.t('permissionGranted')
+                ? l.t('continue')
                 : (_needsBackgroundSettings
                     ? l.t('openLocationSettings')
                     : l.t('allowLocationAccess')),
           ),
         ),
-        if (_needsBackgroundSettings) ...[
+        if (_needsBackgroundSettings && !_permissionReady) ...[
           const SizedBox(height: 8),
           Text(
             l.t('backgroundSettingsHint'),
@@ -404,11 +408,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> with WidgetsBinding
             ),
           ),
         ],
-        const SizedBox(height: 8),
-        FilledButton.tonal(
-          onPressed: _permissionReady ? _next : null,
-          child: Text(l.t('continue')),
-        ),
       ],
     );
   }
@@ -478,20 +477,25 @@ class _OnboardingScreenState extends State<OnboardingScreen> with WidgetsBinding
         ],
         const SizedBox(height: 20),
         FilledButton.icon(
-          onPressed: _testBusy ? null : _testConnection,
+          onPressed: _testBusy
+              ? null
+              : (_connectionReady ? _finish : _testConnection),
           icon: _testBusy
               ? const SizedBox(
                   width: 18,
                   height: 18,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Icon(Icons.wifi_tethering_rounded),
-          label: Text(l.t('testConnection')),
-        ),
-        const SizedBox(height: 10),
-        FilledButton.tonal(
-          onPressed: _connectionReady ? _finish : null,
-          child: Text(l.t('finishSetup')),
+              : Icon(
+                  _connectionReady
+                      ? Icons.check_rounded
+                      : Icons.wifi_tethering_rounded,
+                ),
+          label: Text(
+            _connectionReady
+                ? l.t('finishSetup')
+                : l.t('testConnection'),
+          ),
         ),
       ],
     );
