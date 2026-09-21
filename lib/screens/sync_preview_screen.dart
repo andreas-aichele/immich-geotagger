@@ -11,6 +11,7 @@ import '../services/immich_service.dart';
 import '../services/settings_service.dart';
 import '../services/sync_service.dart';
 import '../theme/app_theme.dart';
+import '../widgets/photo_location_widgets.dart';
 
 class SyncPreviewScreen extends StatefulWidget {
   const SyncPreviewScreen({
@@ -558,116 +559,15 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
     );
   }
 
-  Future<void> _showCandidateMap(SyncCandidate candidate) async {
-    final l = context.l10n;
-    final point = LatLng(candidate.latitude, candidate.longitude);
-    final selected = _selected.contains(candidate.asset.id);
-
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      builder: (sheetContext) {
-        return FractionallySizedBox(
-          heightFactor: 0.78,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                    width: 42,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: AppTheme.border,
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 18),
-                Row(
-                  children: [
-                    if (_appSettings != null) ...[
-                      _thumbnailView(candidate.asset.id, size: 58),
-                      const SizedBox(width: 12),
-                    ],
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            candidate.asset.fileName,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            l.t('proposedLocation'),
-                            style: const TextStyle(
-                              color: AppTheme.muted,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    IconButton(
-                      tooltip: MaterialLocalizations.of(context)
-                          .closeButtonTooltip,
-                      onPressed: () => Navigator.of(sheetContext).pop(),
-                      icon: const Icon(Icons.close),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 14),
-                Expanded(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: FlutterMap(
-                      options: MapOptions(
-                        initialCenter: point,
-                        initialZoom: 16,
-                        interactionOptions: const InteractionOptions(
-                          flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
-                        ),
-                      ),
-                      children: [
-                        _tileLayer(),
-                        MarkerLayer(
-                          markers: [
-                            Marker(
-                              point: point,
-                              width: 48,
-                              height: 48,
-                              child: _mapMarker(selected: selected),
-                            ),
-                          ],
-                        ),
-                        _attribution(),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  '${candidate.latitude.toStringAsFixed(6)}, '
-                  '${candidate.longitude.toStringAsFixed(6)}',
-                  style: const TextStyle(
-                    color: AppTheme.muted,
-                    fontSize: 13,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
+  Future<void> _showCandidateMap(SyncCandidate candidate) {
+    return showPhotoLocationSheet(
+      context,
+      assetId: candidate.asset.id,
+      fileName: candidate.asset.fileName,
+      latitude: candidate.latitude,
+      longitude: candidate.longitude,
+      subtitle: context.l10n.t('proposedLocation'),
+      thumbnailLoader: _thumbnailLoader,
     );
   }
 
@@ -699,25 +599,7 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
   }
 
   Widget _mapMarker({required bool selected}) {
-    return Container(
-      decoration: BoxDecoration(
-        color: selected ? AppTheme.primary : const Color(0xFF8A8A8A),
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.white, width: 3),
-        boxShadow: const [
-          BoxShadow(
-            blurRadius: 8,
-            offset: Offset(0, 2),
-            color: Color(0x33000000),
-          ),
-        ],
-      ),
-      child: const Icon(
-        Icons.photo_camera_outlined,
-        color: Colors.white,
-        size: 20,
-      ),
-    );
+    return PhotoLocationMarker(selected: selected);
   }
 
   LatLng _centerOf(List<SyncCandidate> candidates) {
@@ -755,66 +637,15 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
     return 15;
   }
 
+  ThumbnailLoader? get _thumbnailLoader =>
+      _appSettings == null ? null : _thumbnail;
+
   Widget _thumbnailView(String assetId, {double size = 84}) {
-    if (_appSettings == null) {
-      return _thumbnailPlaceholder(
-        const SizedBox(
-          width: 20,
-          height: 20,
-          child: CircularProgressIndicator(strokeWidth: 2),
-        ),
-        size: size,
-      );
-    }
-
-    return FutureBuilder<Uint8List>(
-      future: _thumbnail(assetId),
-      builder: (context, snapshot) {
-        if (snapshot.hasData) {
-          return ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Image.memory(
-              snapshot.data!,
-              width: size,
-              height: size,
-              fit: BoxFit.cover,
-              gaplessPlayback: true,
-            ),
-          );
-        }
-
-        if (snapshot.hasError) {
-          return _thumbnailPlaceholder(
-            const Icon(
-              Icons.broken_image_outlined,
-              color: AppTheme.muted,
-            ),
-            size: size,
-          );
-        }
-
-        return _thumbnailPlaceholder(
-          const SizedBox(
-            width: 20,
-            height: 20,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
-          size: size,
-        );
-      },
+    return PhotoThumbnail(
+      assetId: assetId,
+      loader: _thumbnailLoader,
+      size: size,
     );
   }
-
-  Widget _thumbnailPlaceholder(Widget child, {double size = 84}) {
-    return Container(
-      width: size,
-      height: size,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: const Color(0xFFF2F2F2),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: child,
-    );
-  }
+}
 }
