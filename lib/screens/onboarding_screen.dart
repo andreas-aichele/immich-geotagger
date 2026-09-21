@@ -51,10 +51,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     });
     try {
       await _tracker.requestRequiredPermissions();
+      final batteryProtected =
+          await _tracker.requestBatteryOptimizationExemption();
       if (!mounted) return;
       setState(() {
         _permissionReady = true;
-        _message = context.l10n.t('permissionReady');
+        _message = batteryProtected
+            ? context.l10n.t('permissionReady')
+            : context.l10n.t('batteryRestricted');
       });
     } catch (e) {
       if (!mounted) return;
