@@ -1,0 +1,1 @@
+First stable release of Immich GeoTagger. Includes adaptive background location tracking, Immich synchronization with preview and selection, OpenStreetMap-based location review, multilingual UI, and Google Play Services-free Android tracking.
