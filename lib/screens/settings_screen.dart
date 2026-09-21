@@ -221,15 +221,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           : ListView(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
               children: [
-                Text(
-                  l.t('settingsIntro'),
-                  style: const TextStyle(
-                    color: AppTheme.muted,
-                    fontSize: 15,
-                    height: 1.45,
-                  ),
-                ),
-                const SizedBox(height: 24),
                 AppSurface(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -389,7 +380,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           height: 1.4,
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 24),
                       TextFormField(
                         controller: _maxGap,
                         onChanged: _maxGapChanged,
