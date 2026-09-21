@@ -334,6 +334,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     fontSize: 13,
                   ),
                 ),
+                const SizedBox(height: 12),
+                const _PhoneClock(),
               ],
             ),
           ),
@@ -486,6 +488,110 @@ class _StatusPill extends StatelessWidget {
               color: foreground,
               fontSize: 13,
               fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+
+class _PhoneClock extends StatefulWidget {
+  const _PhoneClock();
+
+  @override
+  State<_PhoneClock> createState() => _PhoneClockState();
+}
+
+class _PhoneClockState extends State<_PhoneClock> {
+  late DateTime _now;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _now = DateTime.now();
+    _timer = Timer.periodic(
+      const Duration(seconds: 1),
+      (_) {
+        if (mounted) {
+          setState(() => _now = DateTime.now());
+        }
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  String _twoDigits(int value) => value.toString().padLeft(2, '0');
+
+  String _utcOffset(Duration offset) {
+    final negative = offset.isNegative;
+    final absolute = offset.abs();
+    final hours = absolute.inHours;
+    final minutes = absolute.inMinutes.remainder(60);
+    return 'UTC${negative ? '-' : '+'}${_twoDigits(hours)}:${_twoDigits(minutes)}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final time =
+        '${_twoDigits(_now.hour)}:${_twoDigits(_now.minute)}:${_twoDigits(_now.second)}';
+    final zone = _now.timeZoneName;
+    final offset = _utcOffset(_now.timeZoneOffset);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppTheme.primarySoft,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFDCEEFF)),
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.phone_android_rounded,
+            size: 20,
+            color: AppTheme.primary,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l.t('phoneTime'),
+                  style: const TextStyle(
+                    color: AppTheme.muted,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  time,
+                  style: const TextStyle(
+                    fontSize: 23,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '$zone · $offset',
+                  style: const TextStyle(
+                    color: AppTheme.muted,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
