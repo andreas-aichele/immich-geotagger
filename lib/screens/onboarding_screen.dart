@@ -320,9 +320,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> with WidgetsBinding
           ),
         ),
         const SizedBox(height: 28),
-        FilledButton(
-          onPressed: _next,
-          child: Text(l.t('continue')),
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton(
+            onPressed: _next,
+            child: Text(l.t('continue')),
+          ),
         ),
       ],
     );
@@ -367,33 +370,36 @@ class _OnboardingScreenState extends State<OnboardingScreen> with WidgetsBinding
           ),
         ),
         const SizedBox(height: 20),
-        FilledButton.icon(
-          onPressed: _permissionBusy
-              ? null
-              : (_permissionReady
-                  ? _next
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton.icon(
+            onPressed: _permissionBusy
+                ? null
+                : (_permissionReady
+                    ? _next
+                    : (_needsBackgroundSettings
+                        ? _openBackgroundSettings
+                        : _requestPermissions)),
+            icon: _permissionBusy
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Icon(
+                    _permissionReady
+                        ? Icons.arrow_forward_rounded
+                        : (_needsBackgroundSettings
+                            ? Icons.settings_outlined
+                            : Icons.lock_open_rounded),
+                  ),
+            label: Text(
+              _permissionReady
+                  ? l.t('continue')
                   : (_needsBackgroundSettings
-                      ? _openBackgroundSettings
-                      : _requestPermissions)),
-          icon: _permissionBusy
-              ? const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : Icon(
-                  _permissionReady
-                      ? Icons.arrow_forward_rounded
-                      : (_needsBackgroundSettings
-                          ? Icons.settings_outlined
-                          : Icons.lock_open_rounded),
-                ),
-          label: Text(
-            _permissionReady
-                ? l.t('continue')
-                : (_needsBackgroundSettings
-                    ? l.t('openLocationSettings')
-                    : l.t('allowLocationAccess')),
+                      ? l.t('openLocationSettings')
+                      : l.t('allowLocationAccess')),
+            ),
           ),
         ),
         if (_needsBackgroundSettings && !_permissionReady) ...[
@@ -476,25 +482,28 @@ class _OnboardingScreenState extends State<OnboardingScreen> with WidgetsBinding
           ),
         ],
         const SizedBox(height: 20),
-        FilledButton.icon(
-          onPressed: _testBusy
-              ? null
-              : (_connectionReady ? _finish : _testConnection),
-          icon: _testBusy
-              ? const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : Icon(
-                  _connectionReady
-                      ? Icons.check_rounded
-                      : Icons.wifi_tethering_rounded,
-                ),
-          label: Text(
-            _connectionReady
-                ? l.t('finishSetup')
-                : l.t('testConnection'),
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton.icon(
+            onPressed: _testBusy
+                ? null
+                : (_connectionReady ? _finish : _testConnection),
+            icon: _testBusy
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Icon(
+                    _connectionReady
+                        ? Icons.check_rounded
+                        : Icons.wifi_tethering_rounded,
+                  ),
+            label: Text(
+              _connectionReady
+                  ? l.t('finishSetup')
+                  : l.t('testConnection'),
+            ),
           ),
         ),
       ],
