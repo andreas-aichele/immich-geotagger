@@ -27,6 +27,7 @@ class SyncCandidate {
 }
 
 enum UnmatchedReason {
+  noTrackData,
   beforeTrack,
   afterTrack,
   unsafeGap,
