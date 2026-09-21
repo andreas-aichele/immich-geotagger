@@ -29,6 +29,8 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
   static const _tileUrl = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
   static const _userAgent = 'io.github.andreasaichele.immichgeotagger';
   static const _minMapZoom = 2.0;
+  static const _maxMapZoom = 19.0;
+  static const _clusterToleranceMeters = 20.0;
 
   final _settings = SettingsService();
   final _immich = ImmichService();
@@ -405,7 +407,9 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
             child: FlutterMap(
               options: MapOptions(
                 initialCenter: center,
-                initialZoom: zoom,
+                initialZoom: zoom.clamp(_minMapZoom, _maxMapZoom),
+                minZoom: _minMapZoom,
+                maxZoom: _maxMapZoom,
                 interactionOptions: const InteractionOptions(
                   flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
                 ),
@@ -423,9 +427,7 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
                         width: group.length > 1 ? 52 : 42,
                         height: group.length > 1 ? 52 : 42,
                         child: GestureDetector(
-                          onTap: () => group.length == 1
-                              ? _showCandidateMap(group.first)
-                              : _showCandidateGroup(group),
+                          onTap: () => _showCandidateGroup(group),
                           child: group.length == 1
                               ? _mapMarker(
                                   selected: _selected.contains(
@@ -514,7 +516,7 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
                   _reliabilityChip(candidate.reliability),
                   const SizedBox(height: 4),
                   TextButton.icon(
-                    onPressed: () => _showCandidateMap(candidate),
+                    onPressed: () => _showCandidateGroup([candidate]),
                     style: TextButton.styleFrom(
                       padding: const EdgeInsets.symmetric(horizontal: 8),
                       minimumSize: const Size(0, 36),
@@ -708,16 +710,51 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
   List<List<SyncCandidate>> _groupCandidates(
     List<SyncCandidate> candidates,
   ) {
-    const precision = 100000.0;
-    final groups = <String, List<SyncCandidate>>{};
+    final groups = <List<SyncCandidate>>[];
 
     for (final candidate in candidates) {
-      final lat = (candidate.latitude * precision).round();
-      final lon = (candidate.longitude * precision).round();
-      final key = '${lat}:${lon}';
-      groups.putIfAbsent(key, () => []).add(candidate);
+      List<SyncCandidate>? matchingGroup;
+      for (final group in groups) {
+        if (_distanceMeters(
+              candidate.latitude,
+              candidate.longitude,
+              group.first.latitude,
+              group.first.longitude,
+            ) <=
+            _clusterToleranceMeters) {
+          matchingGroup = group;
+          break;
+        }
+      }
+
+      if (matchingGroup == null) {
+        groups.add([candidate]);
+      } else {
+        matchingGroup.add(candidate);
+      }
     }
-    return groups.values.toList();
+
+    return groups;
+  }
+
+  double _distanceMeters(
+    double lat1,
+    double lon1,
+    double lat2,
+    double lon2,
+  ) {
+    const radius = 6371000.0;
+    final phi1 = lat1 * math.pi / 180;
+    final phi2 = lat2 * math.pi / 180;
+    final dPhi = (lat2 - lat1) * math.pi / 180;
+    final dLambda = (lon2 - lon1) * math.pi / 180;
+
+    final a = math.sin(dPhi / 2) * math.sin(dPhi / 2) +
+        math.cos(phi1) *
+            math.cos(phi2) *
+            math.sin(dLambda / 2) *
+            math.sin(dLambda / 2);
+    return radius * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
   }
 
   Widget _groupMapMarker(List<SyncCandidate> group) {
@@ -751,64 +788,220 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
   }
 
   Future<void> _showCandidateGroup(List<SyncCandidate> group) async {
+    final pageController = PageController(viewportFraction: 0.9);
+    final mapController = MapController();
+    var activeIndex = 0;
+
     await showModalBottomSheet<void>(
       context: context,
+      isScrollControlled: true,
       useSafeArea: true,
-      showDragHandle: true,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       builder: (sheetContext) {
-        return ListView(
-          shrinkWrap: true,
-          padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
-          children: [
-            Text(
-              context.l10n.t(
-                'photosAtLocation',
-                {'count': group.length},
+        return StatefulBuilder(
+          builder: (sheetContext, setSheetState) {
+            final active = group[activeIndex];
+
+            return FractionallySizedBox(
+              heightFactor: 0.84,
+              child: Column(
+                children: [
+                  const SizedBox(height: 8),
+                  Center(
+                    child: Container(
+                      width: 42,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: AppTheme.border,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            context.l10n.t(
+                              'photosAtLocation',
+                              {'count': group.length},
+                            ),
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: MaterialLocalizations.of(context)
+                              .closeButtonTooltip,
+                          onPressed: () => Navigator.of(sheetContext).pop(),
+                          icon: const Icon(Icons.close),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    flex: 6,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(14),
+                        child: FlutterMap(
+                          mapController: mapController,
+                          options: MapOptions(
+                            initialCenter: LatLng(
+                              active.latitude,
+                              active.longitude,
+                            ),
+                            initialZoom: 17,
+                            minZoom: _minMapZoom,
+                            maxZoom: _maxMapZoom,
+                            interactionOptions: const InteractionOptions(
+                              flags: InteractiveFlag.all &
+                                  ~InteractiveFlag.rotate,
+                            ),
+                          ),
+                          children: [
+                            _tileLayer(),
+                            MarkerLayer(
+                              markers: [
+                                for (var i = 0; i < group.length; i++)
+                                  Marker(
+                                    point: LatLng(
+                                      group[i].latitude,
+                                      group[i].longitude,
+                                    ),
+                                    width: i == activeIndex ? 48 : 38,
+                                    height: i == activeIndex ? 48 : 38,
+                                    child: PhotoLocationMarker(
+                                      selected: i == activeIndex ||
+                                          _selected.contains(
+                                            group[i].asset.id,
+                                          ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            _attribution(),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    height: 150,
+                    child: PageView.builder(
+                      controller: pageController,
+                      itemCount: group.length,
+                      onPageChanged: (index) {
+                        setSheetState(() => activeIndex = index);
+                        final candidate = group[index];
+                        mapController.move(
+                          LatLng(
+                            candidate.latitude,
+                            candidate.longitude,
+                          ),
+                          mapController.camera.zoom,
+                        );
+                      },
+                      itemBuilder: (context, index) {
+                        final candidate = group[index];
+                        final selected =
+                            _selected.contains(candidate.asset.id);
+
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 5),
+                          child: AppSurface(
+                            padding: const EdgeInsets.all(10),
+                            child: Row(
+                              children: [
+                                _thumbnailView(
+                                  candidate.asset.id,
+                                  size: 84,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        candidate.asset.fileName,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      _reliabilityChip(
+                                        candidate.reliability,
+                                      ),
+                                      if (group.length > 1) ...[
+                                        const SizedBox(height: 6),
+                                        Text(
+                                          context.l10n.t(
+                                            'photoPosition',
+                                            {
+                                              'current': index + 1,
+                                              'total': group.length,
+                                            },
+                                          ),
+                                          style: const TextStyle(
+                                            color: AppTheme.muted,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                                Checkbox(
+                                  value: selected,
+                                  onChanged: (value) {
+                                    setState(() {
+                                      if (value ?? false) {
+                                        _selected.add(candidate.asset.id);
+                                      } else {
+                                        _selected.remove(candidate.asset.id);
+                                      }
+                                    });
+                                    setSheetState(() {});
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                ],
               ),
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 12),
-            for (final candidate in group)
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: _thumbnailView(candidate.asset.id, size: 52),
-                title: Text(
-                  candidate.asset.fileName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                trailing: const Icon(Icons.chevron_right_rounded),
-                onTap: () {
-                  Navigator.of(sheetContext).pop();
-                  _showCandidateMap(candidate);
-                },
-              ),
-          ],
+            );
+          },
         );
       },
     );
-  }
 
-  Future<void> _showCandidateMap(SyncCandidate candidate) {
-    return showPhotoLocationSheet(
-      context,
-      assetId: candidate.asset.id,
-      fileName: candidate.asset.fileName,
-      latitude: candidate.latitude,
-      longitude: candidate.longitude,
-      subtitle: context.l10n.t('proposedLocation'),
-      thumbnailLoader: _thumbnailLoader,
-    );
+    pageController.dispose();
   }
 
   TileLayer _tileLayer() {
     return TileLayer(
       urlTemplate: _tileUrl,
       userAgentPackageName: _userAgent,
+      minZoom: _minMapZoom,
+      maxZoom: _maxMapZoom,
+      minNativeZoom: 0,
       maxNativeZoom: 19,
+      keepBuffer: 4,
     );
   }
 
