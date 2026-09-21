@@ -436,6 +436,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> with WidgetsBinding
               ),
               const SizedBox(height: 12),
               _PermissionCode(
+                label: 'asset.view',
+                description: l.t('assetViewDesc'),
+              ),
+              const SizedBox(height: 12),
+              _PermissionCode(
                 label: 'asset.update',
                 description: l.t('assetUpdateDesc'),
               ),
