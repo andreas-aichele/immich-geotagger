@@ -45,6 +45,33 @@ class ImmichService {
       );
     }
 
+    final decoded = jsonDecode(readResponse.body) as Map<String, dynamic>;
+    final assetsNode =
+        decoded['assets'] as Map<String, dynamic>? ?? decoded;
+    final items = (assetsNode['items'] as List<dynamic>? ?? const [])
+        .whereType<Map<String, dynamic>>();
+
+    if (items.isNotEmpty) {
+      final assetId = items.first['id'] as String?;
+      if (assetId != null) {
+        final viewResponse = await _client.get(
+          _uri(baseUrl, '/assets/$assetId/thumbnail?size=thumbnail'),
+          headers: _headers(apiKey),
+        );
+
+        if (viewResponse.statusCode == 401 || viewResponse.statusCode == 403) {
+          throw StateError(
+            'The API key can read assets but is missing asset.view.',
+          );
+        }
+        if (viewResponse.statusCode < 200 || viewResponse.statusCode >= 300) {
+          throw StateError(
+            'Immich returned HTTP ${viewResponse.statusCode} while checking asset.view.',
+          );
+        }
+      }
+    }
+
     const missingAssetId = '00000000-0000-0000-0000-000000000000';
     final updateResponse = await _client.put(
       _uri(baseUrl, '/assets/$missingAssetId'),
