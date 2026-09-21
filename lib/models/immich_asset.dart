@@ -17,9 +17,13 @@ class ImmichAsset {
 
   factory ImmichAsset.fromJson(Map<String, dynamic> json) {
     final exif = json['exifInfo'] as Map<String, dynamic>?;
-    final dateValue = exif?['dateTimeOriginal'] ??
-        json['localDateTime'] ??
-        json['fileCreatedAt'];
+
+    // fileCreatedAt is Immich's absolute capture timestamp and is the same time
+    // axis used by metadata search. localDateTime is a wall-clock value and
+    // must not be compared directly with UTC GPS timestamps.
+    final dateValue = json['fileCreatedAt'] ??
+        exif?['dateTimeOriginal'] ??
+        json['localDateTime'];
 
     if (dateValue == null) {
       throw const FormatException('Asset has no usable capture timestamp');
