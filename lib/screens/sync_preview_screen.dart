@@ -183,6 +183,7 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
             l.t(
               'syncPreviewSummary',
               {
+                'scanned': widget.preview.scanned,
                 'ready': widget.preview.candidates.length,
                 'located': widget.preview.skippedWithLocation,
                 'unmatched': widget.preview.skippedWithoutTrack,
