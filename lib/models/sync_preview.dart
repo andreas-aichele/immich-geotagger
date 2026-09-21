@@ -14,6 +14,7 @@ class SyncCandidate {
     required this.before,
     required this.after,
     required this.reliability,
+    this.usedLastKnownLocation = false,
   });
 
   final ImmichAsset asset;
@@ -22,6 +23,28 @@ class SyncCandidate {
   final DateTime before;
   final DateTime after;
   final MatchReliability reliability;
+  final bool usedLastKnownLocation;
+}
+
+enum UnmatchedReason {
+  beforeTrack,
+  afterTrack,
+  unsafeGap,
+  noSegment,
+}
+
+class SyncUnmatched {
+  const SyncUnmatched({
+    required this.asset,
+    required this.reason,
+    this.before,
+    this.after,
+  });
+
+  final ImmichAsset asset;
+  final UnmatchedReason reason;
+  final DateTime? before;
+  final DateTime? after;
 }
 
 class SyncPreview {
@@ -30,10 +53,12 @@ class SyncPreview {
     required this.scanned,
     required this.skippedWithLocation,
     required this.skippedWithoutTrack,
+    this.unmatched = const [],
   });
 
   final List<SyncCandidate> candidates;
   final int scanned;
   final int skippedWithLocation;
   final int skippedWithoutTrack;
+  final List<SyncUnmatched> unmatched;
 }
