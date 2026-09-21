@@ -1,0 +1,9 @@
+Immich GeoTagger adds location information to photos from cameras without GPS.
+
+Start tracking before taking photos, keep your phone with you, and import the photos into Immich as usual. GeoTagger compares each photo's capture time with your recorded route, calculates a matching location, and shows you a preview before anything is changed.
+
+You can review thumbnails, deselect individual photos, and only apply the locations you approve. Photos that already contain GPS information are left untouched.
+
+Important: your camera and phone must use the same time and time zone so capture times can be matched correctly.
+
+Location tracking is performed locally on your device. The Android tracking stack uses the standard AOSP LocationManager and does not depend on Google Play Services.
