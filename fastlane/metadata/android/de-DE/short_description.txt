@@ -1,0 +1,1 @@
+GPS-Standorte zu Kamerafotos in Immich hinzufügen.
