@@ -15,6 +15,8 @@ class TrackingService {
 
   bool _initialized = false;
   StreamSubscription<Position>? _positionSubscription;
+  StreamSubscription<HeartbeatEvent>? _heartbeatSubscription;
+  Timer? _samplingTimer;
 
   Future<void> initialize() async {
     if (_initialized) return;
@@ -27,7 +29,7 @@ class TrackingService {
     _initialized = true;
 
     if (await LibreLocation.isTracking) {
-      _ensureForegroundListener();
+      await _ensureForegroundListeners();
     }
   }
 
@@ -111,7 +113,7 @@ class TrackingService {
     if (!await _settings.isTrackingDesired()) return false;
 
     if (await LibreLocation.isTracking) {
-      _ensureForegroundListener();
+      await _ensureForegroundListeners();
       return true;
     }
 
@@ -124,7 +126,7 @@ class TrackingService {
     await requestRequiredPermissions();
 
     if (await LibreLocation.isTracking) {
-      _ensureForegroundListener();
+      await _ensureForegroundListeners();
       if (persistDesiredState) {
         await _settings.setTrackingDesired(true);
       }
@@ -135,7 +137,7 @@ class TrackingService {
     final notification = _notificationCopy();
 
     await LibreLocation.start(
-      preset: _presetForInterval(settings.trackingIntervalSeconds),
+      preset: TrackingPreset.high,
       config: LocationConfig(
         notification: NotificationConfig(
           title: notification.title,
@@ -148,31 +150,62 @@ class TrackingService {
       ),
     );
 
-    _ensureForegroundListener();
+    await captureCurrentPoint();
+    await _ensureForegroundListeners();
 
     if (persistDesiredState) {
       await _settings.setTrackingDesired(true);
     }
   }
 
+  Future<Position?> captureCurrentPoint() async {
+    await initialize();
+
+    try {
+      final position = await LibreLocation.getCurrentPosition(
+        accuracy: Accuracy.high,
+        samples: 1,
+        timeout: 20,
+        maximumAge: 30,
+        persist: false,
+      );
+      await saveLibreLocationPosition(position);
+      return position;
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<void> stop() async {
     await initialize();
-    await LibreLocation.stop();
+    _samplingTimer?.cancel();
+    _samplingTimer = null;
     await _positionSubscription?.cancel();
     _positionSubscription = null;
+    await _heartbeatSubscription?.cancel();
+    _heartbeatSubscription = null;
+    await LibreLocation.stop();
     await _settings.setTrackingDesired(false);
   }
 
-  void _ensureForegroundListener() {
+  Future<void> _ensureForegroundListeners() async {
     _positionSubscription ??= LibreLocation.onLocation.listen(
       saveLibreLocationPosition,
     );
-  }
 
-  TrackingPreset _presetForInterval(int seconds) {
-    if (seconds <= 120) return TrackingPreset.high;
-    if (seconds <= 300) return TrackingPreset.balanced;
-    return TrackingPreset.low;
+    _heartbeatSubscription ??= LibreLocation.onHeartbeat.listen(
+      (event) => saveLibreLocationPosition(event.position),
+    );
+
+    if (_samplingTimer != null) return;
+
+    final settings = await _settings.load();
+    final seconds = settings.trackingIntervalSeconds.clamp(15, 3600);
+
+    _samplingTimer = Timer.periodic(
+      Duration(seconds: seconds),
+      (_) => captureCurrentPoint(),
+    );
   }
 
   _NotificationCopy _notificationCopy() {
