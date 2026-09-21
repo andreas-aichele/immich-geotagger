@@ -123,7 +123,7 @@ class SyncService {
   }
 
   MatchReliability _reliabilityFor(InterpolationResult match) {
-    final gap = match.after.timestamp.difference(match.before.timestamp).abs();
+    final gap = match.after.timestamp.difference(match.before.timestamp);
     final distance = _distanceMeters(
       match.before.latitude,
       match.before.longitude,
