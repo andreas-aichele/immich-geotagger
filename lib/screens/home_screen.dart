@@ -8,6 +8,7 @@ import '../services/tracking_service.dart';
 import '../theme/app_theme.dart';
 import 'history_screen.dart';
 import 'settings_screen.dart';
+import 'sync_preview_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -108,7 +109,18 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     });
 
     try {
-      final result = await _sync.sync();
+      final preview = await _sync.prepareSync();
+      if (!mounted) return;
+
+      setState(() => _busy = false);
+
+      final result = await Navigator.of(context).push<SyncResult>(
+        MaterialPageRoute(
+          builder: (_) => SyncPreviewScreen(preview: preview),
+        ),
+      );
+
+      if (!mounted || result == null) return;
       await _refreshStats();
       if (!mounted) return;
       setState(() => _lastSync = result);
@@ -118,7 +130,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         () => _error = e.toString().replaceFirst('Bad state: ', ''),
       );
     } finally {
-      if (mounted) setState(() => _busy = false);
+      if (mounted && _busy) setState(() => _busy = false);
     }
   }
 
@@ -134,6 +146,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               _header(context),
               const SizedBox(height: 28),
               _trackingHero(context),
+              const SizedBox(height: 16),
+              _cameraClockTip(context),
               const SizedBox(height: 16),
               _syncCard(context),
               if (_error != null) ...[
@@ -266,6 +280,52 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               label: Text(
                 _tracking ? l.t('stopTracking') : l.t('startTracking'),
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _cameraClockTip(BuildContext context) {
+    final l = context.l10n;
+    return AppSurface(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: AppTheme.primarySoft,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(
+              Icons.schedule_rounded,
+              color: AppTheme.primary,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l.t('cameraTimeTipTitle'),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  l.t('cameraTimeTipBody'),
+                  style: const TextStyle(
+                    color: AppTheme.muted,
+                    height: 1.4,
+                    fontSize: 13,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
