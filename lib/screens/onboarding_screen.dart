@@ -142,7 +142,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> with WidgetsBinding
           immichUrl: _url.text.trim(),
           apiKey: _key.text.trim(),
           retentionDays: current.retentionDays,
-          trackingIntervalSeconds: current.trackingIntervalSeconds,
+          trackingQuality: current.trackingQuality,
           maxInterpolationGapMinutes: current.maxInterpolationGapMinutes,
         ),
       );
