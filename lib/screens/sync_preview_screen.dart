@@ -108,7 +108,10 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
       ),
       body: ListView.builder(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
-        itemCount: hasCandidates ? widget.preview.candidates.length + 2 : 2,
+        itemCount: hasCandidates
+            ? widget.preview.candidates.length + 2 +
+                (widget.preview.unmatched.isNotEmpty ? 1 : 0)
+            : 2 + (widget.preview.unmatched.isNotEmpty ? 1 : 0),
         itemBuilder: (context, index) {
           if (index == 0) {
             return Padding(
@@ -118,15 +121,18 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
           }
 
           if (!hasCandidates) {
-            return AppSurface(
-              child: Text(
-                l.t('noSyncCandidates'),
-                style: const TextStyle(
-                  color: AppTheme.muted,
-                  height: 1.4,
+            if (index == 1) {
+              return AppSurface(
+                child: Text(
+                  l.t('noSyncCandidates'),
+                  style: const TextStyle(
+                    color: AppTheme.muted,
+                    height: 1.4,
+                  ),
                 ),
-              ),
-            );
+              );
+            }
+            return _unmatchedCard();
           }
 
           if (index == 1) {
@@ -136,7 +142,11 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
             );
           }
 
-          return _candidateCard(widget.preview.candidates[index - 2]);
+          final candidateIndex = index - 2;
+          if (candidateIndex < widget.preview.candidates.length) {
+            return _candidateCard(widget.preview.candidates[candidateIndex]);
+          }
+          return _unmatchedCard();
         },
       ),
       bottomSheet: SafeArea(
@@ -348,13 +358,18 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
                   ),
                   const SizedBox(height: 3),
                   Text(
-                    l.t(
-                      'interpolatedBetween',
-                      {
-                        'before': time(before),
-                        'after': time(after),
-                      },
-                    ),
+                    candidate.usedLastKnownLocation
+                        ? l.t(
+                            'usingLastKnownLocation',
+                            {'time': time(before)},
+                          )
+                        : l.t(
+                            'interpolatedBetween',
+                            {
+                              'before': time(before),
+                              'after': time(after),
+                            },
+                          ),
                     style: const TextStyle(
                       color: AppTheme.muted,
                       fontSize: 12,
@@ -387,6 +402,119 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
                 });
               },
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _unmatchedCard() {
+    final l = context.l10n;
+    final material = MaterialLocalizations.of(context);
+
+    String time(DateTime value) => material.formatTimeOfDay(
+          TimeOfDay.fromDateTime(value.toLocal()),
+          alwaysUse24HourFormat: MediaQuery.alwaysUse24HourFormatOf(context),
+        );
+
+    String reason(SyncUnmatched item) {
+      return switch (item.reason) {
+        UnmatchedReason.beforeTrack => l.t('unmatchedBeforeTrack'),
+        UnmatchedReason.afterTrack => l.t('unmatchedAfterTrack'),
+        UnmatchedReason.unsafeGap => l.t('unmatchedUnsafeGap'),
+        UnmatchedReason.noSegment => l.t('unmatchedNoSegment'),
+      };
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: AppSurface(
+        child: ExpansionTile(
+          tilePadding: EdgeInsets.zero,
+          childrenPadding: const EdgeInsets.only(top: 4),
+          title: Text(
+            l.t(
+              'unmatchedDetails',
+              {'count': widget.preview.unmatched.length},
+            ),
+            style: const TextStyle(fontWeight: FontWeight.w700),
+          ),
+          subtitle: Text(
+            l.t('unmatchedDetailsHint'),
+            style: const TextStyle(
+              color: AppTheme.muted,
+              fontSize: 12,
+            ),
+          ),
+          children: [
+            for (final item in widget.preview.unmatched)
+              Padding(
+                padding: const EdgeInsets.only(top: 8, bottom: 8),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (_appSettings != null) ...[
+                      _thumbnailView(item.asset.id, size: 52),
+                      const SizedBox(width: 10),
+                    ],
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            item.asset.fileName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            l.t(
+                              'unmatchedPhotoTime',
+                              {'time': time(item.asset.takenAt)},
+                            ),
+                            style: const TextStyle(
+                              color: AppTheme.muted,
+                              fontSize: 12,
+                            ),
+                          ),
+                          if (item.before != null)
+                            Text(
+                              l.t(
+                                'unmatchedGpsBefore',
+                                {'time': time(item.before!)},
+                              ),
+                              style: const TextStyle(
+                                color: AppTheme.muted,
+                                fontSize: 12,
+                              ),
+                            ),
+                          if (item.after != null)
+                            Text(
+                              l.t(
+                                'unmatchedGpsAfter',
+                                {'time': time(item.after!)},
+                              ),
+                              style: const TextStyle(
+                                color: AppTheme.muted,
+                                fontSize: 12,
+                              ),
+                            ),
+                          const SizedBox(height: 3),
+                          Text(
+                            reason(item),
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.error,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
           ],
         ),
       ),
