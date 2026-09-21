@@ -18,7 +18,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final _url = TextEditingController();
   final _key = TextEditingController();
   final _retention = TextEditingController();
-  final _interval = TextEditingController();
   final _maxGap = TextEditingController();
   final _settings = SettingsService();
   final _immich = ImmichService();
@@ -30,6 +29,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _batteryProtected = true;
   bool _batteryBusy = false;
   String? _status;
+  TrackingQuality _trackingQuality = TrackingQuality.balanced;
 
   @override
   void initState() {
@@ -42,7 +42,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _url.dispose();
     _key.dispose();
     _retention.dispose();
-    _interval.dispose();
     _maxGap.dispose();
     super.dispose();
   }
@@ -52,7 +51,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _url.text = value.immichUrl;
     _key.text = value.apiKey;
     _retention.text = value.retentionDays.toString();
-    _interval.text = value.trackingIntervalSeconds.toString();
+    _trackingQuality = value.trackingQuality;
     _maxGap.text = value.maxInterpolationGapMinutes.toString();
     final batteryProtected = await _tracker.isBatteryOptimizationIgnored();
     if (mounted) {
@@ -67,13 +66,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
         immichUrl: _url.text,
         apiKey: _key.text,
         retentionDays: int.parse(_retention.text),
-        trackingIntervalSeconds: int.parse(_interval.text),
+        trackingQuality: _trackingQuality,
         maxInterpolationGapMinutes: int.parse(_maxGap.text),
       );
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
     await _settings.save(_value());
+    await _tracker.applyConfiguredPreset();
     if (!mounted) return;
     setState(() => _status = context.l10n.t('settingsSaved'));
   }
@@ -232,17 +232,45 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ),
                         ),
                         const SizedBox(height: 18),
-                        TextFormField(
-                          controller: _interval,
-                          decoration: InputDecoration(
-                            labelText: l.t('trackingInterval'),
-                            suffixText: l.t('seconds'),
-                            prefixIcon: const Icon(Icons.timer_outlined),
+                        Text(
+                          l.t('trackingQuality'),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
                           ),
-                          keyboardType: TextInputType.number,
-                          validator: _positiveInt,
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 8),
+                        SegmentedButton<TrackingQuality>(
+                          segments: [
+                            ButtonSegment(
+                              value: TrackingQuality.balanced,
+                              icon: const Icon(Icons.battery_saver_outlined),
+                              label: Text(l.t('trackingBalanced')),
+                            ),
+                            ButtonSegment(
+                              value: TrackingQuality.precise,
+                              icon: const Icon(Icons.gps_fixed_rounded),
+                              label: Text(l.t('trackingPrecise')),
+                            ),
+                          ],
+                          selected: {_trackingQuality},
+                          onSelectionChanged: (selection) {
+                            setState(() {
+                              _trackingQuality = selection.first;
+                            });
+                          },
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          _trackingQuality == TrackingQuality.balanced
+                              ? l.t('trackingBalancedDesc')
+                              : l.t('trackingPreciseDesc'),
+                          style: const TextStyle(
+                            color: AppTheme.muted,
+                            fontSize: 13,
+                            height: 1.4,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
                         TextFormField(
                           controller: _maxGap,
                           decoration: InputDecoration(
