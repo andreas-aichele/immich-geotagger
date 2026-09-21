@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
@@ -14,7 +16,6 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  final _formKey = GlobalKey<FormState>();
   final _url = TextEditingController();
   final _key = TextEditingController();
   final _retention = TextEditingController();
@@ -23,13 +24,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final _immich = ImmichService();
   final _tracker = TrackingService();
 
+  Timer? _autoSaveTimer;
+
   bool _loading = true;
   bool _testing = false;
-  bool _testSuccess = false;
+  bool _savingConnection = false;
+  bool _connectionVerified = false;
   bool _batteryProtected = true;
   bool _batteryBusy = false;
-  String? _status;
+  bool _serverStatusSuccess = false;
+  String? _serverStatus;
+  String? _testedUrl;
+  String? _testedKey;
+
   TrackingQuality _trackingQuality = TrackingQuality.balanced;
+  int _retentionDays = 14;
+  int _maxGapMinutes = 15;
 
   @override
   void initState() {
@@ -39,6 +49,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   void dispose() {
+    _autoSaveTimer?.cancel();
     _url.dispose();
     _key.dispose();
     _retention.dispose();
@@ -50,32 +61,136 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final value = await _settings.load();
     _url.text = value.immichUrl;
     _key.text = value.apiKey;
-    _retention.text = value.retentionDays.toString();
+    _retentionDays = value.retentionDays;
+    _retention.text = _retentionDays.toString();
     _trackingQuality = value.trackingQuality;
-    _maxGap.text = value.maxInterpolationGapMinutes.toString();
+    _maxGapMinutes = value.maxInterpolationGapMinutes;
+    _maxGap.text = _maxGapMinutes.toString();
+
     final batteryProtected = await _tracker.isBatteryOptimizationIgnored();
-    if (mounted) {
+    if (!mounted) return;
+    setState(() {
+      _batteryProtected = batteryProtected;
+      _loading = false;
+    });
+  }
+
+  void _connectionChanged(String _) {
+    if (!_connectionVerified && _serverStatus == null) return;
+    setState(() {
+      _connectionVerified = false;
+      _testedUrl = null;
+      _testedKey = null;
+      _serverStatus = null;
+    });
+  }
+
+  bool get _testedConnectionStillMatches =>
+      _connectionVerified &&
+      _testedUrl == _url.text.trim() &&
+      _testedKey == _key.text.trim();
+
+  Future<void> _testConnection() async {
+    final l = context.l10n;
+    final url = _url.text.trim();
+    final key = _key.text.trim();
+
+    if (!url.startsWith('http')) {
       setState(() {
-        _batteryProtected = batteryProtected;
-        _loading = false;
+        _serverStatusSuccess = false;
+        _serverStatus = l.t('validUrl');
       });
+      return;
+    }
+    if (key.isEmpty) {
+      setState(() {
+        _serverStatusSuccess = false;
+        _serverStatus = l.t('apiKeyRequired');
+      });
+      return;
+    }
+
+    setState(() {
+      _testing = true;
+      _connectionVerified = false;
+      _serverStatus = null;
+      _testedUrl = null;
+      _testedKey = null;
+    });
+
+    try {
+      await _immich.verifyConnection(url, key);
+      if (!mounted) return;
+      setState(() {
+        _connectionVerified = true;
+        _testedUrl = url;
+        _testedKey = key;
+        _serverStatusSuccess = true;
+        _serverStatus = l.t('connectionVerifiedSaveHint');
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _serverStatusSuccess = false;
+        _serverStatus = e.toString().replaceFirst('Bad state: ', '');
+      });
+    } finally {
+      if (mounted) setState(() => _testing = false);
     }
   }
 
-  AppSettings _value() => AppSettings(
-        immichUrl: _url.text,
-        apiKey: _key.text,
-        retentionDays: int.parse(_retention.text),
-        trackingQuality: _trackingQuality,
-        maxInterpolationGapMinutes: int.parse(_maxGap.text),
-      );
+  Future<void> _saveConnection() async {
+    if (!_testedConnectionStillMatches || _savingConnection) return;
 
-  Future<void> _save() async {
-    if (!_formKey.currentState!.validate()) return;
-    await _settings.save(_value());
-    await _tracker.applyConfiguredPreset();
+    setState(() => _savingConnection = true);
+    await _settings.saveConnection(
+      immichUrl: _url.text.trim(),
+      apiKey: _key.text.trim(),
+    );
     if (!mounted) return;
-    setState(() => _status = context.l10n.t('settingsSaved'));
+    setState(() {
+      _savingConnection = false;
+      _serverStatusSuccess = true;
+      _serverStatus = context.l10n.t('connectionSaved');
+    });
+  }
+
+  Future<void> _saveTrackingPreferences({bool applyPreset = false}) async {
+    await _settings.saveTrackingPreferences(
+      retentionDays: _retentionDays,
+      trackingQuality: _trackingQuality,
+      maxInterpolationGapMinutes: _maxGapMinutes,
+    );
+    if (applyPreset) {
+      await _tracker.applyConfiguredPreset();
+    }
+  }
+
+  void _scheduleTrackingSave() {
+    _autoSaveTimer?.cancel();
+    _autoSaveTimer = Timer(
+      const Duration(milliseconds: 500),
+      _saveTrackingPreferences,
+    );
+  }
+
+  void _retentionChanged(String value) {
+    final parsed = int.tryParse(value);
+    if (parsed == null || parsed <= 0) return;
+    _retentionDays = parsed;
+    _scheduleTrackingSave();
+  }
+
+  void _maxGapChanged(String value) {
+    final parsed = int.tryParse(value);
+    if (parsed == null || parsed <= 0) return;
+    _maxGapMinutes = parsed;
+    _scheduleTrackingSave();
+  }
+
+  Future<void> _trackingQualityChanged(TrackingQuality quality) async {
+    setState(() => _trackingQuality = quality);
+    await _saveTrackingPreferences(applyPreset: true);
   }
 
   Future<void> _requestBatteryProtection() async {
@@ -87,32 +202,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _batteryProtected = protected;
       _batteryBusy = false;
     });
-  }
-
-  Future<void> _test() async {
-    if (!_formKey.currentState!.validate()) return;
-    setState(() {
-      _testing = true;
-      _testSuccess = false;
-      _status = null;
-    });
-
-    try {
-      final value = _value();
-      await _immich.verifyConnection(value.immichUrl, value.apiKey);
-      if (!mounted) return;
-      setState(() {
-        _testSuccess = true;
-        _status = context.l10n.t('connectionVerified');
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(
-        () => _status = e.toString().replaceFirst('Bad state: ', ''),
-      );
-    } finally {
-      if (mounted) setState(() => _testing = false);
-    }
   }
 
   @override
@@ -127,83 +216,103 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
-          : Form(
-              key: _formKey,
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-                children: [
-                  Text(
-                    l.t('settingsIntro'),
-                    style: const TextStyle(
-                      color: AppTheme.muted,
-                      fontSize: 15,
-                      height: 1.45,
-                    ),
+          : ListView(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+              children: [
+                Text(
+                  l.t('settingsIntro'),
+                  style: const TextStyle(
+                    color: AppTheme.muted,
+                    fontSize: 15,
+                    height: 1.45,
                   ),
-                  const SizedBox(height: 24),
-                  AppSurface(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SectionEyebrow(l.t('immich')),
-                        const SizedBox(height: 8),
-                        Text(
-                          l.t('serverConnection'),
-                          style: const TextStyle(
-                            fontSize: 21,
-                            fontWeight: FontWeight.w700,
-                          ),
+                ),
+                const SizedBox(height: 24),
+                AppSurface(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SectionEyebrow(l.t('immich')),
+                      const SizedBox(height: 8),
+                      Text(
+                        l.t('serverConnection'),
+                        style: const TextStyle(
+                          fontSize: 21,
+                          fontWeight: FontWeight.w700,
                         ),
-                        const SizedBox(height: 18),
-                        TextFormField(
-                          controller: _url,
-                          decoration: InputDecoration(
-                            labelText: l.t('immichUrl'),
-                            hintText: 'https://immich.example.com',
-                            prefixIcon: const Icon(Icons.language_rounded),
-                          ),
-                          keyboardType: TextInputType.url,
-                          autocorrect: false,
-                          validator: (v) =>
-                              (v == null || !v.startsWith('http'))
-                                  ? l.t('validUrl')
-                                  : null,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        l.t('serverConnectionSaveHint'),
+                        style: const TextStyle(
+                          color: AppTheme.muted,
+                          fontSize: 13,
+                          height: 1.4,
                         ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: _key,
-                          decoration: InputDecoration(
-                            labelText: l.t('apiKey'),
-                            prefixIcon: const Icon(Icons.key_rounded),
-                          ),
-                          obscureText: true,
-                          autocorrect: false,
-                          enableSuggestions: false,
-                          validator: (v) =>
-                              (v == null || v.trim().isEmpty)
-                                  ? l.t('apiKeyRequired')
-                                  : null,
+                      ),
+                      const SizedBox(height: 18),
+                      TextField(
+                        controller: _url,
+                        onChanged: _connectionChanged,
+                        decoration: InputDecoration(
+                          labelText: l.t('immichUrl'),
+                          hintText: 'https://immich.example.com',
+                          prefixIcon: const Icon(Icons.language_rounded),
                         ),
-                        const SizedBox(height: 14),
-                        const Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: [
-                            _ScopeChip('asset.read'),
-                            _ScopeChip('asset.update'),
-                          ],
+                        keyboardType: TextInputType.url,
+                        autocorrect: false,
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: _key,
+                        onChanged: _connectionChanged,
+                        decoration: InputDecoration(
+                          labelText: l.t('apiKey'),
+                          prefixIcon: const Icon(Icons.key_rounded),
                         ),
-                        if (_status != null) ...[
-                          const SizedBox(height: 16),
-                          _StatusBox(
-                            text: _status!,
-                            success: _testSuccess,
-                          ),
+                        obscureText: true,
+                        autocorrect: false,
+                        enableSuggestions: false,
+                      ),
+                      const SizedBox(height: 14),
+                      const Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          _ScopeChip('asset.read'),
+                          _ScopeChip('asset.view'),
+                          _ScopeChip('asset.update'),
                         ],
-                        const SizedBox(height: 18),
-                        OutlinedButton.icon(
-                          onPressed: _testing ? null : _test,
-                          icon: _testing
+                      ),
+                      if (_serverStatus != null) ...[
+                        const SizedBox(height: 16),
+                        _StatusBox(
+                          text: _serverStatus!,
+                          success: _serverStatusSuccess,
+                        ),
+                      ],
+                      const SizedBox(height: 18),
+                      OutlinedButton.icon(
+                        onPressed: _testing ? null : _testConnection,
+                        icon: _testing
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Icon(Icons.wifi_tethering_rounded),
+                        label: Text(l.t('testConnection')),
+                      ),
+                      if (_connectionVerified) ...[
+                        const SizedBox(height: 10),
+                        FilledButton.icon(
+                          onPressed: _testedConnectionStillMatches &&
+                                  !_savingConnection
+                              ? _saveConnection
+                              : null,
+                          icon: _savingConnection
                               ? const SizedBox(
                                   width: 18,
                                   height: 18,
@@ -211,150 +320,157 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     strokeWidth: 2,
                                   ),
                                 )
-                              : const Icon(Icons.wifi_tethering_rounded),
-                          label: Text(l.t('testConnection')),
+                              : const Icon(Icons.save_outlined),
+                          label: Text(l.t('saveConnection')),
                         ),
                       ],
-                    ),
+                    ],
                   ),
-                  const SizedBox(height: 16),
-                  AppSurface(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SectionEyebrow(l.t('tracking')),
-                        const SizedBox(height: 8),
-                        Text(
-                          l.t('timelineBehavior'),
-                          style: const TextStyle(
-                            fontSize: 21,
-                            fontWeight: FontWeight.w700,
+                ),
+                const SizedBox(height: 16),
+                AppSurface(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SectionEyebrow(l.t('tracking')),
+                      const SizedBox(height: 8),
+                      Text(
+                        l.t('timelineBehavior'),
+                        style: const TextStyle(
+                          fontSize: 21,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        l.t('trackingAutoSaveHint'),
+                        style: const TextStyle(
+                          color: AppTheme.muted,
+                          fontSize: 13,
+                          height: 1.4,
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+                      Text(
+                        l.t('trackingQuality'),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      SegmentedButton<TrackingQuality>(
+                        segments: [
+                          ButtonSegment(
+                            value: TrackingQuality.balanced,
+                            icon: const Icon(Icons.battery_saver_outlined),
+                            label: Text(l.t('trackingBalanced')),
                           ),
-                        ),
-                        const SizedBox(height: 18),
-                        Text(
-                          l.t('trackingQuality'),
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        SegmentedButton<TrackingQuality>(
-                          segments: [
-                            ButtonSegment(
-                              value: TrackingQuality.balanced,
-                              icon: const Icon(Icons.battery_saver_outlined),
-                              label: Text(l.t('trackingBalanced')),
-                            ),
-                            ButtonSegment(
-                              value: TrackingQuality.precise,
-                              icon: const Icon(Icons.gps_fixed_rounded),
-                              label: Text(l.t('trackingPrecise')),
-                            ),
-                          ],
-                          selected: {_trackingQuality},
-                          onSelectionChanged: (selection) {
-                            setState(() {
-                              _trackingQuality = selection.first;
-                            });
-                          },
-                        ),
-                        const SizedBox(height: 10),
-                        Text(
-                          _trackingQuality == TrackingQuality.balanced
-                              ? l.t('trackingBalancedDesc')
-                              : l.t('trackingPreciseDesc'),
-                          style: const TextStyle(
-                            color: AppTheme.muted,
-                            fontSize: 13,
-                            height: 1.4,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          controller: _maxGap,
-                          decoration: InputDecoration(
-                            labelText: l.t('maximumInterpolationGap'),
-                            suffixText: l.t('minutes'),
-                            prefixIcon: const Icon(Icons.timeline_rounded),
-                          ),
-                          keyboardType: TextInputType.number,
-                          validator: _positiveInt,
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: _retention,
-                          decoration: InputDecoration(
-                            labelText: l.t('keepLocationHistory'),
-                            suffixText: l.t('days'),
-                            prefixIcon: const Icon(Icons.history_rounded),
-                          ),
-                          keyboardType: TextInputType.number,
-                          validator: _positiveInt,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  AppSurface(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SectionEyebrow(l.t('batteryProtection')),
-                        const SizedBox(height: 8),
-                        Text(
-                          l.t('batteryProtection'),
-                          style: const TextStyle(
-                            fontSize: 21,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        Text(
-                          l.t('batteryProtectionDesc'),
-                          style: const TextStyle(
-                            color: AppTheme.muted,
-                            height: 1.45,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        _StatusBox(
-                          text: _batteryProtected
-                              ? l.t('batteryProtected')
-                              : l.t('batteryRestricted'),
-                          success: _batteryProtected,
-                        ),
-                        if (!_batteryProtected) ...[
-                          const SizedBox(height: 14),
-                          OutlinedButton.icon(
-                            onPressed: _batteryBusy
-                                ? null
-                                : _requestBatteryProtection,
-                            icon: _batteryBusy
-                                ? const SizedBox(
-                                    width: 18,
-                                    height: 18,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : const Icon(Icons.battery_saver_outlined),
-                            label: Text(
-                              l.t('allowUnrestrictedBattery'),
-                            ),
+                          ButtonSegment(
+                            value: TrackingQuality.precise,
+                            icon: const Icon(Icons.gps_fixed_rounded),
+                            label: Text(l.t('trackingPrecise')),
                           ),
                         ],
+                        selected: {_trackingQuality},
+                        onSelectionChanged: (selection) {
+                          _trackingQualityChanged(selection.first);
+                        },
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        _trackingQuality == TrackingQuality.balanced
+                            ? l.t('trackingBalancedDesc')
+                            : l.t('trackingPreciseDesc'),
+                        style: const TextStyle(
+                          color: AppTheme.muted,
+                          fontSize: 13,
+                          height: 1.4,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _maxGap,
+                        onChanged: _maxGapChanged,
+                        decoration: InputDecoration(
+                          labelText: l.t('maximumInterpolationGap'),
+                          suffixText: l.t('minutes'),
+                          prefixIcon: const Icon(Icons.timeline_rounded),
+                        ),
+                        keyboardType: TextInputType.number,
+                        autovalidateMode:
+                            AutovalidateMode.onUserInteraction,
+                        validator: _positiveInt,
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _retention,
+                        onChanged: _retentionChanged,
+                        decoration: InputDecoration(
+                          labelText: l.t('keepLocationHistory'),
+                          suffixText: l.t('days'),
+                          prefixIcon: const Icon(Icons.history_rounded),
+                        ),
+                        keyboardType: TextInputType.number,
+                        autovalidateMode:
+                            AutovalidateMode.onUserInteraction,
+                        validator: _positiveInt,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                AppSurface(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SectionEyebrow(l.t('batteryProtection')),
+                      const SizedBox(height: 8),
+                      Text(
+                        l.t('batteryProtection'),
+                        style: const TextStyle(
+                          fontSize: 21,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        l.t('batteryProtectionDesc'),
+                        style: const TextStyle(
+                          color: AppTheme.muted,
+                          height: 1.45,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      _StatusBox(
+                        text: _batteryProtected
+                            ? l.t('batteryProtected')
+                            : l.t('batteryRestricted'),
+                        success: _batteryProtected,
+                      ),
+                      if (!_batteryProtected) ...[
+                        const SizedBox(height: 14),
+                        OutlinedButton.icon(
+                          onPressed: _batteryBusy
+                              ? null
+                              : _requestBatteryProtection,
+                          icon: _batteryBusy
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(Icons.battery_saver_outlined),
+                          label: Text(
+                            l.t('allowUnrestrictedBattery'),
+                          ),
+                        ),
                       ],
-                    ),
+                    ],
                   ),
-                  const SizedBox(height: 22),
-                  FilledButton.icon(
-                    onPressed: _save,
-                    icon: const Icon(Icons.check_rounded),
-                    label: Text(l.t('saveSettings')),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
     );
   }
