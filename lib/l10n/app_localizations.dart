@@ -208,6 +208,7 @@ class AppLocalizations {
       'allowUnrestrictedBattery': 'Uneingeschränkte Akkunutzung erlauben',
       'resumeTracking': 'Tracking wurde automatisch fortgesetzt.',
       'cameraTimeTipTitle': 'Kamerauhr beachten',
+      'cameraTimeTipCompact': 'Antippen, um die genaue Handyzeit anzuzeigen.',
       'cameraTimeTipBody': 'Stelle die Uhr deiner Kamera möglichst genau nach der unten angezeigten Handyzeit. Kann die Kamera keine Zeitzone speichern, wähle vor der Zuordnung in Immich die richtige Zeitzone. GeoTagger normalisiert die Zeitstempel intern auf UTC.',
       'phoneTime': 'Handyzeit zum Einstellen der Kamera',
       'syncPreviewTitle': 'Standorte prüfen',
