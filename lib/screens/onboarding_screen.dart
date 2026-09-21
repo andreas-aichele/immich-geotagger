@@ -129,7 +129,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     height: 42,
                     decoration: BoxDecoration(
                       color: Theme.of(context).colorScheme.primary,
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(
                       Icons.location_on_rounded,
@@ -156,7 +156,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 value: (_page + 1) / 3,
                 minHeight: 4,
                 borderRadius: BorderRadius.circular(99),
-                backgroundColor: const Color(0xFFE6E6EE),
+                backgroundColor: const AppTheme.primarySoftStrong,
               ),
             ),
             Expanded(
@@ -195,8 +195,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             width: 64,
             height: 64,
             decoration: BoxDecoration(
-              color: const Color(0xFFECECFB),
-              borderRadius: BorderRadius.circular(20),
+              color: const AppTheme.primarySoft,
+              borderRadius: BorderRadius.circular(16),
             ),
             child: icon,
           ),
@@ -216,7 +216,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           style: const TextStyle(
             fontSize: 16,
             height: 1.5,
-            color: Color(0xFF62626D),
+            color: AppTheme.muted,
           ),
         ),
         const SizedBox(height: 28),
@@ -450,7 +450,7 @@ class _FeatureRow extends StatelessWidget {
               Text(
                 subtitle,
                 style: const TextStyle(
-                  color: Color(0xFF6A6A75),
+                  color: AppTheme.muted,
                   height: 1.35,
                 ),
               ),
@@ -481,7 +481,7 @@ class _PermissionCode extends StatelessWidget {
             vertical: 7,
           ),
           decoration: BoxDecoration(
-            color: const Color(0xFFECECFB),
+            color: const AppTheme.primarySoft,
             borderRadius: BorderRadius.circular(10),
           ),
           child: Text(
@@ -496,7 +496,7 @@ class _PermissionCode extends StatelessWidget {
         Expanded(
           child: Text(
             description,
-            style: const TextStyle(color: Color(0xFF656570)),
+            style: const TextStyle(color: AppTheme.muted),
           ),
         ),
       ],
@@ -523,7 +523,7 @@ class _StatusMessage extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
