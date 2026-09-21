@@ -22,7 +22,7 @@
 
 Immich GeoTagger is a small companion app for **Immich**. It was created for people who take photos with a DSLR, mirrorless camera, or any other camera without reliable GPS and still want their photos to appear at the correct places on the Immich map.
 
-Instead of manually assigning locations to photos afterwards, you simply take your phone with you. GeoTagger records where you were and later matches that information with the capture time of your photos.
+Instead of manually assigning locations to photos afterwards, you simply take your phone with you. GeoTagger records where you were and later matches that information with the capture time of your photos. You can choose between a battery-friendly **Balanced** mode for all-day tracking and a more detailed **Precise** mode for dedicated photo trips.
 
 ## Get Immich GeoTagger
 
@@ -65,7 +65,7 @@ The workflow is intentionally simple — GeoTagger stays out of the way of your 
    The app compares the capture time of photos without a location with your recorded location history.
 
 5. **Review the proposed matches.**  
-   Before anything is changed, GeoTagger shows a preview with Immich thumbnails, capture times, and the proposed locations on an interactive **OpenStreetMap** map. You can inspect individual markers, deselect photos, or keep the full selection.
+   Before anything is changed, GeoTagger shows a preview with Immich thumbnails, capture times, the proposed locations on an interactive **OpenStreetMap** map, and a reliability indicator for each match. You can inspect individual markers, deselect photos, or keep the full selection.
 
 6. **Apply only what you approve.**  
    Only the selected photos receive their calculated position and can then appear correctly on the Immich map.
