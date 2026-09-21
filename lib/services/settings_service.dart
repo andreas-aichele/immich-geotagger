@@ -21,6 +21,7 @@ class SettingsService {
   static const _secure = FlutterSecureStorage();
   static const _apiKey = 'immich_api_key';
   static const _onboardingComplete = 'onboarding_complete';
+  static const _trackingDesired = 'tracking_desired';
 
   Future<AppSettings> load() async {
     final prefs = await SharedPreferences.getInstance();
@@ -57,5 +58,15 @@ class SettingsService {
   Future<void> setOnboardingComplete(bool value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_onboardingComplete, value);
+  }
+
+  Future<bool> isTrackingDesired() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_trackingDesired) ?? false;
+  }
+
+  Future<void> setTrackingDesired(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_trackingDesired, value);
   }
 }
