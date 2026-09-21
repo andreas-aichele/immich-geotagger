@@ -170,7 +170,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _autoSaveTimer?.cancel();
     _autoSaveTimer = Timer(
       const Duration(milliseconds: 500),
-      _saveTrackingPreferences,
+      () {
+        _saveTrackingPreferences();
+      },
     );
   }
 
