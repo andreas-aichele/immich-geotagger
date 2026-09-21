@@ -1,0 +1,1 @@
+Añade ubicaciones GPS a las fotos de tu cámara en Immich.
