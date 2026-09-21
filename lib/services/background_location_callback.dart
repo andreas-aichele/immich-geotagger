@@ -1,8 +1,6 @@
 import 'dart:ui';
 
 import 'package:background_locator_neo/location_dto.dart';
-import 'package:flutter/widgets.dart';
-
 import '../models/location_point.dart';
 import 'database_service.dart';
 
