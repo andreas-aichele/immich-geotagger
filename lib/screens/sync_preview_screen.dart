@@ -7,6 +7,7 @@ import 'package:flutter_map_maplibre/flutter_map_maplibre.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../l10n/app_localizations.dart';
+import '../models/immich_asset.dart';
 import '../models/sync_preview.dart';
 import '../services/immich_service.dart';
 import '../services/settings_service.dart';
@@ -453,7 +454,7 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _thumbnailView(candidate.asset.id),
+            _thumbnailView(candidate.asset),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -553,7 +554,7 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (_appSettings != null) ...[
-              _thumbnailView(item.asset.id, size: 64),
+              _thumbnailView(item.asset, size: 64),
               const SizedBox(width: 12),
             ],
             Expanded(
@@ -911,7 +912,7 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
                             child: Row(
                               children: [
                                 _thumbnailView(
-                                  candidate.asset.id,
+                                  candidate.asset,
                                   size: 84,
                                 ),
                                 const SizedBox(width: 12),
@@ -1027,11 +1028,13 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
   ThumbnailLoader? get _thumbnailLoader =>
       _appSettings == null ? null : _thumbnail;
 
-  Widget _thumbnailView(String assetId, {double size = 84}) {
+  Widget _thumbnailView(ImmichAsset asset, {double size = 84}) {
     return PhotoThumbnail(
-      assetId: assetId,
+      assetId: asset.id,
       loader: _thumbnailLoader,
       size: size,
+      isVideo: asset.isVideo,
+      duration: asset.duration,
     );
   }
 }
