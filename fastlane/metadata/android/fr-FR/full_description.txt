@@ -1,0 +1,9 @@
+Immich GeoTagger ajoute des informations de localisation aux photos prises avec des appareils sans GPS.
+
+Démarrez le suivi avant de prendre des photos, gardez votre téléphone avec vous, puis importez vos images dans Immich comme d’habitude. GeoTagger compare l’heure de prise de vue de chaque photo avec votre trajet enregistré, calcule une position correspondante et affiche un aperçu avant toute modification.
+
+Vous pouvez vérifier les miniatures, désélectionner certaines photos et n’appliquer que les positions que vous approuvez. Les photos qui possèdent déjà des coordonnées GPS restent inchangées.
+
+Important : votre appareil photo et votre téléphone doivent utiliser la même heure et le même fuseau horaire afin que l’association soit correcte.
+
+Le suivi de localisation est effectué localement sur votre appareil. Sous Android, GeoTagger utilise le LocationManager AOSP libre et ne dépend pas des Google Play Services.
