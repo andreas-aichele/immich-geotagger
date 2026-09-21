@@ -36,14 +36,13 @@ class TrackingService {
       final foreground = await ph.Permission.locationWhenInUse.request();
       if (!foreground.isGranted) {
         throw StateError(
-          'Precise location permission is required before background access can be requested.',
+          'Precise location permission is required before background access can be enabled.',
         );
       }
 
-      final background = await ph.Permission.locationAlways.request();
-      if (!background.isGranted) {
+      if (!await isBackgroundLocationGranted()) {
         throw StateError(
-          'Background location permission is required. In Android settings, choose “Allow all the time”.',
+          'Background location is not enabled. Open the app settings and choose “Allow all the time”.',
         );
       }
 
@@ -59,6 +58,29 @@ class TrackingService {
         permission != PermissionStatus.grantedLimited) {
       throw StateError('Location permission is required.');
     }
+  }
+
+  Future<bool> requestForegroundLocationPermission() async {
+    var enabled = await _location.serviceEnabled();
+    if (!enabled) enabled = await _location.requestService();
+    if (!enabled) return false;
+
+    if (!Platform.isAndroid) {
+      var permission = await _location.hasPermission();
+      if (permission == PermissionStatus.denied) {
+        permission = await _location.requestPermission();
+      }
+      return permission == PermissionStatus.granted ||
+          permission == PermissionStatus.grantedLimited;
+    }
+
+    final status = await ph.Permission.locationWhenInUse.request();
+    return status.isGranted;
+  }
+
+  Future<bool> isBackgroundLocationGranted() async {
+    if (!Platform.isAndroid) return true;
+    return ph.Permission.locationAlways.isGranted;
   }
 
   Future<bool> isBatteryOptimizationIgnored() async {
