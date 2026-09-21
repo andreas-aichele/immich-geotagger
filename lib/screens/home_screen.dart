@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import '../services/database_service.dart';
 import '../services/sync_service.dart';
+import '../services/settings_service.dart';
 import '../services/tracking_service.dart';
 import '../theme/app_theme.dart';
 import 'history_screen.dart';
@@ -15,9 +16,10 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   final _tracker = TrackingService();
   final _sync = SyncService();
+  final _settings = SettingsService();
 
   bool _busy = false;
   bool _tracking = false;
@@ -28,7 +30,45 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _refreshStats();
+    _restoreTracking();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _restoreTracking();
+    }
+  }
+
+  Future<void> _restoreTracking() async {
+    try {
+      final desired = await _settings.isTrackingDesired();
+      final backgroundActive = await _tracker.isBackgroundModeEnabled();
+
+      if (desired && !backgroundActive) {
+        await _tracker.resumeIfNeeded();
+      }
+
+      final active = desired &&
+          (await _tracker.isBackgroundModeEnabled() || _tracker.isTracking);
+
+      if (mounted) {
+        setState(() => _tracking = active);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(
+        () => _error = e.toString().replaceFirst('Bad state: ', ''),
+      );
+    }
   }
 
   Future<void> _refreshStats() async {
