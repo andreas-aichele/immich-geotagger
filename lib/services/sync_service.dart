@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import '../models/geotagged_asset.dart';
 import '../models/sync_preview.dart';
 import 'database_service.dart';
@@ -107,6 +109,7 @@ class SyncService {
           longitude: match.longitude,
           before: match.before.timestamp,
           after: match.after.timestamp,
+          reliability: _reliabilityFor(match),
         ),
       );
     }
@@ -117,6 +120,45 @@ class SyncService {
       skippedWithLocation: existing,
       skippedWithoutTrack: noTrack,
     );
+  }
+
+  MatchReliability _reliabilityFor(InterpolationResult match) {
+    final gap = match.after.timestamp.difference(match.before.timestamp).abs();
+    final distance = _distanceMeters(
+      match.before.latitude,
+      match.before.longitude,
+      match.after.latitude,
+      match.after.longitude,
+    );
+
+    if (distance <= 25 || gap <= const Duration(minutes: 2)) {
+      return MatchReliability.high;
+    }
+    if (distance <= 100 || gap <= const Duration(minutes: 5)) {
+      return MatchReliability.medium;
+    }
+    return MatchReliability.low;
+  }
+
+  double _distanceMeters(
+    double lat1,
+    double lon1,
+    double lat2,
+    double lon2,
+  ) {
+    const earthRadius = 6371000.0;
+    final phi1 = lat1 * math.pi / 180;
+    final phi2 = lat2 * math.pi / 180;
+    final deltaPhi = (lat2 - lat1) * math.pi / 180;
+    final deltaLambda = (lon2 - lon1) * math.pi / 180;
+
+    final a = math.sin(deltaPhi / 2) * math.sin(deltaPhi / 2) +
+        math.cos(phi1) *
+            math.cos(phi2) *
+            math.sin(deltaLambda / 2) *
+            math.sin(deltaLambda / 2);
+    final angle = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
+    return earthRadius * angle;
   }
 
   Future<SyncResult> applySync(
