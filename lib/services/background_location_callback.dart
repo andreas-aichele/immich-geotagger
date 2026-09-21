@@ -1,30 +1,41 @@
 import 'dart:ui';
 
-import 'package:background_locator_neo/location_dto.dart';
+import 'package:flutter/widgets.dart';
+import 'package:libre_location/libre_location.dart';
+
 import '../models/location_point.dart';
 import 'database_service.dart';
 
 @pragma('vm:entry-point')
-Future<void> backgroundLocationCallback(LocationDto location) async {
+void libreLocationHeadlessDispatcher() {
+  WidgetsFlutterBinding.ensureInitialized();
+  DartPluginRegistrant.ensureInitialized();
+}
+
+@pragma('vm:entry-point')
+void libreLocationHeadlessCallback(Map<String, dynamic> data) async {
+  WidgetsFlutterBinding.ensureInitialized();
   DartPluginRegistrant.ensureInitialized();
 
+  try {
+    final position = Position.fromMap(data);
+    await _savePosition(position);
+  } catch (_) {
+    // Ignore malformed headless payloads instead of terminating the service.
+  }
+}
+
+Future<void> saveLibreLocationPosition(Position position) async {
+  await _savePosition(position);
+}
+
+Future<void> _savePosition(Position position) async {
   await DatabaseService.instance.insertLocation(
     LocationPoint(
-      timestamp: DateTime.now().toUtc(),
-      latitude: location.latitude,
-      longitude: location.longitude,
-      accuracy: location.accuracy,
+      timestamp: position.timestamp.toUtc(),
+      latitude: position.latitude,
+      longitude: position.longitude,
+      accuracy: position.accuracy,
     ),
   );
 }
-
-@pragma('vm:entry-point')
-void backgroundLocationInitCallback(Map<dynamic, dynamic> params) {
-  DartPluginRegistrant.ensureInitialized();
-}
-
-@pragma('vm:entry-point')
-void backgroundLocationDisposeCallback() {}
-
-@pragma('vm:entry-point')
-void backgroundNotificationTapCallback() {}
