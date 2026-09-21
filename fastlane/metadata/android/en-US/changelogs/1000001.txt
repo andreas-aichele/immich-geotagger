@@ -1,0 +1,1 @@
+Adds F-Droid store metadata, app icon, and screenshots for the public listing.
