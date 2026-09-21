@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:flutter_map_maplibre/flutter_map_maplibre.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../l10n/app_localizations.dart';
@@ -26,10 +27,9 @@ class SyncPreviewScreen extends StatefulWidget {
 }
 
 class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
-  static const _tileUrl = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
-  static const _userAgent = 'io.github.andreasaichele.immichgeotagger';
-  static const _minMapZoom = 2.0;
-  static const _maxMapZoom = 19.0;
+  static const _mapStyle = 'https://tiles.openfreemap.org/styles/liberty';
+  static const _minMapZoom = 0.0;
+  static const _maxMapZoom = 20.0;
   static const _clusterToleranceMeters = 20.0;
 
   final _settings = SettingsService();
@@ -408,14 +408,38 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
               options: MapOptions(
                 initialCenter: center,
                 initialZoom: zoom.clamp(_minMapZoom, _maxMapZoom),
+                initialCameraFit: candidates.length > 1
+                    ? CameraFit.bounds(
+                        bounds: LatLngBounds.fromPoints(
+                          candidates
+                              .map(
+                                (candidate) => LatLng(
+                                  candidate.latitude,
+                                  candidate.longitude,
+                                ),
+                              )
+                              .toList(),
+                        ),
+                        padding: const EdgeInsets.all(40),
+                        maxZoom: 16,
+                      )
+                    : null,
                 minZoom: _minMapZoom,
                 maxZoom: _maxMapZoom,
+                cameraConstraint: CameraConstraint.containCenter(
+                  bounds: LatLngBounds(
+                    const LatLng(-85.05112878, -180),
+                    const LatLng(85.05112878, 180),
+                  ),
+                ),
                 interactionOptions: const InteractionOptions(
                   flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
                 ),
               ),
               children: [
-                _tileLayer(),
+                const MapLibreLayer(
+                  initStyle: _mapStyle,
+                ),
                 MarkerLayer(
                   markers: [
                     for (final group in _groupCandidates(candidates))
@@ -439,7 +463,6 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
                       ),
                   ],
                 ),
-                _attribution(),
               ],
             ),
           ),
@@ -858,13 +881,21 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
                             initialZoom: 17,
                             minZoom: _minMapZoom,
                             maxZoom: _maxMapZoom,
+                            cameraConstraint: CameraConstraint.containCenter(
+                              bounds: LatLngBounds(
+                                const LatLng(-85.05112878, -180),
+                                const LatLng(85.05112878, 180),
+                              ),
+                            ),
                             interactionOptions: const InteractionOptions(
                               flags: InteractiveFlag.all &
                                   ~InteractiveFlag.rotate,
                             ),
                           ),
                           children: [
-                            _tileLayer(),
+                            const MapLibreLayer(
+                              initStyle: _mapStyle,
+                            ),
                             MarkerLayer(
                               markers: [
                                 for (var i = 0; i < group.length; i++)
@@ -884,8 +915,7 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
                                   ),
                               ],
                             ),
-                            _attribution(),
-                          ],
+                                      ],
                         ),
                       ),
                     ),
@@ -991,37 +1021,6 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
     );
 
     pageController.dispose();
-  }
-
-  TileLayer _tileLayer() {
-    return TileLayer(
-      urlTemplate: _tileUrl,
-      userAgentPackageName: _userAgent,
-      minZoom: _minMapZoom,
-      maxZoom: _maxMapZoom,
-      minNativeZoom: 0,
-      maxNativeZoom: 19,
-      keepBuffer: 4,
-    );
-  }
-
-  Widget _attribution() {
-    return const Align(
-      alignment: Alignment.bottomRight,
-      child: ColoredBox(
-        color: Color(0xCCFFFFFF),
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-          child: Text(
-            '© OpenStreetMap contributors',
-            style: TextStyle(
-              color: Color(0xFF555555),
-              fontSize: 10,
-            ),
-          ),
-        ),
-      ),
-    );
   }
 
   Widget _mapMarker({required bool selected}) {
