@@ -156,7 +156,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 value: (_page + 1) / 3,
                 minHeight: 4,
                 borderRadius: BorderRadius.circular(99),
-                backgroundColor: const AppTheme.primarySoftStrong,
+                backgroundColor: AppTheme.primarySoftStrong,
               ),
             ),
             Expanded(
@@ -195,7 +195,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             width: 64,
             height: 64,
             decoration: BoxDecoration(
-              color: const AppTheme.primarySoft,
+              color: AppTheme.primarySoft,
               borderRadius: BorderRadius.circular(16),
             ),
             child: icon,
@@ -481,7 +481,7 @@ class _PermissionCode extends StatelessWidget {
             vertical: 7,
           ),
           decoration: BoxDecoration(
-            color: const AppTheme.primarySoft,
+            color: AppTheme.primarySoft,
             borderRadius: BorderRadius.circular(10),
           ),
           child: Text(
