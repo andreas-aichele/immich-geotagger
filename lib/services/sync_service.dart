@@ -67,31 +67,15 @@ class SyncService {
     final retentionStart = now.subtract(retention);
     final points = await _database.locationsBetween(retentionStart, now);
 
-    if (points.length < 2) {
-      return const SyncPreview(
-        candidates: [],
-        scanned: 0,
-        skippedWithLocation: 0,
-        skippedWithoutTrack: 0,
-      );
-    }
-
-    // Only assets inside the recorded route can ever be interpolated. Searching
-    // the complete retention period made preview generation unnecessarily slow
-    // on larger Immich libraries.
-    // Give Immich's date filter a generous margin. Camera metadata can carry
-    // incomplete timezone information, and Immich versions have had date/time
-    // conversion differences. Final acceptance is still done strictly against
-    // the recorded GPS points below.
-    final searchFrom =
-        points.first.timestamp.toUtc().subtract(const Duration(hours: 12));
-    final searchTo =
-        points.last.timestamp.toUtc().add(const Duration(hours: 12));
+    // The retention setting defines the Immich review window as well as the
+    // local GPS retention window. This keeps the preview transparent: every
+    // image in Immich from the configured period is classified, even when no
+    // matching GPS track exists for it.
     final assets = await _immich.assetsTakenBetween(
       baseUrl: settings.immichUrl,
       apiKey: settings.apiKey,
-      from: searchFrom,
-      to: searchTo,
+      from: retentionStart,
+      to: now,
     );
 
     final candidates = <SyncCandidate>[];
@@ -105,11 +89,13 @@ class SyncService {
         continue;
       }
 
-      final match = _interpolation.interpolate(
-        timestamp: asset.takenAt,
-        points: points,
-        maxGap: Duration(minutes: settings.maxInterpolationGapMinutes),
-      );
+      final match = points.length >= 2
+          ? _interpolation.interpolate(
+              timestamp: asset.takenAt,
+              points: points,
+              maxGap: Duration(minutes: settings.maxInterpolationGapMinutes),
+            )
+          : null;
 
       if (match == null) {
         final fallback = _lastKnownLocationFallback(
@@ -190,6 +176,13 @@ class SyncService {
     List<LocationPoint> points,
     AppSettings settings,
   ) {
+    if (points.isEmpty) {
+      return SyncUnmatched(
+        asset: asset,
+        reason: UnmatchedReason.noTrackData,
+      );
+    }
+
     final target = asset.takenAt.toUtc();
     final first = points.first.timestamp.toUtc();
     final last = points.last.timestamp.toUtc();
@@ -207,6 +200,14 @@ class SyncService {
         asset: asset,
         reason: UnmatchedReason.afterTrack,
         before: points.last.timestamp,
+      );
+    }
+
+    if (points.length < 2) {
+      return SyncUnmatched(
+        asset: asset,
+        reason: UnmatchedReason.noTrackData,
+        before: points.first.timestamp,
       );
     }
 
