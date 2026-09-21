@@ -3,10 +3,20 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/andreas-aichele/immich-geotagger/releases/latest"><strong>Download the latest release</strong></a>
-  ·
+  <strong>Give cameras without GPS a place on your Immich map.</strong>
+</p>
+
+<p align="center">
+  <a href="https://github.com/andreas-aichele/immich-geotagger/releases/latest"><strong>⬇ Download latest release</strong></a>
+  &nbsp;·&nbsp;
   <a href="https://github.com/andreas-aichele/immich-geotagger/issues">Report an issue</a>
 </p>
+
+<p align="center">
+  <sub>Open source · Built for self-hosted Immich · Location history stays on your phone</sub>
+</p>
+
+---
 
 **Give photos from cameras without GPS the location they were actually taken at.**
 
@@ -14,13 +24,13 @@ Immich GeoTagger is a small companion app for **Immich**. It was created for peo
 
 Instead of manually assigning locations to photos afterwards, you simply take your phone with you. GeoTagger records where you were and later matches that information with the capture time of your photos.
 
-## Download
+## Get Immich GeoTagger
 
-The easiest way to get started is to download the latest version from **GitHub Releases**:
+Ready to try it? Download the latest version from **GitHub Releases**.
 
-**[Download Immich GeoTagger](https://github.com/andreas-aichele/immich-geotagger/releases/latest)**
+### [⬇ Download Immich GeoTagger](https://github.com/andreas-aichele/immich-geotagger/releases/latest)
 
-Android users can install the provided APK directly.
+**Android:** download the APK and install it on your phone. The first-start guide walks you through location access and connecting your Immich server.
 
 > **Note for iPhone users:** iOS builds currently require manual signing and are not yet available as a normal App Store installation.
 
@@ -37,6 +47,8 @@ The idea is simple:
 You do not need to connect your camera to your phone, install anything on the camera, or change the way you import photos.
 
 ## How it works
+
+The workflow is intentionally simple — GeoTagger stays out of the way of your normal photography and Immich import process.
 
 1. **Start tracking before taking photos.**  
    GeoTagger records your location in the background while your phone stays in your pocket.
