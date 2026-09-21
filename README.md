@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <strong>Give cameras without GPS a place on your Immich map.</strong>
+  <strong>GPS for cameras without</strong>
 </p>
 
 <p align="center">
