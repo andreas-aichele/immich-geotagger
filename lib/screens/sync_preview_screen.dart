@@ -504,7 +504,7 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
   }
 
   TileLayer _tileLayer() {
-    return const TileLayer(
+    return TileLayer(
       urlTemplate: _tileUrl,
       userAgentPackageName: _userAgent,
       maxNativeZoom: 19,
