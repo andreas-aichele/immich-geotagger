@@ -101,78 +101,78 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
-    final hasCandidates = widget.preview.candidates.isNotEmpty;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l.t('syncPreviewTitle')),
-      ),
-      body: ListView.builder(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
-        itemCount: hasCandidates
-            ? widget.preview.candidates.length + 2 +
-                (widget.preview.unmatched.isNotEmpty ? 1 : 0)
-            : 2 + (widget.preview.unmatched.isNotEmpty ? 1 : 0),
-        itemBuilder: (context, index) {
-          if (index == 0) {
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 12),
+    return DefaultTabController(
+      length: 3,
+      initialIndex: 1,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(l.t('syncPreviewTitle')),
+        ),
+        body: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
               child: _summaryCard(),
-            );
-          }
-
-          if (!hasCandidates) {
-            if (index == 1) {
-              return AppSurface(
-                child: Text(
-                  l.t('noSyncCandidates'),
-                  style: const TextStyle(
-                    color: AppTheme.muted,
-                    height: 1.4,
+            ),
+            TabBar(
+              tabs: [
+                Tab(
+                  icon: const Icon(Icons.map_outlined),
+                  text: l.t('syncTabMap'),
+                ),
+                Tab(
+                  icon: const Icon(Icons.photo_library_outlined),
+                  text: l.t(
+                    'syncTabAssignable',
+                    {'count': widget.preview.candidates.length},
                   ),
                 ),
-              );
-            }
-            return _unmatchedCard();
-          }
-
-          if (index == 1) {
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: _overviewMapCard(),
-            );
-          }
-
-          final candidateIndex = index - 2;
-          if (candidateIndex < widget.preview.candidates.length) {
-            return _candidateCard(widget.preview.candidates[candidateIndex]);
-          }
-          return _unmatchedCard();
-        },
-      ),
-      bottomSheet: SafeArea(
-        top: false,
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            border: Border(
-              top: BorderSide(color: AppTheme.border),
+                Tab(
+                  icon: const Icon(Icons.location_off_outlined),
+                  text: l.t(
+                    'syncTabUnmatched',
+                    {'count': widget.preview.unmatched.length},
+                  ),
+                ),
+              ],
             ),
-          ),
-          child: FilledButton.icon(
-            onPressed: _selected.isEmpty || _applying ? null : _apply,
-            icon: _applying
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.location_on_outlined),
-            label: Text(
-              l.t(
-                'applySelectedLocations',
-                {'count': _selected.length},
+            const Divider(height: 1),
+            Expanded(
+              child: TabBarView(
+                children: [
+                  _mapTab(),
+                  _assignableTab(),
+                  _unmatchedTab(),
+                ],
+              ),
+            ),
+          ],
+        ),
+        bottomSheet: SafeArea(
+          top: false,
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              border: Border(
+                top: BorderSide(color: AppTheme.border),
+              ),
+            ),
+            child: FilledButton.icon(
+              onPressed: _selected.isEmpty || _applying ? null : _apply,
+              icon: _applying
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.location_on_outlined),
+              label: Text(
+                l.t(
+                  'applySelectedLocations',
+                  {'count': _selected.length},
+                ),
               ),
             ),
           ),
@@ -185,51 +185,147 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
     final l = context.l10n;
 
     return AppSurface(
+      padding: const EdgeInsets.all(14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SectionEyebrow(l.t('syncPreview')),
-          const SizedBox(height: 8),
           Text(
-            l.t(
-              'syncPreviewSummary',
-              {
-                'scanned': widget.preview.scanned,
-                'ready': widget.preview.candidates.length,
-                'located': widget.preview.skippedWithLocation,
-                'unmatched': widget.preview.skippedWithoutTrack,
-              },
-            ),
+            l.t('syncOverview'),
             style: const TextStyle(
-              color: AppTheme.muted,
-              height: 1.45,
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           Row(
             children: [
-              TextButton(
-                onPressed: _selectAll,
-                child: Text(l.t('selectAll')),
+              _summaryNumber(
+                widget.preview.scanned,
+                l.t('syncFound'),
               ),
-              TextButton(
-                onPressed: _selectNone,
-                child: Text(l.t('selectNone')),
+              _summaryNumber(
+                widget.preview.candidates.length,
+                l.t('syncAssignable'),
               ),
-              const Spacer(),
-              Text(
-                l.t(
-                  'selectedCount',
-                  {'count': _selected.length},
-                ),
-                style: const TextStyle(
-                  color: AppTheme.muted,
-                  fontWeight: FontWeight.w600,
-                ),
+              _summaryNumber(
+                widget.preview.unmatched.length,
+                l.t('syncUnmatched'),
+              ),
+              _summaryNumber(
+                widget.preview.skippedWithLocation,
+                l.t('syncAlreadyLocated'),
               ),
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _summaryNumber(int value, String label) {
+    return Expanded(
+      child: Column(
+        children: [
+          Text(
+            '$value',
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: AppTheme.muted,
+              fontSize: 11,
+              height: 1.15,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _mapTab() {
+    if (widget.preview.candidates.isEmpty) {
+      return _emptyTab(context.l10n.t('noSyncCandidates'));
+    }
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
+      children: [_overviewMapCard()],
+    );
+  }
+
+  Widget _assignableTab() {
+    final l = context.l10n;
+    if (widget.preview.candidates.isEmpty) {
+      return _emptyTab(l.t('noSyncCandidates'));
+    }
+
+    final allSelected =
+        _selected.length == widget.preview.candidates.length;
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
+      children: [
+        Row(
+          children: [
+            Text(
+              l.t('selectedCount', {'count': _selected.length}),
+              style: const TextStyle(
+                color: AppTheme.muted,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const Spacer(),
+            IconButton(
+              tooltip: allSelected ? l.t('selectNone') : l.t('selectAll'),
+              onPressed: allSelected ? _selectNone : _selectAll,
+              icon: Icon(
+                allSelected
+                    ? Icons.deselect_rounded
+                    : Icons.select_all_rounded,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        for (final candidate in widget.preview.candidates)
+          _candidateCard(candidate),
+      ],
+    );
+  }
+
+  Widget _unmatchedTab() {
+    if (widget.preview.unmatched.isEmpty) {
+      return _emptyTab(context.l10n.t('noUnmatchedPhotos'));
+    }
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
+      children: [
+        for (final item in widget.preview.unmatched)
+          _unmatchedPhotoCard(item),
+      ],
+    );
+  }
+
+  Widget _emptyTab(String message) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Text(
+          message,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            color: AppTheme.muted,
+            height: 1.4,
+          ),
+        ),
       ),
     );
   }
@@ -409,16 +505,10 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
     );
   }
 
-  Widget _unmatchedCard() {
+  Widget _unmatchedPhotoCard(SyncUnmatched item) {
     final l = context.l10n;
-    final material = MaterialLocalizations.of(context);
 
-    String time(DateTime value) => material.formatTimeOfDay(
-          TimeOfDay.fromDateTime(value.toLocal()),
-          alwaysUse24HourFormat: MediaQuery.alwaysUse24HourFormatOf(context),
-        );
-
-    String reason(SyncUnmatched item) {
+    String reason() {
       return switch (item.reason) {
         UnmatchedReason.noTrackData => l.t('unmatchedNoTrackData'),
         UnmatchedReason.beforeTrack => l.t('unmatchedBeforeTrack'),
@@ -428,99 +518,116 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
       };
     }
 
+    final deviation = _relativeDeviation(item);
+
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 10),
       child: AppSurface(
-        child: ExpansionTile(
-          tilePadding: EdgeInsets.zero,
-          childrenPadding: const EdgeInsets.only(top: 4),
-          title: Text(
-            l.t(
-              'unmatchedDetails',
-              {'count': widget.preview.unmatched.length},
-            ),
-            style: const TextStyle(fontWeight: FontWeight.w700),
-          ),
-          subtitle: Text(
-            l.t('unmatchedDetailsHint'),
-            style: const TextStyle(
-              color: AppTheme.muted,
-              fontSize: 12,
-            ),
-          ),
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            for (final item in widget.preview.unmatched)
-              Padding(
-                padding: const EdgeInsets.only(top: 8, bottom: 8),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (_appSettings != null) ...[
-                      _thumbnailView(item.asset.id, size: 52),
-                      const SizedBox(width: 10),
-                    ],
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            item.asset.fileName,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontWeight: FontWeight.w700),
-                          ),
-                          const SizedBox(height: 3),
-                          Text(
-                            l.t(
-                              'unmatchedPhotoTime',
-                              {'time': time(item.asset.takenAt)},
-                            ),
-                            style: const TextStyle(
-                              color: AppTheme.muted,
-                              fontSize: 12,
-                            ),
-                          ),
-                          if (item.before != null)
-                            Text(
-                              l.t(
-                                'unmatchedGpsBefore',
-                                {'time': time(item.before!)},
-                              ),
-                              style: const TextStyle(
-                                color: AppTheme.muted,
-                                fontSize: 12,
-                              ),
-                            ),
-                          if (item.after != null)
-                            Text(
-                              l.t(
-                                'unmatchedGpsAfter',
-                                {'time': time(item.after!)},
-                              ),
-                              style: const TextStyle(
-                                color: AppTheme.muted,
-                                fontSize: 12,
-                              ),
-                            ),
-                          const SizedBox(height: 3),
-                          Text(
-                            reason(item),
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.error,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
+            if (_appSettings != null) ...[
+              _thumbnailView(item.asset.id, size: 64),
+              const SizedBox(width: 12),
+            ],
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.asset.fileName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    _formatPhotoDate(item.asset.takenAt),
+                    style: const TextStyle(
+                      color: AppTheme.muted,
+                      fontSize: 12,
+                    ),
+                  ),
+                  if (deviation != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      l.t(
+                        'unmatchedDeviation',
+                        {'value': deviation},
+                      ),
+                      style: const TextStyle(
+                        color: AppTheme.muted,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
-                ),
+                  const SizedBox(height: 5),
+                  Text(
+                    reason(),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
               ),
+            ),
           ],
         ),
       ),
     );
+  }
+
+  String _formatPhotoDate(DateTime value) {
+    final local = value.toLocal();
+    final material = MaterialLocalizations.of(context);
+    final date = material.formatShortDate(local);
+    final time = material.formatTimeOfDay(
+      TimeOfDay.fromDateTime(local),
+      alwaysUse24HourFormat: MediaQuery.alwaysUse24HourFormatOf(context),
+    );
+    return context.l10n.t(
+      'unmatchedPhotoDateTime',
+      {'date': date, 'time': time},
+    );
+  }
+
+  String? _relativeDeviation(SyncUnmatched item) {
+    final photo = item.asset.takenAt.toUtc();
+    final references = <DateTime>[
+      if (item.before != null) item.before!.toUtc(),
+      if (item.after != null) item.after!.toUtc(),
+    ];
+    if (references.isEmpty) return null;
+
+    var difference = references.first.difference(photo).abs();
+    for (final reference in references.skip(1)) {
+      final candidate = reference.difference(photo).abs();
+      if (candidate < difference) difference = candidate;
+    }
+
+    final l = context.l10n;
+    if (difference.inDays >= 1) {
+      final days = difference.inHours / 24;
+      final rounded = days >= 10 ? days.round().toString() : days.toStringAsFixed(1);
+      return l.t('durationDays', {'count': rounded});
+    }
+    if (difference.inHours >= 1) {
+      final hours = difference.inMinutes / 60;
+      final rounded =
+          hours >= 10 ? hours.round().toString() : hours.toStringAsFixed(1);
+      return l.t('durationHours', {'count': rounded});
+    }
+    if (difference.inMinutes >= 1) {
+      return l.t(
+        'durationMinutes',
+        {'count': math.max(1, difference.inMinutes)},
+      );
+    }
+    return l.t('durationLessThanMinute');
   }
 
   Widget _reliabilityChip(MatchReliability reliability) {
