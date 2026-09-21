@@ -76,8 +76,14 @@ class SyncService {
     // Only assets inside the recorded route can ever be interpolated. Searching
     // the complete retention period made preview generation unnecessarily slow
     // on larger Immich libraries.
-    final searchFrom = points.first.timestamp.toUtc();
-    final searchTo = points.last.timestamp.toUtc();
+    // Give Immich's date filter a generous margin. Camera metadata can carry
+    // incomplete timezone information, and Immich versions have had date/time
+    // conversion differences. Final acceptance is still done strictly against
+    // the recorded GPS points below.
+    final searchFrom =
+        points.first.timestamp.toUtc().subtract(const Duration(hours: 12));
+    final searchTo =
+        points.last.timestamp.toUtc().add(const Duration(hours: 12));
     final assets = await _immich.assetsTakenBetween(
       baseUrl: settings.immichUrl,
       apiKey: settings.apiKey,
