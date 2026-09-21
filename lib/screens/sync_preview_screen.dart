@@ -292,10 +292,7 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
     if (widget.preview.candidates.isEmpty) {
       return _emptyTab(context.l10n.t('noSyncCandidates'));
     }
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
-      children: [_overviewMapCard()],
-    );
+    return _overviewMapCard();
   }
 
   Widget _assignableTab() {
@@ -369,103 +366,68 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
   }
 
   Widget _overviewMapCard() {
-    final l = context.l10n;
     final candidates = widget.preview.candidates;
     final center = _centerOf(candidates);
     final zoom = _zoomFor(candidates);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(2, 0, 2, 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                l.t('mapOverview'),
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
+    return FlutterMap(
+      options: MapOptions(
+        initialCenter: center,
+        initialZoom: zoom.clamp(_minMapZoom, _maxMapZoom),
+        initialCameraFit: candidates.length > 1
+            ? CameraFit.bounds(
+                bounds: LatLngBounds.fromPoints(
+                  candidates
+                      .map(
+                        (candidate) => LatLng(
+                          candidate.latitude,
+                          candidate.longitude,
+                        ),
+                      )
+                      .toList(),
                 ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                l.t('mapOverviewHint'),
-                style: const TextStyle(
-                  color: AppTheme.muted,
-                  fontSize: 13,
-                ),
-              ),
-            ],
+                padding: const EdgeInsets.all(40),
+                maxZoom: 16,
+              )
+            : null,
+        minZoom: _minMapZoom,
+        maxZoom: _maxMapZoom,
+        cameraConstraint: CameraConstraint.containCenter(
+          bounds: LatLngBounds(
+            const LatLng(-85.05112878, -180),
+            const LatLng(85.05112878, 180),
           ),
         ),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: SizedBox(
-            height: 300,
-            child: FlutterMap(
-              options: MapOptions(
-                initialCenter: center,
-                initialZoom: zoom.clamp(_minMapZoom, _maxMapZoom),
-                initialCameraFit: candidates.length > 1
-                    ? CameraFit.bounds(
-                        bounds: LatLngBounds.fromPoints(
-                          candidates
-                              .map(
-                                (candidate) => LatLng(
-                                  candidate.latitude,
-                                  candidate.longitude,
-                                ),
-                              )
-                              .toList(),
-                        ),
-                        padding: const EdgeInsets.all(40),
-                        maxZoom: 16,
-                      )
-                    : null,
-                minZoom: _minMapZoom,
-                maxZoom: _maxMapZoom,
-                cameraConstraint: CameraConstraint.containCenter(
-                  bounds: LatLngBounds(
-                    const LatLng(-85.05112878, -180),
-                    const LatLng(85.05112878, 180),
-                  ),
+        interactionOptions: const InteractionOptions(
+          flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
+        ),
+      ),
+      children: [
+        const MapLibreLayer(
+          initStyle: _mapStyle,
+        ),
+        MarkerLayer(
+          markers: [
+            for (final group in _groupCandidates(candidates))
+              Marker(
+                point: LatLng(
+                  group.first.latitude,
+                  group.first.longitude,
                 ),
-                interactionOptions: const InteractionOptions(
-                  flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
+                width: group.length > 1 ? 52 : 42,
+                height: group.length > 1 ? 52 : 42,
+                child: GestureDetector(
+                  onTap: () => _showCandidateGroup(group),
+                  child: group.length == 1
+                      ? _mapMarker(
+                          selected: _selected.contains(
+                            group.first.asset.id,
+                          ),
+                        )
+                      : _groupMapMarker(group),
                 ),
               ),
-              children: [
-                const MapLibreLayer(
-                  initStyle: _mapStyle,
-                ),
-                MarkerLayer(
-                  markers: [
-                    for (final group in _groupCandidates(candidates))
-                      Marker(
-                        point: LatLng(
-                          group.first.latitude,
-                          group.first.longitude,
-                        ),
-                        width: group.length > 1 ? 52 : 42,
-                        height: group.length > 1 ? 52 : 42,
-                        child: GestureDetector(
-                          onTap: () => _showCandidateGroup(group),
-                          child: group.length == 1
-                              ? _mapMarker(
-                                  selected: _selected.contains(
-                                    group.first.asset.id,
-                                  ),
-                                )
-                              : _groupMapMarker(group),
-                        ),
-                      ),
-                  ],
-                ),
-              ],
-            ),
-          ),
+          ],
         ),
       ],
     );
