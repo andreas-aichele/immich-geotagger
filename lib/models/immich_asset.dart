@@ -50,12 +50,21 @@ class ImmichAsset {
       type: typeValue == 'VIDEO'
           ? ImmichAssetType.video
           : ImmichAssetType.image,
-      duration: _parseDuration(json['duration'] as String?),
+      duration: _parseDuration(json['duration']),
     );
   }
 
-  static Duration? _parseDuration(String? value) {
-    if (value == null || value.isEmpty) return null;
+  static Duration? _parseDuration(Object? value) {
+    if (value == null) return null;
+
+    // Current Immich versions expose asset duration as milliseconds.
+    if (value is num) {
+      if (value < 0) return null;
+      return Duration(milliseconds: value.round());
+    }
+
+    // Keep compatibility with older Immich responses that used HH:MM:SS.
+    if (value is! String || value.isEmpty) return null;
 
     final parts = value.split(':');
     if (parts.length != 3) return null;
