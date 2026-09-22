@@ -64,7 +64,7 @@ jobs:
           fi
 
       - name: Build APKs per ABI
-        run: flutter build apk --release --split-per-abi --no-pub
+        run: flutter build apk --release --split-per-abi --no-pub -P force-version-code-ignoring-abi=true
 
       - name: Build AAB
         run: flutter build appbundle --release --no-pub
