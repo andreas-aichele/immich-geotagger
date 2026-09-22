@@ -29,9 +29,9 @@ jobs:
           ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
         shell: bash
         run: |
-          if [[ -z "$ANDROID_KEYSTORE_BASE64" ]]; then
-            echo "No Android signing secrets configured."
-            exit 0
+          if [[ -z "$ANDROID_KEYSTORE_BASE64" || -z "$ANDROID_KEY_ALIAS" || -z "$ANDROID_KEY_PASSWORD" || -z "$ANDROID_STORE_PASSWORD" ]]; then
+            echo "::error::Android release signing secrets are incomplete."
+            exit 1
           fi
           printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/upload-keystore.jks
           cat > android/key.properties <<EOF
@@ -40,15 +40,6 @@ jobs:
           keyAlias=$ANDROID_KEY_ALIAS
           storeFile=upload-keystore.jks
           EOF
-
-      - name: Signing status
-        shell: bash
-        run: |
-          if [[ -f android/key.properties ]]; then
-            echo "Using persistent Android release signing key."
-          else
-            echo "::warning::Android signing secrets are not configured; using Flutter template debug signing for this test build."
-          fi
 
       - run: flutter pub get
       - run: flutter analyze
@@ -73,10 +64,10 @@ jobs:
           fi
 
       - name: Build APKs per ABI
-        run: flutter build apk --release --split-per-abi
+        run: flutter build apk --release --split-per-abi --no-pub
 
       - name: Build AAB
-        run: flutter build appbundle --release
+        run: flutter build appbundle --release --no-pub
 
       - name: Prepare Android artifacts
         shell: bash
@@ -86,6 +77,10 @@ jobs:
           cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk "dist/immich-geotagger-${GITHUB_REF_NAME}-android-arm64-v8a.apk"
           cp build/app/outputs/flutter-apk/app-x86_64-release.apk "dist/immich-geotagger-${GITHUB_REF_NAME}-android-x86_64.apk"
           cp build/app/outputs/bundle/release/app-release.aab "dist/immich-geotagger-${GITHUB_REF_NAME}-android.aab"
+          (
+            cd dist
+            sha256sum *.apk *.aab > SHA256SUMS
+          )
 
       - uses: actions/upload-artifact@v4
         with:
