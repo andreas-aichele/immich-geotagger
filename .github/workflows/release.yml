@@ -13,8 +13,18 @@ jobs:
   android:
     name: Build Android
     runs-on: ubuntu-latest
+    env:
+      BUILD_ROOT: /tmp/build
+      PUB_CACHE: /tmp/build/.pub-cache
     steps:
       - uses: actions/checkout@v4
+
+      - name: Prepare reproducible build workspace
+        shell: bash
+        run: |
+          rm -rf "$BUILD_ROOT"
+          mkdir -p "$BUILD_ROOT"
+          cp -a "$GITHUB_WORKSPACE/." "$BUILD_ROOT/"
 
       - uses: subosito/flutter-action@v2
         with:
@@ -33,21 +43,27 @@ jobs:
             echo "::error::Android release signing secrets are incomplete."
             exit 1
           fi
-          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/upload-keystore.jks
-          cat > android/key.properties <<EOF
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$BUILD_ROOT/android/app/upload-keystore.jks"
+          cat > "$BUILD_ROOT/android/key.properties" <<EOF
           storePassword=$ANDROID_STORE_PASSWORD
           keyPassword=$ANDROID_KEY_PASSWORD
           keyAlias=$ANDROID_KEY_ALIAS
           storeFile=upload-keystore.jks
           EOF
 
-      - run: flutter pub get
-      - run: flutter analyze
-      - run: flutter test
+      - name: Install dependencies
+        run: cd "$BUILD_ROOT" && flutter pub get
+
+      - name: Analyze
+        run: cd "$BUILD_ROOT" && flutter analyze
+
+      - name: Test
+        run: cd "$BUILD_ROOT" && flutter test
 
       - name: Validate release version
         shell: bash
         run: |
+          cd "$BUILD_ROOT"
           SOURCE_VERSION="$(sed -n -E 's/^version:[[:space:]]*([^+]+)\+([0-9]+)$/\1/p' pubspec.yaml)"
           SOURCE_CODE="$(sed -n -E 's/^version:[[:space:]]*([^+]+)\+([0-9]+)$/\2/p' pubspec.yaml)"
 
@@ -64,19 +80,19 @@ jobs:
           fi
 
       - name: Build APKs per ABI
-        run: flutter build apk --release --split-per-abi --no-pub
+        run: cd "$BUILD_ROOT" && flutter build apk --release --split-per-abi --no-pub
 
       - name: Build AAB
-        run: flutter build appbundle --release --no-pub
+        run: cd "$BUILD_ROOT" && flutter build appbundle --release --no-pub
 
       - name: Prepare Android artifacts
         shell: bash
         run: |
           mkdir -p dist
-          cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk "dist/immich-geotagger-${GITHUB_REF_NAME}-android-armeabi-v7a.apk"
-          cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk "dist/immich-geotagger-${GITHUB_REF_NAME}-android-arm64-v8a.apk"
-          cp build/app/outputs/flutter-apk/app-x86_64-release.apk "dist/immich-geotagger-${GITHUB_REF_NAME}-android-x86_64.apk"
-          cp build/app/outputs/bundle/release/app-release.aab "dist/immich-geotagger-${GITHUB_REF_NAME}-android.aab"
+          cp "$BUILD_ROOT/build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk" "dist/immich-geotagger-${GITHUB_REF_NAME}-android-armeabi-v7a.apk"
+          cp "$BUILD_ROOT/build/app/outputs/flutter-apk/app-arm64-v8a-release.apk" "dist/immich-geotagger-${GITHUB_REF_NAME}-android-arm64-v8a.apk"
+          cp "$BUILD_ROOT/build/app/outputs/flutter-apk/app-x86_64-release.apk" "dist/immich-geotagger-${GITHUB_REF_NAME}-android-x86_64.apk"
+          cp "$BUILD_ROOT/build/app/outputs/bundle/release/app-release.aab" "dist/immich-geotagger-${GITHUB_REF_NAME}-android.aab"
           (
             cd dist
             sha256sum *.apk *.aab > SHA256SUMS
