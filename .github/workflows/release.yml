@@ -54,6 +54,9 @@ jobs:
       - name: Install dependencies
         run: cd "$BUILD_ROOT" && flutter pub get
 
+      - name: Prepare reproducible Android build
+        run: cd "$BUILD_ROOT" && python3 tool/prepare_android_reproducible_build.py
+
       - name: Analyze
         run: cd "$BUILD_ROOT" && flutter analyze
 
@@ -81,6 +84,15 @@ jobs:
 
       - name: Build APKs per ABI
         run: cd "$BUILD_ROOT" && flutter build apk --release --split-per-abi --no-pub
+
+      - name: Verify JNI build-id is disabled
+        shell: bash
+        run: |
+          unzip -p "$BUILD_ROOT/build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk"             lib/armeabi-v7a/libdartjni.so > /tmp/libdartjni.so
+          if readelf -n /tmp/libdartjni.so | grep -q "Build ID"; then
+            echo "::error::libdartjni.so still contains a GNU build-id."
+            exit 1
+          fi
 
       - name: Build AAB
         run: cd "$BUILD_ROOT" && flutter build appbundle --release --no-pub
