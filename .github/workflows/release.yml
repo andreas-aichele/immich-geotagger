@@ -72,8 +72,8 @@ jobs:
             exit 1
           fi
 
-      - name: Build APK
-        run: flutter build apk --release
+      - name: Build APKs per ABI
+        run: flutter build apk --release --split-per-abi
 
       - name: Build AAB
         run: flutter build appbundle --release
@@ -82,7 +82,9 @@ jobs:
         shell: bash
         run: |
           mkdir -p dist
-          cp build/app/outputs/flutter-apk/app-release.apk "dist/immich-geotagger-${GITHUB_REF_NAME}-android.apk"
+          cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk "dist/immich-geotagger-${GITHUB_REF_NAME}-android-armeabi-v7a.apk"
+          cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk "dist/immich-geotagger-${GITHUB_REF_NAME}-android-arm64-v8a.apk"
+          cp build/app/outputs/flutter-apk/app-x86_64-release.apk "dist/immich-geotagger-${GITHUB_REF_NAME}-android-x86_64.apk"
           cp build/app/outputs/bundle/release/app-release.aab "dist/immich-geotagger-${GITHUB_REF_NAME}-android.aab"
 
       - uses: actions/upload-artifact@v4
