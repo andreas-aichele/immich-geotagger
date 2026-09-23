@@ -3,39 +3,72 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
+
+    <!-- Soft rounded tile from the Lens Pin concept. -->
     <path
-        android:fillColor="#FAFBFC"
+        android:fillColor="#FCFDFE"
         android:pathData="M15,0h78a15,15 0,0 1,15 15v78a15,15 0,0 1,-15 15h-78a15,15 0,0 1,-15 -15v-78a15,15 0,0 1,15 -15z" />
 
     <path
-        android:fillColor="#1E83F7"
-        android:pathData="M54,13c-20.4,0 -37,16.6 -37,37c0,27.7 37,47 37,47s37,-19.3 37,-47c0,-20.4 -16.6,-37 -37,-37z" />
+        android:fillColor="#FFE9E5"
+        android:pathData="M0,69 C20,69 32,84 53,87 C33,91 17,99 0,104 Z" />
     <path
-        android:fillColor="#13B8A6"
-        android:pathData="M54,13c20.4,0 37,16.6 37,37c0,27.7 -37,47 -37,47z" />
+        android:fillColor="#E5F2FF"
+        android:pathData="M45,91 C70,88 83,66 108,61 L108,89 C83,88 69,94 45,97 Z" />
+    <path
+        android:fillColor="#DDF8F2"
+        android:pathData="M0,104 C32,91 59,96 108,81 L108,108 L0,108 Z" />
 
+    <!-- Four-color location pin body. -->
+    <group>
+        <clip-path
+            android:pathData="M54,13 C33,13 19,29 19,46 C19,66 39,80 54,95 C69,80 89,66 89,46 C89,29 75,13 54,13 Z" />
+        <path
+            android:fillColor="#FFBE2E"
+            android:pathData="M15,8 H54 V50 H15 Z" />
+        <path
+            android:fillColor="#FF5269"
+            android:pathData="M54,8 H94 V50 H54 Z" />
+        <path
+            android:fillColor="#1E83F7"
+            android:pathData="M15,45 H54 V100 H15 Z" />
+        <path
+            android:fillColor="#13B8A6"
+            android:pathData="M54,45 H94 V100 H54 Z" />
+    </group>
+
+    <!-- White aperture ring. -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M54,25a25,25 0,1 0,0 50a25,25 0,1 0,0 -50z" />
+        android:pathData="M54,25 A24,24 0,1 0,54,73 A24,24 0,1 0,54,25 Z" />
 
+    <!-- Five aperture blades. -->
     <path
         android:fillColor="#FFBE2E"
-        android:pathData="M54,29a21,21 0,0 0,-18.2 10.5L54,50z" />
+        android:pathData="M54,30 C47,30 40,34 36,40 L53,48 L62,42 Z" />
     <path
         android:fillColor="#FF5269"
-        android:pathData="M54,29a21,21 0,0 1,18.2 10.5L54,50z" />
+        android:pathData="M56,30 C64,31 71,36 74,43 L63,57 L55,48 Z" />
     <path
         android:fillColor="#1E83F7"
-        android:pathData="M72.2,39.5a21,21 0,0 1,0 21L54,50z" />
+        android:pathData="M75,45 C76,54 72,61 66,66 L51,61 L63,56 Z" />
     <path
         android:fillColor="#13B8A6"
-        android:pathData="M35.8,39.5a21,21 0,0 0,0 21L54,50z" />
+        android:pathData="M64,68 C56,72 47,71 40,67 L42,52 L52,61 Z" />
+    <path
+        android:fillColor="#0AA398"
+        android:pathData="M37,64 C32,58 31,49 34,42 L48,42 L42,53 Z" />
 
+    <!-- Lens. -->
     <path
         android:fillColor="#25284A"
-        android:pathData="M54,39a11,11 0,1 0,0 22a11,11 0,1 0,0 -22z" />
+        android:pathData="M54,40 A10,10 0,1 0,54,60 A10,10 0,1 0,54,40 Z" />
     <path
-        android:fillColor="#FFFFFF"
-        android:fillAlpha="0.72"
-        android:pathData="M49,43a3.2,3.2 0,1 0,0 6.4a3.2,3.2 0,1 0,0 -6.4z" />
+        android:fillColor="#9A91E9"
+        android:fillAlpha="0.82"
+        android:pathData="M49,43 A3,3 0,1 0,49,49 A3,3 0,1 0,49,43 Z" />
+    <path
+        android:fillColor="#9A91E9"
+        android:fillAlpha="0.62"
+        android:pathData="M59,53 A1.6,1.6 0,1 0,59,56.2 A1.6,1.6 0,1 0,59,53 Z" />
 </vector>
