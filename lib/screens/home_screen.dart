@@ -221,10 +221,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     return Container(
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
-        color: _tracking ? primary : AppTheme.primarySoft,
+        color: _tracking ? null : AppTheme.primarySoft,
+        gradient: _tracking ? AppTheme.brandGradient : null,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: _tracking ? primary : AppTheme.primarySoftStrong,
+          color: _tracking ? AppTheme.brandTeal : AppTheme.primarySoftStrong,
         ),
       ),
       child: Column(
@@ -315,12 +316,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: AppTheme.primarySoft,
+                color: AppTheme.tealSoft,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.check_circle_outline_rounded),
+                  const Icon(
+                    Icons.check_circle_outline_rounded,
+                    color: AppTheme.brandTeal,
+                  ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
@@ -423,7 +427,7 @@ class _StatusPill extends StatelessWidget {
             width: 8,
             height: 8,
             decoration: BoxDecoration(
-              color: active ? const Color(0xFF7ED9A7) : primary,
+              color: active ? AppTheme.brandYellow : AppTheme.brandTeal,
               shape: BoxShape.circle,
             ),
           ),
