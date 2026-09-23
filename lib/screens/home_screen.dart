@@ -175,15 +175,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     final l = context.l10n;
     return Row(
       children: [
-        Container(
-          width: 46,
-          height: 46,
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: const Icon(Icons.location_on_rounded, color: Colors.white),
-        ),
+        const BrandMark(size: 46),
         const SizedBox(width: 13),
         Expanded(
           child: Column(
@@ -232,7 +224,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         color: _tracking ? primary : AppTheme.primarySoft,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: _tracking ? primary : const Color(0xFFDCEEFF),
+          color: _tracking ? primary : AppTheme.primarySoftStrong,
         ),
       ),
       child: Column(
@@ -421,7 +413,7 @@ class _StatusPill extends StatelessWidget {
         border: Border.all(
           color: active
               ? Colors.white.withValues(alpha: 0.18)
-              : const Color(0xFFCFE6FF),
+              : AppTheme.primarySoftStrong,
         ),
       ),
       child: Row(
