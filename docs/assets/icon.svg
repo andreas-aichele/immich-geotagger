@@ -3,6 +3,15 @@
     <clipPath id="pin">
       <path d="M50 7C28 7 13 24 13 43c0 23 21 38 37 54 16-16 37-31 37-54C87 24 72 7 50 7z"/>
     </clipPath>
+    <path id="blade" d="M50 16.5
+      C42.0 16.5 35.0 21.0 30.2 28.4
+      C29.3 29.8 29.7 31.4 31.1 32.1
+      L44.4 38.9
+      C45.6 39.5 46.8 39.2 47.6 38.2
+      L57.9 28.8
+      C58.9 27.9 59.0 26.5 58.3 25.4
+      L53.9 18.4
+      C53.1 17.2 51.7 16.5 50 16.5z"/>
   </defs>
 
   <g clip-path="url(#pin)">
@@ -13,11 +22,12 @@
   </g>
 
   <circle cx="50" cy="37" r="26" fill="#FFFFFF"/>
-  <path d="M50 17c-8 0-15 4-20 11l18 9 10-7z" fill="#FFBE2E"/>
-  <path d="M52 17c9 1 16 7 20 15L59 48 48 37z" fill="#FF5269"/>
-  <path d="M73 33c2 9-3 18-10 23l-17-6 13-5z" fill="#1E83F7"/>
-  <path d="M61 57c-9 5-19 4-27-2l3-18 10 13z" fill="#13B8A6"/>
-  <path d="M31 52c-7-7-8-18-4-26l17 1-7 12z" fill="#0AA398"/>
+
+  <use href="#blade" fill="#FFBE2E"/>
+  <use href="#blade" fill="#FF5269" transform="rotate(72 50 37)"/>
+  <use href="#blade" fill="#1E83F7" transform="rotate(144 50 37)"/>
+  <use href="#blade" fill="#13B8A6" transform="rotate(216 50 37)"/>
+  <use href="#blade" fill="#0AA398" transform="rotate(288 50 37)"/>
 
   <circle cx="50" cy="37" r="10.5" fill="#25284A"/>
   <ellipse cx="45.5" cy="32.5" rx="3.2" ry="2.2" transform="rotate(-42 45.5 32.5)" fill="#9A91E9" opacity=".82"/>
