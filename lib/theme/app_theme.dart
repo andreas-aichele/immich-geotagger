@@ -212,7 +212,7 @@ class SectionEyebrow extends StatelessWidget {
 }
 
 class BrandMark extends StatelessWidget {
-  const BrandMark({this.size = 46, super.key});
+  const BrandMark({this.size = 44, super.key});
 
   final double size;
 
