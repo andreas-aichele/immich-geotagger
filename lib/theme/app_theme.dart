@@ -1,14 +1,24 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  // Immich UI primary color.
+  // Immich GeoTagger brand palette, derived from the Lens Pin mark.
   static const primary = Color(0xFF1E83F7);
-  static const primarySoft = Color(0xFFF2F8FF);
-  static const primarySoftStrong = Color(0xFFDCEEFF);
-  static const ink = Color(0xFF333333);
-  static const muted = Color(0xFF737373);
-  static const background = Color(0xFFFAFAFA);
-  static const border = Color(0xFFE5E5E5);
+  static const brandTeal = Color(0xFF13B8A6);
+  static const brandCoral = Color(0xFFFF5269);
+  static const brandYellow = Color(0xFFFFBE2E);
+  static const brandNavy = Color(0xFF25284A);
+  static const primarySoft = Color(0xFFF1F9FC);
+  static const primarySoftStrong = Color(0xFFD9EEF3);
+  static const ink = Color(0xFF2E3048);
+  static const muted = Color(0xFF6F7285);
+  static const background = Color(0xFFFAFBFC);
+  static const border = Color(0xFFE3E8ED);
+
+  static const brandGradient = LinearGradient(
+    colors: [primary, brandTeal],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
 
   static ThemeData light() {
     final scheme = ColorScheme.fromSeed(
@@ -93,7 +103,7 @@ class AppTheme {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: primary,
-          side: const BorderSide(color: Color(0xFFCFE6FF)),
+          side: const BorderSide(color: primarySoftStrong),
           minimumSize: const Size.fromHeight(48),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
