@@ -661,18 +661,18 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
     final (label, color, background) = switch (reliability) {
       MatchReliability.high => (
           l.t('reliabilityHigh'),
-          const Color(0xFF157A4A),
-          const Color(0xFFEAF7F0),
+          AppTheme.success,
+          AppTheme.tealSoft,
         ),
       MatchReliability.medium => (
           l.t('reliabilityMedium'),
-          const Color(0xFF9A6700),
-          const Color(0xFFFFF6DD),
+          AppTheme.warning,
+          AppTheme.yellowSoft,
         ),
       MatchReliability.low => (
           l.t('reliabilityLow'),
-          const Color(0xFFA13A2E),
-          const Color(0xFFFFECE9),
+          AppTheme.brandCoral,
+          AppTheme.coralSoft,
         ),
     };
 
@@ -750,7 +750,7 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        color: selected > 0 ? AppTheme.primary : const Color(0xFF8A8A8A),
+        color: selected > 0 ? AppTheme.brandTeal : AppTheme.neutralMarker,
         shape: BoxShape.circle,
         border: Border.all(color: Colors.white, width: 3),
         boxShadow: const [
