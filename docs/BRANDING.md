@@ -6,8 +6,9 @@ Immich GeoTagger uses the **Lens Pin** mark as its canonical visual identity.
 
 - `assets/branding/app_icon.png` — canonical full-bleed app icon with background to the edges.
 - `assets/branding/brand_mark.png` — canonical transparent in-app mark.
-- `android/app/src/main/res/drawable-nodpi/app_icon.png` — Android launcher artwork.
-- `android/app/src/main/res/drawable-nodpi/brand_mark.png` — Android splash mark.
+- `android/app/src/main/res/drawable-nodpi/brand_mark.png` — transparent Android foreground/splash mark.
+- `android/app/src/main/res/drawable/app_icon_background.xml` — separate Android launcher/splash background.
+- `android/app/src/main/res/drawable/app_icon_foreground.xml` — Android foreground wrapper for the transparent mark.
 - `fastlane/metadata/android/en-US/images/icon.png` — store / F-Droid icon.
 - `docs/assets/app_icon.png` — README/project artwork.
 
@@ -41,3 +42,14 @@ Blue is the primary action color. Teal is used for positive/location-related sta
 ## Store artwork
 
 Store screenshots should be regenerated from a build of this branch after the branding is approved, so the store screenshots match the final UI and icon.
+
+## Android composition
+
+The Android launcher no longer uses the combined full icon bitmap. Android composes the icon from a separate background and foreground:
+
+- background: `app_icon_background.xml`
+- foreground: `brand_mark.png`
+- adaptive icon definitions: `mipmap-anydpi-v26/ic_launcher*.xml`
+- legacy layered fallback: `mipmap-anydpi/ic_launcher*.xml`
+
+The splash screen uses the same separate background and transparent brand mark. Android 12+ uses the transparent mark directly through `values-v31/styles.xml`.
