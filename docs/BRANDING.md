@@ -4,11 +4,14 @@ Immich GeoTagger uses the **Lens Pin** mark as its canonical visual identity.
 
 ## Canonical assets
 
-- `docs/assets/icon.svg` — canonical standalone Lens Pin artwork.
-- `docs/assets/logo.svg` — horizontal project logo using the same artwork.
-- `android/app/src/main/res/drawable/ic_launcher_geotagger.xml` — Android vector adaptation.
+- `assets/branding/app_icon.png` — canonical full-bleed app icon with background to the edges.
+- `assets/branding/brand_mark.png` — canonical transparent in-app mark.
+- `android/app/src/main/res/drawable-nodpi/app_icon.png` — Android launcher artwork.
+- `android/app/src/main/res/drawable-nodpi/brand_mark.png` — Android splash mark.
+- `fastlane/metadata/android/en-US/images/icon.png` — store / F-Droid icon.
+- `docs/assets/app_icon.png` — README/project artwork.
 
-Do not replace the Lens Pin with a generic Material location icon in branded surfaces. Functional location/map actions may continue to use standard Material icons.
+Do not maintain a separate hand-drawn SVG version. All branded surfaces must use one of the two approved PNG masters.
 
 ## Sizes
 
@@ -37,4 +40,4 @@ Blue is the primary action color. Teal is used for positive/location-related sta
 
 ## Store artwork
 
-Store screenshots and the previous Fastlane PNG were removed from the branding branch because they showed the old icon/UI. They should be regenerated from a build of this branch after the branding is approved, so the store never contains a visually different Lens Pin.
+Store screenshots should be regenerated from a build of this branch after the branding is approved, so the store screenshots match the final UI and icon.
