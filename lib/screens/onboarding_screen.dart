@@ -178,7 +178,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> with WidgetsBinding
               padding: const EdgeInsets.fromLTRB(24, 18, 24, 8),
               child: Row(
                 children: [
-                  const BrandMark(size: 42),
+                  const BrandMark(),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
