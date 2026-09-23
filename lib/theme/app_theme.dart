@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 
 class AppTheme {
@@ -218,125 +216,12 @@ class BrandMark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox.square(
-      dimension: size,
-      child: CustomPaint(
-        painter: const _LensPinPainter(),
-      ),
+    return Image.asset(
+      'assets/branding/brand_mark.png',
+      width: size,
+      height: size,
+      fit: BoxFit.contain,
+      filterQuality: FilterQuality.high,
     );
   }
-}
-
-class _LensPinPainter extends CustomPainter {
-  const _LensPinPainter();
-
-  static const _lavender = Color(0xFF9A91E9);
-  static const _deepTeal = Color(0xFF0AA398);
-
-  Path _bladePath() {
-    const center = Offset(50, 37);
-    const outerRadius = 21.0;
-    const innerRadius = 12.5;
-    const startAngle = -126 * math.pi / 180;
-    const sweep = 60 * math.pi / 180;
-
-    final outer = Rect.fromCircle(center: center, radius: outerRadius);
-    final inner = Rect.fromCircle(center: center, radius: innerRadius);
-
-    final path = Path()
-      ..arcTo(outer, startAngle, sweep, true);
-
-    final innerEndAngle = startAngle + sweep;
-    path
-      ..lineTo(
-        center.dx + innerRadius * math.cos(innerEndAngle),
-        center.dy + innerRadius * math.sin(innerEndAngle),
-      )
-      ..arcTo(inner, innerEndAngle, -sweep, false)
-      ..close();
-
-    return path;
-  }
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final scale = size.width / 100;
-    canvas.save();
-    canvas.scale(scale, scale);
-
-    final pin = Path()
-      ..moveTo(50, 7)
-      ..cubicTo(28, 7, 13, 24, 13, 43)
-      ..cubicTo(13, 66, 34, 81, 50, 97)
-      ..cubicTo(66, 81, 87, 66, 87, 43)
-      ..cubicTo(87, 24, 72, 7, 50, 7)
-      ..close();
-
-    canvas.save();
-    canvas.clipPath(pin);
-    canvas.drawRect(
-      const Rect.fromLTWH(13, 7, 37, 40),
-      Paint()..color = AppTheme.brandYellow,
-    );
-    canvas.drawRect(
-      const Rect.fromLTWH(50, 7, 37, 40),
-      Paint()..color = AppTheme.brandCoral,
-    );
-    canvas.drawRect(
-      const Rect.fromLTWH(13, 43, 37, 54),
-      Paint()..color = AppTheme.primary,
-    );
-    canvas.drawRect(
-      const Rect.fromLTWH(50, 43, 37, 54),
-      Paint()..color = AppTheme.brandTeal,
-    );
-    canvas.restore();
-
-    const apertureCenter = Offset(50, 37);
-    canvas.drawCircle(apertureCenter, 26, Paint()..color = Colors.white);
-
-    final blade = _bladePath();
-    const colors = [
-      AppTheme.brandYellow,
-      AppTheme.brandCoral,
-      AppTheme.primary,
-      AppTheme.brandTeal,
-      _deepTeal,
-    ];
-
-    for (var i = 0; i < colors.length; i++) {
-      canvas.save();
-      canvas.translate(apertureCenter.dx, apertureCenter.dy);
-      canvas.rotate(i * 72 * math.pi / 180);
-      canvas.translate(-apertureCenter.dx, -apertureCenter.dy);
-      canvas.drawPath(blade, Paint()..color = colors[i]);
-      canvas.restore();
-    }
-
-    canvas.drawCircle(
-      apertureCenter,
-      10.5,
-      Paint()..color = AppTheme.brandNavy,
-    );
-
-    canvas.save();
-    canvas.translate(45.5, 32.5);
-    canvas.rotate(-42 * math.pi / 180);
-    canvas.drawOval(
-      Rect.fromCenter(center: Offset.zero, width: 6.4, height: 4.4),
-      Paint()..color = _lavender.withValues(alpha: 0.82),
-    );
-    canvas.restore();
-
-    canvas.drawCircle(
-      const Offset(55, 42),
-      1.6,
-      Paint()..color = _lavender.withValues(alpha: 0.65),
-    );
-
-    canvas.restore();
-  }
-
-  @override
-  bool shouldRepaint(covariant _LensPinPainter oldDelegate) => false;
 }
