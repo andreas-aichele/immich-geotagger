@@ -175,7 +175,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     final l = context.l10n;
     return Row(
       children: [
-        const BrandMark(size: 46),
+        const BrandMark(),
         const SizedBox(width: 13),
         Expanded(
           child: Column(
