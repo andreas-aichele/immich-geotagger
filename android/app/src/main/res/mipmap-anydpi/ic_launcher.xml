@@ -2,10 +2,10 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:drawable="@drawable/app_icon_background" />
     <item
-        android:left="8dp"
-        android:top="4dp"
-        android:right="8dp"
-        android:bottom="4dp">
+        android:left="21dp"
+        android:top="21dp"
+        android:right="21dp"
+        android:bottom="21dp">
         <bitmap
             android:antialias="true"
             android:filter="true"
