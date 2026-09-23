@@ -1,54 +1,30 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="900" height="220" viewBox="0 0 900 220" role="img" aria-labelledby="title desc">
   <title id="title">Immich GeoTagger</title>
-  <desc id="desc">Immich GeoTagger Lens Pin logo combining a multicolor location pin with a camera aperture.</desc>
-
+  <desc id="desc">Immich GeoTagger Lens Pin logo.</desc>
   <defs>
-    <clipPath id="tileClip">
-      <rect x="20" y="20" width="180" height="180" rx="38"/>
+    <clipPath id="pin">
+      <path d="M110 24C70 24 43 55 43 89c0 42 38 69 67 98 29-29 67-56 67-98 0-34-27-65-67-65z"/>
     </clipPath>
-    <clipPath id="pinClip">
-      <path d="M110 43c-35 0-58 27-58 55 0 33 33 56 58 81 25-25 58-48 58-81 0-28-23-55-58-55z"/>
-    </clipPath>
-    <linearGradient id="bluePin" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#459EF8"/>
-      <stop offset="1" stop-color="#126FE8"/>
-    </linearGradient>
-    <linearGradient id="tealPin" x1="1" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#28C8B5"/>
-      <stop offset="1" stop-color="#078D9E"/>
-    </linearGradient>
-    <radialGradient id="lens" cx="35%" cy="35%" r="70%">
-      <stop offset="0" stop-color="#454A76"/>
-      <stop offset="0.55" stop-color="#25284A"/>
-      <stop offset="1" stop-color="#15182E"/>
-    </radialGradient>
   </defs>
 
-  <rect x="20" y="20" width="180" height="180" rx="38" fill="#FCFDFE"/>
-  <g clip-path="url(#tileClip)">
-    <path d="M20 135c35 0 55 24 89 29-34 6-60 18-89 26z" fill="#FFE9E5"/>
-    <path d="M96 168c43-6 65-42 104-50v47c-39-2-62 9-104 15z" fill="#E5F2FF"/>
-    <path d="M20 190c53-22 101-15 180-39v49H20z" fill="#DDF8F2"/>
+  <g clip-path="url(#pin)">
+    <rect x="43" y="24" width="67" height="72" fill="#FFBE2E"/>
+    <rect x="110" y="24" width="67" height="72" fill="#FF5269"/>
+    <rect x="43" y="89" width="67" height="98" fill="#1E83F7"/>
+    <rect x="110" y="89" width="67" height="98" fill="#13B8A6"/>
   </g>
 
-  <g clip-path="url(#pinClip)">
-    <rect x="48" y="40" width="62" height="62" fill="#FFBE2E"/>
-    <rect x="110" y="40" width="62" height="62" fill="#FF5269"/>
-    <rect x="48" y="98" width="62" height="90" fill="url(#bluePin)"/>
-    <rect x="110" y="98" width="62" height="90" fill="url(#tealPin)"/>
-  </g>
+  <circle cx="110" cy="78" r="47" fill="#FFFFFF"/>
+  <path d="M110 42c-14 0-27 7-36 20l33 16 18-13z" fill="#FFBE2E"/>
+  <path d="M114 42c16 2 29 13 36 27l-24 29-20-20z" fill="#FF5269"/>
+  <path d="M152 71c3 17-6 32-18 41l-31-11 24-9z" fill="#1E83F7"/>
+  <path d="M130 115c-16 9-34 7-49-4l5-33 18 24z" fill="#13B8A6"/>
+  <path d="M76 106c-13-13-14-32-7-47l31 2-13 22z" fill="#0AA398"/>
 
-  <circle cx="110" cy="91" r="42" fill="#FFFFFF"/>
-  <path d="M110 59c-13 0-25 6-32 17l30 14 16-11z" fill="#FFBE2E"/>
-  <path d="M113 59c14 2 26 10 31 23l-20 25-14-17z" fill="#FF5269"/>
-  <path d="M145 85c2 15-5 28-16 36l-26-9 21-8z" fill="#1E83F7"/>
-  <path d="M126 123c-14 7-30 5-42-3l4-27 16 19z" fill="#13B8A6"/>
-  <path d="M80 116c-10-11-11-27-6-39l25 1-11 18z" fill="#0AA398"/>
+  <circle cx="110" cy="78" r="19" fill="#25284A"/>
+  <ellipse cx="102" cy="70" rx="6" ry="4" transform="rotate(-42 102 70)" fill="#9A91E9" opacity=".82"/>
+  <circle cx="119" cy="87" r="3" fill="#9A91E9" opacity=".65"/>
 
-  <circle cx="110" cy="91" r="18" fill="url(#lens)"/>
-  <ellipse cx="102" cy="83" rx="6" ry="4" transform="rotate(-42 102 83)" fill="#9A91E9" opacity=".82"/>
-  <circle cx="118" cy="99" r="3" fill="#9A91E9" opacity=".65"/>
-
-  <text x="240" y="102" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="64" font-weight="700" fill="#2B2E46">Immich GeoTagger</text>
-  <text x="244" y="151" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="28" font-weight="500" fill="#6C7085">GPS for cameras without</text>
+  <text x="220" y="102" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="64" font-weight="700" fill="#2B2E46">Immich GeoTagger</text>
+  <text x="224" y="151" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="28" font-weight="500" fill="#6C7085">GPS for cameras without</text>
 </svg>
