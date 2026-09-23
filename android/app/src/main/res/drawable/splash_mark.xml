@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:width="128dp"
+        android:height="128dp"
+        android:gravity="center">
+        <bitmap
+            android:antialias="true"
+            android:filter="true"
+            android:gravity="fill"
+            android:src="@drawable/brand_mark" />
+    </item>
+</layer-list>
