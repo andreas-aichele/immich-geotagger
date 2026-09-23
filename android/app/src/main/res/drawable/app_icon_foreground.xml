@@ -1,10 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!--
+      Android adaptive icons render the foreground larger than the final mask.
+      Keep the complete pin inside the central safe zone so no part is cropped
+      by circle, squircle or rounded-square launcher masks.
+    -->
     <item
-        android:left="8dp"
-        android:top="3dp"
-        android:right="8dp"
-        android:bottom="3dp">
+        android:left="21dp"
+        android:top="21dp"
+        android:right="21dp"
+        android:bottom="21dp">
         <bitmap
             android:antialias="true"
             android:filter="true"
