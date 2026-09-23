@@ -27,6 +27,10 @@ class AppTheme {
     ).copyWith(
       primary: primary,
       onPrimary: Colors.white,
+      secondary: brandTeal,
+      onSecondary: Colors.white,
+      tertiary: brandCoral,
+      onTertiary: Colors.white,
       primaryContainer: primarySoft,
       onPrimaryContainer: primary,
       surface: Colors.white,
