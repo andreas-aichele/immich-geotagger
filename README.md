@@ -1,5 +1,7 @@
 <p align="center">
-  <img src="docs/assets/logo.svg" alt="Immich GeoTagger" width="720">
+  <img src="docs/assets/app_icon.png" alt="Immich GeoTagger app icon" width="220">
+  <br>
+  <strong style="font-size: 1.5em;">Immich GeoTagger</strong>
 </p>
 
 <p align="center">
