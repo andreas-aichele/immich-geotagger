@@ -25,12 +25,12 @@ class CameraClockTip extends StatelessWidget {
                 width: 38,
                 height: 38,
                 decoration: BoxDecoration(
-                  color: AppTheme.primarySoft,
+                  color: AppTheme.yellowSoft,
                   borderRadius: BorderRadius.circular(11),
                 ),
                 child: const Icon(
                   Icons.schedule_rounded,
-                  color: AppTheme.primary,
+                  color: AppTheme.warning,
                   size: 21,
                 ),
               ),
@@ -154,16 +154,16 @@ class _PhoneClockState extends State<_PhoneClock> {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: AppTheme.primarySoft,
+        color: AppTheme.yellowSoft,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.primarySoftStrong),
+        border: Border.all(color: AppTheme.brandYellow.withValues(alpha: 0.45)),
       ),
       child: Row(
         children: [
           const Icon(
             Icons.phone_android_rounded,
             size: 20,
-            color: AppTheme.primary,
+            color: AppTheme.warning,
           ),
           const SizedBox(width: 10),
           Expanded(
