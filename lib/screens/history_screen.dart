@@ -156,7 +156,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
               padding: EdgeInsets.only(top: 4),
               child: Icon(
                 Icons.check_circle_rounded,
-                color: Color(0xFF157A4A),
+                color: AppTheme.success,
               ),
             ),
           ],
