@@ -4,15 +4,14 @@ Immich GeoTagger uses the **Lens Pin** mark as its canonical visual identity.
 
 ## Canonical assets
 
-- `assets/branding/app_icon.png` — canonical full-bleed app icon with background to the edges.
-- `assets/branding/brand_mark.png` — canonical transparent in-app mark.
+- `assets/branding/brand_mark.png` — canonical transparent Lens Pin master artwork.
 - `android/app/src/main/res/drawable-nodpi/brand_mark.png` — transparent Android foreground/splash mark.
 - `android/app/src/main/res/drawable/app_icon_background.xml` — separate Android launcher/splash background.
 - `android/app/src/main/res/drawable/app_icon_foreground.xml` — Android foreground wrapper for the transparent mark.
-- `fastlane/metadata/android/en-US/images/icon.png` — store / F-Droid icon.
-- `docs/assets/app_icon.png` — README/project artwork.
+- `fastlane/metadata/android/en-US/images/icon.png` — store / F-Droid icon, using the same transparent Lens Pin artwork.
+- `docs/assets/brand_mark.png` — README/project artwork, using the same transparent Lens Pin artwork.
 
-Do not maintain a separate hand-drawn SVG version. All branded surfaces must use one of the two approved PNG masters.
+Do not maintain a separate hand-drawn SVG or a combined background+icon PNG. The transparent Lens Pin is the single canonical raster master. Android composes its launcher/splash background separately.
 
 ## Sizes
 
@@ -41,7 +40,7 @@ Blue is the primary action color. Teal is used for positive/location-related sta
 
 ## Store artwork
 
-Store screenshots should be regenerated from a build of this branch after the branding is approved, so the store screenshots match the final UI and icon.
+Store screenshots should be regenerated from a build of this branch after the branding is approved, so the store screenshots match the final UI and icon. The store icon itself uses the transparent Lens Pin master without the decorative landscape background.
 
 ## Android composition
 
