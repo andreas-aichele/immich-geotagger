@@ -130,7 +130,7 @@ class PhotoThumbnail extends StatelessWidget {
       height: size,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: const Color(0xFFF2F2F2),
+        color: const Color(0xFFF3F6F9),
         borderRadius: BorderRadius.circular(12),
       ),
       child: child,
@@ -285,7 +285,8 @@ class PhotoLocationMarker extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: selected ? AppTheme.primary : const Color(0xFF8A8A8A),
+        color: selected ? null : AppTheme.neutralMarker,
+        gradient: selected ? AppTheme.brandGradient : null,
         shape: BoxShape.circle,
         border: Border.all(color: Colors.white, width: 3),
         boxShadow: const [
