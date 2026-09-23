@@ -4,7 +4,7 @@ Immich GeoTagger uses the **Lens Pin** mark as its canonical visual identity.
 
 ## Canonical assets
 
-- `assets/branding/brand_mark.png` — canonical transparent Lens Pin master artwork.
+- `assets/branding/brand_mark.png` — canonical 512 × 512 truecolor RGBA Lens Pin master artwork.
 - `android/app/src/main/res/drawable-nodpi/brand_mark.png` — transparent Android foreground/splash mark.
 - `android/app/src/main/res/drawable/app_icon_background.xml` — separate Android launcher/splash background.
 - `android/app/src/main/res/drawable/app_icon_foreground.xml` — Android foreground wrapper for the transparent mark.
@@ -19,7 +19,7 @@ Do not maintain a separate hand-drawn SVG or a combined background+icon PNG. The
 | --- | ---: |
 | In-app header / onboarding brand mark | 44 dp |
 | Android launcher vector viewport | 108 × 108 dp |
-| Android splash mark | launcher drawable at intrinsic 108 dp |
+| Android splash mark | 80 dp, centered independently from launcher sizing |
 | README logo icon tile | 180 × 180 units inside the 900 × 220 wordmark |
 
 ## Brand palette
@@ -52,3 +52,10 @@ The Android launcher no longer uses the combined full icon bitmap. Android compo
 - legacy layered fallback: `mipmap-anydpi/ic_launcher*.xml`
 
 The splash screen uses the same separate background and transparent brand mark. Android 12+ uses the transparent mark directly through `values-v31/styles.xml`.
+
+
+## Raster quality
+
+The Lens Pin master is stored as a truecolor RGBA PNG. Do not convert it to an indexed/palette PNG and do not use a reduced-color export. All branded PNG copies in the repository must reference the same Git blob as the canonical master.
+
+The Android splash uses the same master artwork through `splash_mark.xml`, but at 80 dp. This keeps splash sizing independent from the Android adaptive-icon safe zone.
