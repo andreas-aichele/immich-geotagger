@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 
 class AppTheme {
@@ -17,7 +15,7 @@ class AppTheme {
   static const navySoft = Color(0xFFF0F0F6);
   static const ink = Color(0xFF2B2E46);
   static const muted = Color(0xFF6C7085);
-  static const background = Color(0xFFFAFBFD);
+  static const background = Colors.white;
   static const border = Color(0xFFE4E8EE);
   static const success = Color(0xFF0E8F7F);
   static const warning = Color(0xFF9B6A00);
@@ -48,8 +46,8 @@ class AppTheme {
       onPrimaryContainer: primary,
       surface: Colors.white,
       onSurface: ink,
-      surfaceContainerLowest: background,
-      surfaceContainerLow: const Color(0xFFF6F8FB),
+      surfaceContainerLowest: Colors.white,
+      surfaceContainerLow: Colors.white,
       outline: border,
       outlineVariant: const Color(0xFFEDF0F4),
     );
@@ -238,122 +236,81 @@ class _LensPinPainter extends CustomPainter {
     canvas.save();
     canvas.scale(scale, scale);
 
-    final tile = RRect.fromRectAndRadius(
-      const Rect.fromLTWH(0, 0, 100, 100),
-      const Radius.circular(22),
-    );
-
-    canvas.drawRRect(tile, Paint()..color = const Color(0xFFFCFDFE));
-    canvas.save();
-    canvas.clipRRect(tile);
-
-    final peachWave = Path()
-      ..moveTo(0, 64)
-      ..cubicTo(18, 64, 30, 78, 49, 81)
-      ..cubicTo(30, 84, 16, 91, 0, 96)
-      ..close();
-    canvas.drawPath(peachWave, Paint()..color = const Color(0xFFFFE9E5));
-
-    final blueWave = Path()
-      ..moveTo(42, 84)
-      ..cubicTo(65, 82, 77, 61, 100, 57)
-      ..lineTo(100, 82)
-      ..cubicTo(77, 82, 64, 88, 42, 90)
-      ..close();
-    canvas.drawPath(blueWave, Paint()..color = const Color(0xFFE5F2FF));
-
-    final mintWave = Path()
-      ..moveTo(0, 96)
-      ..cubicTo(29, 84, 55, 88, 100, 75)
-      ..lineTo(100, 100)
-      ..lineTo(0, 100)
-      ..close();
-    canvas.drawPath(mintWave, Paint()..color = const Color(0xFFDDF8F2));
-
     final pin = Path()
-      ..moveTo(50, 12)
-      ..cubicTo(31, 12, 18, 27, 18, 43)
-      ..cubicTo(18, 62, 36, 74, 50, 87)
-      ..cubicTo(64, 74, 82, 62, 82, 43)
-      ..cubicTo(82, 27, 69, 12, 50, 12)
+      ..moveTo(50, 7)
+      ..cubicTo(28, 7, 13, 24, 13, 43)
+      ..cubicTo(13, 66, 34, 81, 50, 97)
+      ..cubicTo(66, 81, 87, 66, 87, 43)
+      ..cubicTo(87, 24, 72, 7, 50, 7)
       ..close();
-
-    canvas.drawShadow(pin, const Color(0x33000000), 2.5, false);
 
     canvas.save();
     canvas.clipPath(pin);
-    canvas.drawRect(
-      const Rect.fromLTWH(18, 12, 64, 32),
-      Paint()
-        ..shader = const LinearGradient(
-          colors: [AppTheme.brandYellow, AppTheme.brandCoral],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ).createShader(const Rect.fromLTWH(18, 12, 64, 32)),
-    );
-    canvas.drawRect(
-      const Rect.fromLTWH(18, 42, 32, 48),
-      Paint()
-        ..shader = const LinearGradient(
-          colors: [Color(0xFF459EF8), Color(0xFF126FE8)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ).createShader(const Rect.fromLTWH(18, 42, 32, 48)),
-    );
-    canvas.drawRect(
-      const Rect.fromLTWH(50, 42, 32, 48),
-      Paint()
-        ..shader = const LinearGradient(
-          colors: [Color(0xFF28C8B5), Color(0xFF078D9E)],
-          begin: Alignment.topRight,
-          end: Alignment.bottomLeft,
-        ).createShader(const Rect.fromLTWH(50, 42, 32, 48)),
-    );
+    canvas.drawRect(const Rect.fromLTWH(13, 7, 37, 40), Paint()..color = AppTheme.brandYellow);
+    canvas.drawRect(const Rect.fromLTWH(50, 7, 37, 40), Paint()..color = AppTheme.brandCoral);
+    canvas.drawRect(const Rect.fromLTWH(13, 43, 37, 54), Paint()..color = AppTheme.primary);
+    canvas.drawRect(const Rect.fromLTWH(50, 43, 37, 54), Paint()..color = AppTheme.brandTeal);
     canvas.restore();
 
-    const apertureCenter = Offset(50, 37);
-    const apertureRadius = 22.5;
-    canvas.drawCircle(apertureCenter, apertureRadius + 2.5, Paint()..color = Colors.white);
+    canvas.drawCircle(const Offset(50, 37), 26, Paint()..color = Colors.white);
 
-    final apertureRect = Rect.fromCircle(center: apertureCenter, radius: 17.5);
-    const segmentColors = [
-      AppTheme.brandYellow,
-      AppTheme.brandCoral,
-      AppTheme.primary,
-      AppTheme.brandTeal,
-      Color(0xFF0AA398),
-    ];
-    const gap = 0.09;
-    final segment = (math.pi * 2 / segmentColors.length) - gap;
-    var angle = -math.pi * 0.78;
-    for (final color in segmentColors) {
-      canvas.drawArc(
-        apertureRect,
-        angle,
-        segment,
-        false,
-        Paint()
-          ..color = color
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 9.5
-          ..strokeCap = StrokeCap.round,
-      );
-      angle += segment + gap;
-    }
+    final yellowBlade = Path()
+      ..moveTo(50, 17)
+      ..cubicTo(42, 17, 35, 21, 30, 28)
+      ..lineTo(48, 37)
+      ..lineTo(58, 30)
+      ..close();
+    canvas.drawPath(yellowBlade, Paint()..color = AppTheme.brandYellow);
+
+    final coralBlade = Path()
+      ..moveTo(52, 17)
+      ..cubicTo(61, 18, 68, 24, 72, 32)
+      ..lineTo(59, 48)
+      ..lineTo(48, 37)
+      ..close();
+    canvas.drawPath(coralBlade, Paint()..color = AppTheme.brandCoral);
+
+    final blueBlade = Path()
+      ..moveTo(73, 33)
+      ..cubicTo(75, 42, 70, 51, 63, 56)
+      ..lineTo(46, 50)
+      ..lineTo(59, 45)
+      ..close();
+    canvas.drawPath(blueBlade, Paint()..color = AppTheme.primary);
+
+    final tealBlade = Path()
+      ..moveTo(61, 57)
+      ..cubicTo(52, 62, 42, 61, 34, 55)
+      ..lineTo(37, 37)
+      ..lineTo(47, 50)
+      ..close();
+    canvas.drawPath(tealBlade, Paint()..color = AppTheme.brandTeal);
+
+    final deepTealBlade = Path()
+      ..moveTo(31, 52)
+      ..cubicTo(24, 45, 23, 34, 27, 26)
+      ..lineTo(44, 27)
+      ..lineTo(37, 39)
+      ..close();
+    canvas.drawPath(deepTealBlade, Paint()..color = const Color(0xFF0AA398));
+
+    canvas.drawCircle(const Offset(50, 37), 10.5, Paint()..color = AppTheme.brandNavy);
+
+    canvas.save();
+    canvas.translate(45.5, 32.5);
+    canvas.rotate(-0.7330382858);
+    canvas.drawOval(
+      const Rect.fromCenter(center: Offset.zero, width: 6.4, height: 4.4),
+      Paint()..color = _lavender.withValues(alpha: 0.82),
+    );
+    canvas.restore();
 
     canvas.drawCircle(
-      apertureCenter,
-      9.6,
-      Paint()
-        ..shader = const RadialGradient(
-          center: Alignment(-0.35, -0.35),
-          colors: [Color(0xFF454A76), AppTheme.brandNavy, Color(0xFF15182E)],
-        ).createShader(Rect.fromCircle(center: apertureCenter, radius: 9.6)),
+      const Offset(55, 42),
+      1.6,
+      Paint()..color = _lavender.withValues(alpha: 0.65),
     );
-    canvas.drawCircle(const Offset(45.6, 32.8), 2.8, Paint()..color = _lavender.withValues(alpha: 0.82));
-    canvas.drawCircle(const Offset(54.6, 41.1), 1.5, Paint()..color = _lavender.withValues(alpha: 0.65));
 
-    canvas.restore();
     canvas.restore();
   }
 
