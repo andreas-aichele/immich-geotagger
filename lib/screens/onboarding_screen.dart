@@ -238,7 +238,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> with WidgetsBinding
             width: 64,
             height: 64,
             decoration: BoxDecoration(
-              color: AppTheme.primarySoft,
+              color: AppTheme.navySoft,
               borderRadius: BorderRadius.circular(16),
             ),
             child: icon,
@@ -273,7 +273,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> with WidgetsBinding
     return _pageShell(
       icon: Icon(
         Icons.route_rounded,
-        color: Theme.of(context).colorScheme.primary,
+        color: AppTheme.brandTeal,
         size: 30,
       ),
       title: l.t('introTitle'),
@@ -325,7 +325,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> with WidgetsBinding
     return _pageShell(
       icon: Icon(
         Icons.location_searching_rounded,
-        color: Theme.of(context).colorScheme.primary,
+        color: AppTheme.brandCoral,
         size: 30,
       ),
       title: l.t('allowLocationTitle'),
@@ -412,7 +412,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> with WidgetsBinding
     return _pageShell(
       icon: Icon(
         Icons.photo_library_outlined,
-        color: Theme.of(context).colorScheme.primary,
+        color: AppTheme.primary,
         size: 30,
       ),
       title: l.t('connectImmichTitle'),
@@ -519,7 +519,7 @@ class _FeatureRow extends StatelessWidget {
         Icon(
           icon,
           size: 22,
-          color: Theme.of(context).colorScheme.primary,
+          color: AppTheme.brandTeal,
         ),
         const SizedBox(width: 14),
         Expanded(
@@ -565,7 +565,7 @@ class _PermissionCode extends StatelessWidget {
             vertical: 7,
           ),
           decoration: BoxDecoration(
-            color: AppTheme.primarySoft,
+            color: AppTheme.tealSoft,
             borderRadius: BorderRadius.circular(10),
           ),
           child: Text(
@@ -600,7 +600,7 @@ class _StatusMessage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = success
-        ? const Color(0xFF157A4A)
+        ? AppTheme.success
         : Theme.of(context).colorScheme.error;
     return Container(
       width: double.infinity,
