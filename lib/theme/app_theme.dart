@@ -323,7 +323,7 @@ class _LensPinPainter extends CustomPainter {
     canvas.translate(45.5, 32.5);
     canvas.rotate(-42 * math.pi / 180);
     canvas.drawOval(
-      const Rect.fromCenter(center: Offset.zero, width: 6.4, height: 4.4),
+      Rect.fromCenter(center: Offset.zero, width: 6.4, height: 4.4),
       Paint()..color = _lavender.withValues(alpha: 0.82),
     );
     canvas.restore();
