@@ -34,3 +34,6 @@ flutter:
   config:
     enable-swift-package-manager: true
   uses-material-design: true
+  assets:
+    - assets/branding/brand_mark.png
+    - assets/branding/app_icon.png
