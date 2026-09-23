@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 class AppTheme {
@@ -229,6 +231,32 @@ class _LensPinPainter extends CustomPainter {
   const _LensPinPainter();
 
   static const _lavender = Color(0xFF9A91E9);
+  static const _deepTeal = Color(0xFF0AA398);
+
+  Path _bladePath() {
+    const center = Offset(50, 37);
+    const outerRadius = 21.0;
+    const innerRadius = 12.5;
+    const startAngle = -126 * math.pi / 180;
+    const sweep = 60 * math.pi / 180;
+
+    final outer = Rect.fromCircle(center: center, radius: outerRadius);
+    final inner = Rect.fromCircle(center: center, radius: innerRadius);
+
+    final path = Path()
+      ..arcTo(outer, startAngle, sweep, true);
+
+    final innerEndAngle = startAngle + sweep;
+    path
+      ..lineTo(
+        center.dx + innerRadius * math.cos(innerEndAngle),
+        center.dy + innerRadius * math.sin(innerEndAngle),
+      )
+      ..arcTo(inner, innerEndAngle, -sweep, false)
+      ..close();
+
+    return path;
+  }
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -246,59 +274,54 @@ class _LensPinPainter extends CustomPainter {
 
     canvas.save();
     canvas.clipPath(pin);
-    canvas.drawRect(const Rect.fromLTWH(13, 7, 37, 40), Paint()..color = AppTheme.brandYellow);
-    canvas.drawRect(const Rect.fromLTWH(50, 7, 37, 40), Paint()..color = AppTheme.brandCoral);
-    canvas.drawRect(const Rect.fromLTWH(13, 43, 37, 54), Paint()..color = AppTheme.primary);
-    canvas.drawRect(const Rect.fromLTWH(50, 43, 37, 54), Paint()..color = AppTheme.brandTeal);
+    canvas.drawRect(
+      const Rect.fromLTWH(13, 7, 37, 40),
+      Paint()..color = AppTheme.brandYellow,
+    );
+    canvas.drawRect(
+      const Rect.fromLTWH(50, 7, 37, 40),
+      Paint()..color = AppTheme.brandCoral,
+    );
+    canvas.drawRect(
+      const Rect.fromLTWH(13, 43, 37, 54),
+      Paint()..color = AppTheme.primary,
+    );
+    canvas.drawRect(
+      const Rect.fromLTWH(50, 43, 37, 54),
+      Paint()..color = AppTheme.brandTeal,
+    );
     canvas.restore();
 
-    canvas.drawCircle(const Offset(50, 37), 26, Paint()..color = Colors.white);
+    const apertureCenter = Offset(50, 37);
+    canvas.drawCircle(apertureCenter, 26, Paint()..color = Colors.white);
 
-    final yellowBlade = Path()
-      ..moveTo(50, 17)
-      ..cubicTo(42, 17, 35, 21, 30, 28)
-      ..lineTo(48, 37)
-      ..lineTo(58, 30)
-      ..close();
-    canvas.drawPath(yellowBlade, Paint()..color = AppTheme.brandYellow);
+    final blade = _bladePath();
+    const colors = [
+      AppTheme.brandYellow,
+      AppTheme.brandCoral,
+      AppTheme.primary,
+      AppTheme.brandTeal,
+      _deepTeal,
+    ];
 
-    final coralBlade = Path()
-      ..moveTo(52, 17)
-      ..cubicTo(61, 18, 68, 24, 72, 32)
-      ..lineTo(59, 48)
-      ..lineTo(48, 37)
-      ..close();
-    canvas.drawPath(coralBlade, Paint()..color = AppTheme.brandCoral);
+    for (var i = 0; i < colors.length; i++) {
+      canvas.save();
+      canvas.translate(apertureCenter.dx, apertureCenter.dy);
+      canvas.rotate(i * 72 * math.pi / 180);
+      canvas.translate(-apertureCenter.dx, -apertureCenter.dy);
+      canvas.drawPath(blade, Paint()..color = colors[i]);
+      canvas.restore();
+    }
 
-    final blueBlade = Path()
-      ..moveTo(73, 33)
-      ..cubicTo(75, 42, 70, 51, 63, 56)
-      ..lineTo(46, 50)
-      ..lineTo(59, 45)
-      ..close();
-    canvas.drawPath(blueBlade, Paint()..color = AppTheme.primary);
-
-    final tealBlade = Path()
-      ..moveTo(61, 57)
-      ..cubicTo(52, 62, 42, 61, 34, 55)
-      ..lineTo(37, 37)
-      ..lineTo(47, 50)
-      ..close();
-    canvas.drawPath(tealBlade, Paint()..color = AppTheme.brandTeal);
-
-    final deepTealBlade = Path()
-      ..moveTo(31, 52)
-      ..cubicTo(24, 45, 23, 34, 27, 26)
-      ..lineTo(44, 27)
-      ..lineTo(37, 39)
-      ..close();
-    canvas.drawPath(deepTealBlade, Paint()..color = const Color(0xFF0AA398));
-
-    canvas.drawCircle(const Offset(50, 37), 10.5, Paint()..color = AppTheme.brandNavy);
+    canvas.drawCircle(
+      apertureCenter,
+      10.5,
+      Paint()..color = AppTheme.brandNavy,
+    );
 
     canvas.save();
     canvas.translate(45.5, 32.5);
-    canvas.rotate(-0.7330382858);
+    canvas.rotate(-42 * math.pi / 180);
     canvas.drawOval(
       const Rect.fromCenter(center: Offset.zero, width: 6.4, height: 4.4),
       Paint()..color = _lavender.withValues(alpha: 0.82),
