@@ -156,7 +156,7 @@ class _PhoneClockState extends State<_PhoneClock> {
       decoration: BoxDecoration(
         color: AppTheme.primarySoft,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFDCEEFF)),
+        border: Border.all(color: AppTheme.primarySoftStrong),
       ),
       child: Row(
         children: [
