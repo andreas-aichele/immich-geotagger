@@ -4,7 +4,6 @@
         <item name="android:windowSplashScreenBackground">#FFFFFF</item>
         <item name="android:windowSplashScreenAnimatedIcon">@drawable/brand_mark</item>
         <item name="android:windowSplashScreenIconBackgroundColor">#FFFFFF</item>
-        <item name="android:postSplashScreenTheme">@style/NormalTheme</item>
     </style>
 
     <style name="NormalTheme" parent="@android:style/Theme.Light.NoTitleBar">
