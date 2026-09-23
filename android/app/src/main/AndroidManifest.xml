@@ -15,8 +15,8 @@
     <application
         android:label="Immich GeoTagger"
         android:name="${applicationName}"
-        android:icon="@drawable/ic_launcher_geotagger"
-        android:roundIcon="@drawable/ic_launcher_geotagger">
+        android:icon="@drawable/app_icon"
+        android:roundIcon="@drawable/app_icon">
         <activity
             android:name=".MainActivity"
             android:exported="true"
