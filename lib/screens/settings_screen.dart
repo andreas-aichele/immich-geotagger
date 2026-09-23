@@ -486,7 +486,7 @@ class _ScopeChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
-        color: AppTheme.primarySoft,
+        color: AppTheme.tealSoft,
         borderRadius: BorderRadius.circular(10),
       ),
       child: Text(
@@ -512,7 +512,7 @@ class _StatusBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = success
-        ? const Color(0xFF157A4A)
+        ? AppTheme.success
         : Theme.of(context).colorScheme.error;
 
     return Container(
