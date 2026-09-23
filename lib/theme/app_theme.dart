@@ -169,3 +169,53 @@ class SectionEyebrow extends StatelessWidget {
     );
   }
 }
+
+
+class BrandMark extends StatelessWidget {
+  const BrandMark({this.size = 46, super.key});
+
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final lensSize = size * 0.46;
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        gradient: AppTheme.brandGradient,
+        borderRadius: BorderRadius.circular(size * 0.27),
+      ),
+      child: Center(
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Icon(
+              Icons.location_on_rounded,
+              color: Colors.white,
+              size: size * 0.72,
+            ),
+            Container(
+              width: lensSize,
+              height: lensSize,
+              decoration: const BoxDecoration(
+                color: AppTheme.brandNavy,
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: Container(
+                  width: lensSize * 0.42,
+                  height: lensSize * 0.42,
+                  decoration: const BoxDecoration(
+                    color: AppTheme.brandCoral,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
