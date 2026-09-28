@@ -142,6 +142,7 @@ class SyncService {
       skippedWithLocation: existing,
       skippedWithoutTrack: noTrack,
       unmatched: unmatched,
+      maxInterpolationGapMinutes: settings.maxInterpolationGapMinutes,
     );
   }
 
@@ -306,6 +307,9 @@ class SyncService {
           assetId: candidate.asset.id,
           fileName: candidate.asset.fileName,
           captureTime: candidate.asset.takenAt,
+          trackBeforeTime: candidate.before,
+          trackAfterTime:
+              candidate.usedLastKnownLocation ? null : candidate.after,
           latitude: candidate.latitude,
           longitude: candidate.longitude,
           updatedAt: DateTime.now().toUtc(),

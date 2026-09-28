@@ -55,6 +55,7 @@ class SyncPreview {
     required this.skippedWithLocation,
     required this.skippedWithoutTrack,
     this.unmatched = const [],
+    this.maxInterpolationGapMinutes = 15,
   });
 
   final List<SyncCandidate> candidates;
@@ -62,4 +63,5 @@ class SyncPreview {
   final int skippedWithLocation;
   final int skippedWithoutTrack;
   final List<SyncUnmatched> unmatched;
+  final int maxInterpolationGapMinutes;
 }

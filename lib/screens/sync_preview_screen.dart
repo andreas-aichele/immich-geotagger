@@ -13,6 +13,7 @@ import '../services/immich_service.dart';
 import '../services/settings_service.dart';
 import '../services/sync_service.dart';
 import '../theme/app_theme.dart';
+import '../widgets/match_timeline.dart';
 import '../widgets/photo_location_widgets.dart';
 
 class SyncPreviewScreen extends StatefulWidget {
@@ -437,15 +438,6 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
   Widget _candidateCard(SyncCandidate candidate) {
     final l = context.l10n;
     final selected = _selected.contains(candidate.asset.id);
-    final localTime = candidate.asset.takenAt.toLocal();
-    final before = candidate.before.toLocal();
-    final after = candidate.after.toLocal();
-    final material = MaterialLocalizations.of(context);
-
-    String time(DateTime value) => material.formatTimeOfDay(
-          TimeOfDay.fromDateTime(value),
-          alwaysUse24HourFormat: MediaQuery.alwaysUse24HourFormatOf(context),
-        );
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
@@ -468,35 +460,12 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  const SizedBox(height: 5),
-                  Text(
-                    l.t(
-                      'capturedAt',
-                      {'time': time(localTime)},
-                    ),
-                    style: const TextStyle(
-                      color: AppTheme.muted,
-                      fontSize: 13,
-                    ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    candidate.usedLastKnownLocation
-                        ? l.t(
-                            'usingLastKnownLocation',
-                            {'time': time(before)},
-                          )
-                        : l.t(
-                            'interpolatedBetween',
-                            {
-                              'before': time(before),
-                              'after': time(after),
-                            },
-                          ),
-                    style: const TextStyle(
-                      color: AppTheme.muted,
-                      fontSize: 12,
-                    ),
+                  MatchTimeline(
+                    photoTime: candidate.asset.takenAt,
+                    before: candidate.before,
+                    after: candidate.usedLastKnownLocation
+                        ? null
+                        : candidate.after,
                   ),
                   const SizedBox(height: 8),
                   _reliabilityChip(candidate.reliability),
@@ -544,8 +513,6 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
       };
     }
 
-    final deviation = _relativeDeviation(item);
-
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: AppSurface(
@@ -568,27 +535,11 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
                     style: const TextStyle(fontWeight: FontWeight.w700),
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    _formatPhotoDate(item.asset.takenAt),
-                    style: const TextStyle(
-                      color: AppTheme.muted,
-                      fontSize: 12,
-                    ),
+                  MatchTimeline(
+                    photoTime: item.asset.takenAt,
+                    before: item.before,
+                    after: item.after,
                   ),
-                  if (deviation != null) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      l.t(
-                        'unmatchedDeviation',
-                        {'value': deviation},
-                      ),
-                      style: const TextStyle(
-                        color: AppTheme.muted,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
                   const SizedBox(height: 5),
                   Text(
                     reason(),
@@ -605,55 +556,6 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
         ),
       ),
     );
-  }
-
-  String _formatPhotoDate(DateTime value) {
-    final local = value.toLocal();
-    final material = MaterialLocalizations.of(context);
-    final date = material.formatShortDate(local);
-    final time = material.formatTimeOfDay(
-      TimeOfDay.fromDateTime(local),
-      alwaysUse24HourFormat: MediaQuery.alwaysUse24HourFormatOf(context),
-    );
-    return context.l10n.t(
-      'unmatchedPhotoDateTime',
-      {'date': date, 'time': time},
-    );
-  }
-
-  String? _relativeDeviation(SyncUnmatched item) {
-    final photo = item.asset.takenAt.toUtc();
-    final references = <DateTime>[
-      if (item.before != null) item.before!.toUtc(),
-      if (item.after != null) item.after!.toUtc(),
-    ];
-    if (references.isEmpty) return null;
-
-    var difference = references.first.difference(photo).abs();
-    for (final reference in references.skip(1)) {
-      final candidate = reference.difference(photo).abs();
-      if (candidate < difference) difference = candidate;
-    }
-
-    final l = context.l10n;
-    if (difference.inDays >= 1) {
-      final days = difference.inHours / 24;
-      final rounded = days >= 10 ? days.round().toString() : days.toStringAsFixed(1);
-      return l.t('durationDays', {'count': rounded});
-    }
-    if (difference.inHours >= 1) {
-      final hours = difference.inMinutes / 60;
-      final rounded =
-          hours >= 10 ? hours.round().toString() : hours.toStringAsFixed(1);
-      return l.t('durationHours', {'count': rounded});
-    }
-    if (difference.inMinutes >= 1) {
-      return l.t(
-        'durationMinutes',
-        {'count': math.max(1, difference.inMinutes)},
-      );
-    }
-    return l.t('durationLessThanMinute');
   }
 
   Widget _reliabilityChip(MatchReliability reliability) {
@@ -885,7 +787,7 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
                   ),
                   const SizedBox(height: 12),
                   SizedBox(
-                    height: 150,
+                    height: 190,
                     child: PageView.builder(
                       controller: pageController,
                       itemCount: group.length,
@@ -931,7 +833,13 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
                                           fontWeight: FontWeight.w700,
                                         ),
                                       ),
-                                      const SizedBox(height: 6),
+                                      MatchTimeline(
+                                        photoTime: candidate.asset.takenAt,
+                                        before: candidate.before,
+                                        after: candidate.usedLastKnownLocation
+                                            ? null
+                                            : candidate.after,
+                                      ),
                                       _reliabilityChip(
                                         candidate.reliability,
                                       ),

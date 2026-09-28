@@ -49,7 +49,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   void dispose() {
-    _autoSaveTimer?.cancel();
+    // Persist the latest text-field values when leaving the screen. Without
+    // this flush, a pending debounce was discarded and the next sync could
+    // still use the previous interpolation gap.
+    if (_autoSaveTimer?.isActive ?? false) {
+      _autoSaveTimer!.cancel();
+      _saveTrackingPreferences();
+    }
     _url.dispose();
     _key.dispose();
     _retention.dispose();
@@ -380,6 +386,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           height: 1.4,
                         ),
                       ),
+                      const SizedBox(height: 8),
+                      Text(
+                        l.t('trackingSamplingHint'),
+                        style: const TextStyle(
+                          color: AppTheme.muted,
+                          fontSize: 12,
+                          height: 1.4,
+                        ),
+                      ),
                       const SizedBox(height: 24),
                       TextFormField(
                         controller: _maxGap,
@@ -393,6 +408,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         autovalidateMode:
                             AutovalidateMode.onUserInteraction,
                         validator: _positiveInt,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        l.t('maximumInterpolationGapDesc'),
+                        style: const TextStyle(
+                          color: AppTheme.muted,
+                          fontSize: 12,
+                          height: 1.4,
+                        ),
                       ),
                       const SizedBox(height: 12),
                       TextFormField(

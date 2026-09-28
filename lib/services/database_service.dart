@@ -15,7 +15,7 @@ class DatabaseService {
     final root = await getDatabasesPath();
     _db = await openDatabase(
       p.join(root, 'immich_geotagger.db'),
-      version: 1,
+      version: 2,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE location_points (
@@ -35,11 +35,23 @@ class DatabaseService {
             asset_id TEXT NOT NULL UNIQUE,
             file_name TEXT NOT NULL,
             capture_time_ms INTEGER NOT NULL,
+            track_before_ms INTEGER,
+            track_after_ms INTEGER,
             latitude REAL NOT NULL,
             longitude REAL NOT NULL,
             updated_at_ms INTEGER NOT NULL
           )
         ''');
+      },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          await db.execute(
+            'ALTER TABLE geotagged_assets ADD COLUMN track_before_ms INTEGER',
+          );
+          await db.execute(
+            'ALTER TABLE geotagged_assets ADD COLUMN track_after_ms INTEGER',
+          );
+        }
       },
     );
     return _db!;
@@ -60,6 +72,37 @@ class DatabaseService {
       orderBy: 'timestamp_ms ASC',
     );
     return rows.map(LocationPoint.fromMap).toList();
+  }
+
+  Future<(DateTime?, DateTime?)> locationTimesAround(DateTime timestamp) async {
+    final db = await database;
+    final value = timestamp.toUtc().millisecondsSinceEpoch;
+    final beforeRows = await db.query(
+      'location_points',
+      columns: ['timestamp_ms'],
+      where: 'timestamp_ms <= ?',
+      whereArgs: [value],
+      orderBy: 'timestamp_ms DESC',
+      limit: 1,
+    );
+    final afterRows = await db.query(
+      'location_points',
+      columns: ['timestamp_ms'],
+      where: 'timestamp_ms >= ?',
+      whereArgs: [value],
+      orderBy: 'timestamp_ms ASC',
+      limit: 1,
+    );
+
+    DateTime? pointTime(List<Map<String, Object?>> rows) {
+      if (rows.isEmpty) return null;
+      return DateTime.fromMillisecondsSinceEpoch(
+        rows.first['timestamp_ms'] as int,
+        isUtc: true,
+      );
+    }
+
+    return (pointTime(beforeRows), pointTime(afterRows));
   }
 
   Future<void> purgeLocationsOlderThan(Duration retention) async {

@@ -9,6 +9,7 @@ import '../services/immich_service.dart';
 import '../services/settings_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/photo_location_widgets.dart';
+import '../widgets/match_timeline.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -21,6 +22,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
   final _settings = SettingsService();
   final _immich = ImmichService();
   final _thumbnailFutures = <String, Future<Uint8List>>{};
+  final _timelineFutures =
+      <String, Future<(DateTime?, DateTime?)>>{};
 
   AppSettings? _appSettings;
 
@@ -50,6 +53,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   ThumbnailLoader? get _thumbnailLoader =>
       _appSettings == null ? null : _thumbnail;
+
+  Future<(DateTime?, DateTime?)> _timelineTimes(GeotaggedAsset item) {
+    return _timelineFutures.putIfAbsent(
+      item.assetId,
+      () => DatabaseService.instance.locationTimesAround(item.captureTime),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -86,13 +96,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   Widget _assetCard(GeotaggedAsset item) {
     final l = context.l10n;
-    final material = MaterialLocalizations.of(context);
-    final local = item.captureTime.toLocal();
-    final time = material.formatTimeOfDay(
-      TimeOfDay.fromDateTime(local),
-      alwaysUse24HourFormat: MediaQuery.alwaysUse24HourFormatOf(context),
-    );
-
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: AppSurface(
@@ -115,14 +118,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(fontWeight: FontWeight.w700),
                   ),
-                  const SizedBox(height: 5),
-                  Text(
-                    l.t('capturedAt', {'time': time}),
-                    style: const TextStyle(
-                      color: AppTheme.muted,
-                      fontSize: 13,
-                    ),
-                  ),
+                  _matchTimeline(item),
                   const SizedBox(height: 3),
                   Text(
                     l.t('locationAlreadyApplied'),
@@ -162,6 +158,28 @@ class _HistoryScreenState extends State<HistoryScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _matchTimeline(GeotaggedAsset item) {
+    if (item.trackBeforeTime != null || item.trackAfterTime != null) {
+      return MatchTimeline(
+        photoTime: item.captureTime,
+        before: item.trackBeforeTime,
+        after: item.trackAfterTime,
+      );
+    }
+
+    return FutureBuilder<(DateTime?, DateTime?)>(
+      future: _timelineTimes(item),
+      builder: (context, snapshot) {
+        final times = snapshot.data;
+        return MatchTimeline(
+          photoTime: item.captureTime,
+          before: times?.$1,
+          after: times?.$2,
+        );
+      },
     );
   }
 }
