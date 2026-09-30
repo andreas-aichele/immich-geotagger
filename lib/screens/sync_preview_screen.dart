@@ -97,10 +97,25 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
       setState(() => _applying = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(e.toString().replaceFirst('Bad state: ', '')),
+          content: Text(_immichErrorMessage(e)),
         ),
       );
     }
+  }
+
+  String _immichErrorMessage(Object error) {
+    final l = context.l10n;
+    if (error is ImmichConnectionException) {
+      return switch (error.error) {
+        ImmichConnectionError.unreachable => l.t('immichUnreachable'),
+        ImmichConnectionError.timeout => l.t('immichTimeout'),
+        ImmichConnectionError.server => l.t(
+            'immichServerError',
+            {'code': error.statusCode ?? 500},
+          ),
+      };
+    }
+    return error.toString().replaceFirst('Bad state: ', '');
   }
 
   @override
