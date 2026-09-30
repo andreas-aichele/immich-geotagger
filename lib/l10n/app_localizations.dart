@@ -22,6 +22,7 @@ class AppLocalizations {
 
   static const _values = <String, Map<String, String>>{
     'en': {
+      'missingTimeZoneWarning': '{count} image(s) have no timezone metadata in Immich. Their capture time is available only as an absolute UTC timestamp, so matching may be shifted if the camera clock was in another timezone.',
       'immichUnreachable': 'Immich server is not reachable. Check your connection or try again later.',
       'immichTimeout': 'The connection to Immich timed out. Please try again.',
       'immichServerError': 'Immich returned a server error (HTTP {code}). Please try again later.',
@@ -179,6 +180,7 @@ class AppLocalizations {
       'appliedLocation': 'Applied photo location',
     },
     'de': {
+      'missingTimeZoneWarning': 'Bei {count} Bild(ern) ist in Immich keine Zeitzone hinterlegt. Die Aufnahmezeit liegt nur als absoluter UTC-Zeitstempel vor. Die Zuordnung kann daher verschoben sein, wenn die Kamera auf eine andere Zeitzone eingestellt war.',
       'immichUnreachable': 'Der Immich-Server ist nicht erreichbar. Prüfe deine Verbindung oder versuche es später erneut.',
       'immichTimeout': 'Die Verbindung zu Immich hat zu lange gedauert. Bitte versuche es erneut.',
       'immichServerError': 'Immich hat einen Serverfehler zurückgegeben (HTTP {code}). Bitte versuche es später erneut.',
@@ -336,6 +338,7 @@ class AppLocalizations {
       'appliedLocation': 'Übernommener Fotostandort',
     },
     'fr': {
+      'missingTimeZoneWarning': '{count} image(s) n’ont pas de fuseau horaire enregistré dans Immich. L’heure de prise de vue n’est disponible que sous forme d’horodatage UTC absolu ; l’association peut donc être décalée si l’appareil utilisait un autre fuseau horaire.',
       'immichUnreachable': 'Le serveur Immich est inaccessible. Vérifiez votre connexion ou réessayez plus tard.',
       'immichTimeout': 'La connexion à Immich a expiré. Veuillez réessayer.',
       'immichServerError': 'Immich a renvoyé une erreur serveur (HTTP {code}). Veuillez réessayer plus tard.',
@@ -492,6 +495,7 @@ class AppLocalizations {
       'appliedLocation': 'Position appliquée à la photo',
     },
     'es': {
+      'missingTimeZoneWarning': '{count} imagen(es) no tienen zona horaria guardada en Immich. La hora de captura solo está disponible como marca de tiempo UTC absoluta, por lo que la asignación puede quedar desplazada si la cámara usaba otra zona horaria.',
       'immichUnreachable': 'No se puede acceder al servidor de Immich. Comprueba tu conexión o inténtalo más tarde.',
       'immichTimeout': 'La conexión con Immich agotó el tiempo de espera. Inténtalo de nuevo.',
       'immichServerError': 'Immich devolvió un error del servidor (HTTP {code}). Inténtalo más tarde.',
@@ -649,6 +653,7 @@ class AppLocalizations {
       'appliedLocation': 'Ubicación aplicada a la foto',
     },
     'nl': {
+      'missingTimeZoneWarning': 'Bij {count} afbeelding(en) is in Immich geen tijdzone opgeslagen. De opnametijd is alleen beschikbaar als absolute UTC-tijdstempel, waardoor de koppeling kan verschuiven als de camera op een andere tijdzone stond.',
       'immichUnreachable': 'De Immich-server is niet bereikbaar. Controleer je verbinding of probeer het later opnieuw.',
       'immichTimeout': 'De verbinding met Immich duurde te lang. Probeer het opnieuw.',
       'immichServerError': 'Immich gaf een serverfout terug (HTTP {code}). Probeer het later opnieuw.',
