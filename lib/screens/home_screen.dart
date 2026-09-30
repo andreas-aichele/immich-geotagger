@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
 import '../services/database_service.dart';
+import '../services/immich_service.dart';
 import '../services/sync_service.dart';
 import '../services/settings_service.dart';
 import '../services/tracking_service.dart';
@@ -165,12 +166,25 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       setState(() => _lastSync = result);
     } catch (e) {
       if (!mounted) return;
-      setState(
-        () => _error = e.toString().replaceFirst('Bad state: ', ''),
-      );
+      setState(() => _error = _immichErrorMessage(e));
     } finally {
       if (mounted && _syncBusy) setState(() => _syncBusy = false);
     }
+  }
+
+  String _immichErrorMessage(Object error) {
+    final l = context.l10n;
+    if (error is ImmichConnectionException) {
+      return switch (error.error) {
+        ImmichConnectionError.unreachable => l.t('immichUnreachable'),
+        ImmichConnectionError.timeout => l.t('immichTimeout'),
+        ImmichConnectionError.server => l.t(
+            'immichServerError',
+            {'code': error.statusCode ?? 500},
+          ),
+      };
+    }
+    return error.toString().replaceFirst('Bad state: ', '');
   }
 
   @override
