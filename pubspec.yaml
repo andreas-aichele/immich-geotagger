@@ -1,7 +1,7 @@
 name: immich_geotagger
 description: Background GPS logger that geotags Immich assets using timestamp interpolation.
 publish_to: 'none'
-version: 1.0.6+1000006
+version: 1.0.7+1000007
 
 environment:
   sdk: '>=3.4.0 <4.0.0'
