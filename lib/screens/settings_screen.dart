@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
+import '../services/gpx_export_service.dart';
 import '../services/immich_service.dart';
 import '../services/settings_service.dart';
 import '../services/tracking_service.dart';
@@ -23,6 +24,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final _settings = SettingsService();
   final _immich = ImmichService();
   final _tracker = TrackingService();
+  final _gpxExport = GpxExportService();
 
   Timer? _autoSaveTimer;
 
@@ -32,6 +34,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _connectionVerified = false;
   bool _batteryProtected = true;
   bool _batteryBusy = false;
+  bool _gpxExportBusy = false;
   bool _serverStatusSuccess = false;
   String? _serverStatus;
   String? _testedUrl;
@@ -210,6 +213,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _batteryProtected = protected;
       _batteryBusy = false;
     });
+  }
+
+  Future<void> _exportGpx(BuildContext buttonContext) async {
+    if (_gpxExportBusy) return;
+    setState(() => _gpxExportBusy = true);
+    try {
+      final renderBox = buttonContext.findRenderObject() as RenderBox?;
+      final origin = renderBox == null
+          ? null
+          : renderBox.localToGlobal(Offset.zero) & renderBox.size;
+      final exported = await _gpxExport.export(sharePositionOrigin: origin);
+      if (!mounted) return;
+      if (!exported) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.t('gpxExportEmpty'))),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.t('gpxExportFailed'))),
+      );
+    } finally {
+      if (mounted) setState(() => _gpxExportBusy = false);
+    }
   }
 
   @override
@@ -418,7 +446,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           height: 1.4,
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 24),
                       TextFormField(
                         controller: _retention,
                         onChanged: _retentionChanged,
@@ -431,6 +459,38 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         autovalidateMode:
                             AutovalidateMode.onUserInteraction,
                         validator: _positiveInt,
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        l.t('gpxExportTitle'),
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        l.t('gpxExportDesc'),
+                        style: const TextStyle(
+                          color: AppTheme.muted,
+                          fontSize: 12,
+                          height: 1.4,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Builder(
+                        builder: (buttonContext) => OutlinedButton.icon(
+                          onPressed: _gpxExportBusy
+                              ? null
+                              : () => _exportGpx(buttonContext),
+                          icon: _gpxExportBusy
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(Icons.file_download_outlined),
+                          label: Text(l.t('gpxExportButton')),
+                        ),
                       ),
                     ],
                   ),
