@@ -98,6 +98,25 @@ class SyncService {
           : null;
 
       if (match == null) {
+        final nearest = _interpolation.nearestPoint(
+          timestamp: asset.takenAt,
+          points: points,
+        );
+        if (nearest != null) {
+          candidates.add(
+            SyncCandidate(
+              asset: asset,
+              latitude: nearest.latitude,
+              longitude: nearest.longitude,
+              before: nearest.timestamp,
+              after: nearest.timestamp,
+              reliability: MatchReliability.medium,
+              usedLastKnownLocation: true,
+            ),
+          );
+          continue;
+        }
+
         final fallback = _lastKnownLocationFallback(
           assetTime: asset.takenAt,
           points: points,
@@ -159,7 +178,7 @@ class SyncService {
     final lastTime = last.timestamp.toUtc();
 
     if (!target.isAfter(lastTime)) return null;
-    if (target.difference(lastTime) > const Duration(minutes: 10)) return null;
+    if (target.difference(lastTime) > const Duration(minutes: 15)) return null;
 
     final movement = _distanceMeters(
       previous.latitude,
@@ -167,7 +186,7 @@ class SyncService {
       last.latitude,
       last.longitude,
     );
-    if (movement > 50) return null;
+    if (movement > InterpolationService.stationaryDistanceMeters) return null;
 
     return last;
   }
@@ -226,8 +245,18 @@ class SyncService {
         b.latitude,
         b.longitude,
       );
-      if (gap > Duration(minutes: settings.maxInterpolationGapMinutes) &&
-          movement > 50) {
+      final stationary =
+          movement <= InterpolationService.stationaryDistanceMeters &&
+              gap <= InterpolationService.stationaryMaxGap;
+      final manualAnchored =
+          a.isManual &&
+              b.isManual &&
+              gap <= InterpolationService.manualAnchorMaxGap;
+      final speed = _interpolation.averageSpeedKmh(movement, gap);
+      if ((gap > Duration(minutes: settings.maxInterpolationGapMinutes) &&
+              !stationary &&
+              !manualAnchored) ||
+          (!manualAnchored && speed > 300)) {
         return SyncUnmatched(
           asset: asset,
           reason: UnmatchedReason.unsafeGap,
@@ -251,11 +280,22 @@ class SyncService {
       match.after.latitude,
       match.after.longitude,
     );
+    final speed = _interpolation.averageSpeedKmh(distance, gap);
 
-    if (distance <= 25 || gap <= const Duration(minutes: 2)) {
+    if (match.before.isManual && match.after.isManual) {
+      return gap <= const Duration(hours: 6)
+          ? MatchReliability.medium
+          : MatchReliability.low;
+    }
+
+    if (gap <= const Duration(minutes: 2) && speed <= 300) {
       return MatchReliability.high;
     }
-    if (distance <= 100 || gap <= const Duration(minutes: 5)) {
+    if (gap <= const Duration(minutes: 5) && speed <= 300) {
+      return MatchReliability.medium;
+    }
+    if (distance <= InterpolationService.stationaryDistanceMeters &&
+        gap <= const Duration(minutes: 30)) {
       return MatchReliability.medium;
     }
     return MatchReliability.low;
