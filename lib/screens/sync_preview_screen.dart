@@ -305,6 +305,8 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
 
     final allSelected =
         _selected.length == widget.preview.candidates.length;
+    final candidates = [...widget.preview.candidates]
+      ..sort((a, b) => b.asset.takenAt.compareTo(a.asset.takenAt));
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
@@ -331,7 +333,7 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
           ],
         ),
         const SizedBox(height: 4),
-        for (final candidate in widget.preview.candidates)
+        for (final candidate in candidates)
           _candidateCard(candidate),
       ],
     );
@@ -342,10 +344,13 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
       return _emptyTab(context.l10n.t('noUnmatchedPhotos'));
     }
 
+    final unmatched = [...widget.preview.unmatched]
+      ..sort((a, b) => b.asset.takenAt.compareTo(a.asset.takenAt));
+
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
       children: [
-        for (final item in widget.preview.unmatched)
+        for (final item in unmatched)
           _unmatchedPhotoCard(item),
       ],
     );
