@@ -325,15 +325,31 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                backgroundColor: _tracking ? Colors.white : null,
+                foregroundColor: _tracking ? primary : primary,
+                side: BorderSide(
+                  color: _tracking
+                      ? Colors.white
+                      : primary.withValues(alpha: 0.45),
+                ),
+              ),
               onPressed: _manualPointBusy ? null : _captureManualPoint,
               icon: _manualPointBusy
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 18,
                       height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: primary,
+                      ),
                     )
                   : const Icon(Icons.add_location_alt_outlined),
-              label: Text(l.t('saveCurrentLocation')),
+              label: Text(
+                _manualPointBusy
+                    ? l.t('savingCurrentLocation')
+                    : l.t('saveCurrentLocation'),
+              ),
             ),
           ),
         ],
