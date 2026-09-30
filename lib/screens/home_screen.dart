@@ -27,6 +27,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   bool _trackingBusy = false;
   bool _syncBusy = false;
+  bool _manualPointBusy = false;
   bool _tracking = false;
   int _points = 0;
   SyncResult? _lastSync;
@@ -109,6 +110,34 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       );
     } finally {
       if (mounted) setState(() => _trackingBusy = false);
+    }
+  }
+
+  Future<void> _captureManualPoint() async {
+    setState(() {
+      _manualPointBusy = true;
+      _error = null;
+    });
+
+    try {
+      final point = await _tracker.captureManualPoint();
+      if (!mounted) return;
+      if (point == null) {
+        setState(() => _error = context.l10n.t('manualPointFailed'));
+        return;
+      }
+      await _refreshStats();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.t('manualPointSaved'))),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(
+        () => _error = e.toString().replaceFirst('Bad state: ', ''),
+      );
+    } finally {
+      if (mounted) setState(() => _manualPointBusy = false);
     }
   }
 
@@ -290,6 +319,21 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               label: Text(
                 _tracking ? l.t('stopTracking') : l.t('startTracking'),
               ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: _manualPointBusy ? null : _captureManualPoint,
+              icon: _manualPointBusy
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.add_location_alt_outlined),
+              label: Text(l.t('saveCurrentLocation')),
             ),
           ),
         ],
