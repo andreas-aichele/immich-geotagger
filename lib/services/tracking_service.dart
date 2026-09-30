@@ -4,7 +4,9 @@ import 'dart:ui';
 
 import 'package:libre_location/libre_location.dart';
 
+import '../models/location_point.dart';
 import 'background_location_callback.dart';
+import 'database_service.dart';
 import 'settings_service.dart';
 
 class TrackingService {
@@ -173,6 +175,34 @@ class TrackingService {
       );
       await saveLibreLocationPosition(position);
       return position;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<LocationPoint?> captureManualPoint({int timeoutSeconds = 20}) async {
+    await initialize();
+
+    final foreground = await requestForegroundLocationPermission();
+    if (!foreground) return null;
+
+    try {
+      final position = await LibreLocation.getCurrentPosition(
+        accuracy: Accuracy.high,
+        samples: 1,
+        timeout: timeoutSeconds,
+        maximumAge: 0,
+        persist: false,
+      );
+      final point = LocationPoint(
+        timestamp: position.timestamp.toUtc(),
+        latitude: position.latitude,
+        longitude: position.longitude,
+        accuracy: position.accuracy,
+        isManual: true,
+      );
+      await DatabaseService.instance.insertLocation(point);
+      return point;
     } catch (_) {
       return null;
     }
