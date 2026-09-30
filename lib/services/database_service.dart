@@ -80,6 +80,15 @@ class DatabaseService {
     return rows.map(LocationPoint.fromMap).toList();
   }
 
+  Future<List<LocationPoint>> allLocations() async {
+    final db = await database;
+    final rows = await db.query(
+      'location_points',
+      orderBy: 'timestamp_ms ASC',
+    );
+    return rows.map(LocationPoint.fromMap).toList();
+  }
+
   Future<(DateTime?, DateTime?)> locationTimesAround(DateTime timestamp) async {
     final db = await database;
     final value = timestamp.toUtc().millisecondsSinceEpoch;
