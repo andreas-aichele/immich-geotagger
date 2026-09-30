@@ -22,6 +22,9 @@ class AppLocalizations {
 
   static const _values = <String, Map<String, String>>{
     'en': {
+      'immichUnreachable': 'Immich server is not reachable. Check your connection or try again later.',
+      'immichTimeout': 'The connection to Immich timed out. Please try again.',
+      'immichServerError': 'Immich returned a server error (HTTP {code}). Please try again later.',
       'savingCurrentLocation': 'Saving current location…',
       'gpxExportTitle': 'Export GPS data',
       'gpxExportDesc': 'Export all saved GPS points as a GPX track.',
@@ -176,6 +179,9 @@ class AppLocalizations {
       'appliedLocation': 'Applied photo location',
     },
     'de': {
+      'immichUnreachable': 'Der Immich-Server ist nicht erreichbar. Prüfe deine Verbindung oder versuche es später erneut.',
+      'immichTimeout': 'Die Verbindung zu Immich hat zu lange gedauert. Bitte versuche es erneut.',
+      'immichServerError': 'Immich hat einen Serverfehler zurückgegeben (HTTP {code}). Bitte versuche es später erneut.',
       'savingCurrentLocation': 'Standort wird ermittelt…',
       'gpxExportTitle': 'GPS-Daten exportieren',
       'gpxExportDesc': 'Alle gespeicherten GPS-Punkte als GPX-Track exportieren.',
@@ -330,6 +336,9 @@ class AppLocalizations {
       'appliedLocation': 'Übernommener Fotostandort',
     },
     'fr': {
+      'immichUnreachable': 'Le serveur Immich est inaccessible. Vérifiez votre connexion ou réessayez plus tard.',
+      'immichTimeout': 'La connexion à Immich a expiré. Veuillez réessayer.',
+      'immichServerError': 'Immich a renvoyé une erreur serveur (HTTP {code}). Veuillez réessayer plus tard.',
       'savingCurrentLocation': 'Enregistrement de la position…',
       'gpxExportTitle': 'Exporter les données GPS',
       'gpxExportDesc': 'Exporter tous les points GPS enregistrés sous forme de trace GPX.',
@@ -483,6 +492,9 @@ class AppLocalizations {
       'appliedLocation': 'Position appliquée à la photo',
     },
     'es': {
+      'immichUnreachable': 'No se puede acceder al servidor de Immich. Comprueba tu conexión o inténtalo más tarde.',
+      'immichTimeout': 'La conexión con Immich agotó el tiempo de espera. Inténtalo de nuevo.',
+      'immichServerError': 'Immich devolvió un error del servidor (HTTP {code}). Inténtalo más tarde.',
       'savingCurrentLocation': 'Guardando ubicación…',
       'gpxExportTitle': 'Exportar datos GPS',
       'gpxExportDesc': 'Exporta todos los puntos GPS guardados como una ruta GPX.',
@@ -637,6 +649,9 @@ class AppLocalizations {
       'appliedLocation': 'Ubicación aplicada a la foto',
     },
     'nl': {
+      'immichUnreachable': 'De Immich-server is niet bereikbaar. Controleer je verbinding of probeer het later opnieuw.',
+      'immichTimeout': 'De verbinding met Immich duurde te lang. Probeer het opnieuw.',
+      'immichServerError': 'Immich gaf een serverfout terug (HTTP {code}). Probeer het later opnieuw.',
       'savingCurrentLocation': 'Locatie wordt opgeslagen…',
       'gpxExportTitle': 'GPS-gegevens exporteren',
       'gpxExportDesc': 'Exporteer alle opgeslagen GPS-punten als GPX-track.',
