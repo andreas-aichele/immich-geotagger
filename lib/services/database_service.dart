@@ -15,7 +15,7 @@ class DatabaseService {
     final root = await getDatabasesPath();
     _db = await openDatabase(
       p.join(root, 'immich_geotagger.db'),
-      version: 2,
+      version: 3,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE location_points (
@@ -23,7 +23,8 @@ class DatabaseService {
             timestamp_ms INTEGER NOT NULL,
             latitude REAL NOT NULL,
             longitude REAL NOT NULL,
-            accuracy REAL
+            accuracy REAL,
+            is_manual INTEGER NOT NULL DEFAULT 0
           )
         ''');
         await db.execute(
@@ -50,6 +51,11 @@ class DatabaseService {
           );
           await db.execute(
             'ALTER TABLE geotagged_assets ADD COLUMN track_after_ms INTEGER',
+          );
+        }
+        if (oldVersion < 3) {
+          await db.execute(
+            'ALTER TABLE location_points ADD COLUMN is_manual INTEGER NOT NULL DEFAULT 0',
           );
         }
       },
