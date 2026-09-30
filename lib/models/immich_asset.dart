@@ -11,6 +11,7 @@ class ImmichAsset {
     required this.latitude,
     required this.longitude,
     required this.type,
+    required this.hasExplicitTimeZone,
     this.duration,
   });
 
@@ -20,6 +21,7 @@ class ImmichAsset {
   final double? latitude;
   final double? longitude;
   final ImmichAssetType type;
+  final bool hasExplicitTimeZone;
   final Duration? duration;
 
   bool get hasLocation => latitude != null && longitude != null;
@@ -40,6 +42,9 @@ class ImmichAsset {
     }
 
     final typeValue = (json['type'] as String? ?? 'IMAGE').toUpperCase();
+    final timeZone = exif?['timeZone'];
+    final hasExplicitTimeZone =
+        timeZone is String && timeZone.trim().isNotEmpty;
 
     return ImmichAsset(
       id: json['id'] as String,
@@ -50,6 +55,7 @@ class ImmichAsset {
       type: typeValue == 'VIDEO'
           ? ImmichAssetType.video
           : ImmichAssetType.image,
+      hasExplicitTimeZone: hasExplicitTimeZone,
       duration: _parseDuration(json['duration']),
     );
   }
