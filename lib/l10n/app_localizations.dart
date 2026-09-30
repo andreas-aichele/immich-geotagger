@@ -22,6 +22,9 @@ class AppLocalizations {
 
   static const _values = <String, Map<String, String>>{
     'en': {
+      'saveCurrentLocation': 'Save current location',
+      'manualPointSaved': 'Location point saved.',
+      'manualPointFailed': 'Could not get a fresh location fix.',
       'appName': 'Immich GeoTagger',
       'appSubtitle': 'Camera location timeline',
       'continue': 'Continue',
@@ -167,6 +170,9 @@ class AppLocalizations {
       'appliedLocation': 'Applied photo location',
     },
     'de': {
+      'saveCurrentLocation': 'Aktuellen Standort speichern',
+      'manualPointSaved': 'Standortpunkt gespeichert.',
+      'manualPointFailed': 'Es konnte kein aktueller Standort ermittelt werden.',
       'appName': 'Immich GeoTagger',
       'appSubtitle': 'Standortverlauf für Kameras',
       'continue': 'Weiter',
@@ -312,6 +318,9 @@ class AppLocalizations {
       'appliedLocation': 'Übernommener Fotostandort',
     },
     'fr': {
+      'saveCurrentLocation': 'Enregistrer la position actuelle',
+      'manualPointSaved': 'Point de localisation enregistré.',
+      'manualPointFailed': 'Impossible d’obtenir une position actuelle.',
       'appName': 'Immich GeoTagger',
       'appSubtitle': 'Chronologie de localisation',
       'continue': 'Continuer',
@@ -456,6 +465,9 @@ class AppLocalizations {
       'appliedLocation': 'Position appliquée à la photo',
     },
     'es': {
+      'saveCurrentLocation': 'Guardar ubicación actual',
+      'manualPointSaved': 'Punto de ubicación guardado.',
+      'manualPointFailed': 'No se pudo obtener una ubicación actual.',
       'appName': 'Immich GeoTagger',
       'appSubtitle': 'Cronología de ubicación',
       'continue': 'Continuar',
@@ -601,6 +613,9 @@ class AppLocalizations {
       'appliedLocation': 'Ubicación aplicada a la foto',
     },
     'nl': {
+      'saveCurrentLocation': 'Huidige locatie opslaan',
+      'manualPointSaved': 'Locatiepunt opgeslagen.',
+      'manualPointFailed': 'Er kon geen actuele locatie worden bepaald.',
       'appName': 'Immich GeoTagger',
       'appSubtitle': 'Locatietijdlijn voor camera’s',
       'continue': 'Doorgaan',
