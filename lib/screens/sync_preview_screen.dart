@@ -210,6 +210,14 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
 
   Widget _summaryCard() {
     final l = context.l10n;
+    final imagesWithoutTimeZone = [
+      ...widget.preview.candidates.map((item) => item.asset),
+      ...widget.preview.unmatched.map((item) => item.asset),
+    ].where(
+      (asset) =>
+          asset.type == ImmichAssetType.image &&
+          !asset.hasExplicitTimeZone,
+    ).length;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -244,6 +252,42 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
               ),
             ],
           ),
+          if (imagesWithoutTimeZone > 0) ...[
+            const SizedBox(height: 14),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF6DD),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFE6C96A)),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(
+                    Icons.warning_amber_rounded,
+                    color: Color(0xFF8A6200),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      l.t(
+                        'missingTimeZoneWarning',
+                        {'count': imagesWithoutTimeZone},
+                      ),
+                      style: const TextStyle(
+                        color: Color(0xFF6F5200),
+                        fontSize: 12,
+                        height: 1.4,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );
