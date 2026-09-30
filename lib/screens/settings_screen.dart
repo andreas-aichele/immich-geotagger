@@ -141,11 +141,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (!mounted) return;
       setState(() {
         _serverStatusSuccess = false;
-        _serverStatus = e.toString().replaceFirst('Bad state: ', '');
+        _serverStatus = _immichErrorMessage(e);
       });
     } finally {
       if (mounted) setState(() => _testing = false);
     }
+  }
+
+  String _immichErrorMessage(Object error) {
+    final l = context.l10n;
+    if (error is ImmichConnectionException) {
+      return switch (error.error) {
+        ImmichConnectionError.unreachable => l.t('immichUnreachable'),
+        ImmichConnectionError.timeout => l.t('immichTimeout'),
+        ImmichConnectionError.server => l.t(
+            'immichServerError',
+            {'code': error.statusCode ?? 500},
+          ),
+      };
+    }
+    return error.toString().replaceFirst('Bad state: ', '');
   }
 
   Future<void> _saveConnection() async {
