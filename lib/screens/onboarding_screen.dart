@@ -14,7 +14,8 @@ class OnboardingScreen extends StatefulWidget {
   State<OnboardingScreen> createState() => _OnboardingScreenState();
 }
 
-class _OnboardingScreenState extends State<OnboardingScreen> with WidgetsBindingObserver {
+class _OnboardingScreenState extends State<OnboardingScreen>
+    with WidgetsBindingObserver {
   final _controller = PageController();
   final _settings = SettingsService();
   final _tracker = TrackingService();
@@ -29,6 +30,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> with WidgetsBinding
   bool _needsBackgroundSettings = false;
   bool _testBusy = false;
   bool _connectionReady = false;
+  bool _apiKeyVisible = false;
   String? _message;
 
   @override
@@ -69,8 +71,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> with WidgetsBinding
     });
 
     try {
-      final foreground =
-          await _tracker.requestForegroundLocationPermission();
+      final foreground = await _tracker.requestForegroundLocationPermission();
       if (!mounted) return;
 
       if (!foreground) {
@@ -92,8 +93,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> with WidgetsBinding
   }
 
   Future<void> _checkBackgroundPermission() async {
-    final backgroundGranted =
-        await _tracker.isBackgroundLocationGranted();
+    final backgroundGranted = await _tracker.isBackgroundLocationGranted();
     if (!mounted) return;
 
     if (!backgroundGranted) {
@@ -466,12 +466,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> with WidgetsBinding
         const SizedBox(height: 12),
         TextField(
           controller: _key,
-          obscureText: true,
+          obscureText: !_apiKeyVisible,
           autocorrect: false,
           enableSuggestions: false,
           decoration: InputDecoration(
             labelText: l.t('apiKey'),
             prefixIcon: const Icon(Icons.key_rounded),
+            suffixIcon: IconButton(
+              tooltip: l.t(_apiKeyVisible ? 'hideApiKey' : 'showApiKey'),
+              icon: Icon(_apiKeyVisible
+                  ? Icons.visibility_off_rounded
+                  : Icons.visibility_rounded),
+              onPressed: () => setState(() => _apiKeyVisible = !_apiKeyVisible),
+            ),
           ),
         ),
         if (_message != null) ...[
@@ -500,9 +507,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> with WidgetsBinding
                         : Icons.wifi_tethering_rounded,
                   ),
             label: Text(
-              _connectionReady
-                  ? l.t('finishSetup')
-                  : l.t('testConnection'),
+              _connectionReady ? l.t('finishSetup') : l.t('testConnection'),
             ),
           ),
         ),
@@ -610,9 +615,8 @@ class _StatusMessage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = success
-        ? const Color(0xFF157A4A)
-        : Theme.of(context).colorScheme.error;
+    final color =
+        success ? const Color(0xFF157A4A) : Theme.of(context).colorScheme.error;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(14),
@@ -624,9 +628,7 @@ class _StatusMessage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(
-            success
-                ? Icons.check_circle_outline
-                : Icons.info_outline,
+            success ? Icons.check_circle_outline : Icons.info_outline,
             size: 20,
             color: color,
           ),

@@ -36,6 +36,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _batteryBusy = false;
   bool _gpxExportBusy = false;
   bool _serverStatusSuccess = false;
+  bool _apiKeyVisible = false;
   String? _serverStatus;
   String? _testedUrl;
   String? _testedKey;
@@ -221,8 +222,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _requestBatteryProtection() async {
     setState(() => _batteryBusy = true);
-    final protected =
-        await _tracker.requestBatteryOptimizationExemption();
+    final protected = await _tracker.requestBatteryOptimizationExemption();
     if (!mounted) return;
     setState(() {
       _batteryProtected = protected;
@@ -311,8 +311,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         decoration: InputDecoration(
                           labelText: l.t('apiKey'),
                           prefixIcon: const Icon(Icons.key_rounded),
+                          suffixIcon: IconButton(
+                            tooltip: l.t(
+                                _apiKeyVisible ? 'hideApiKey' : 'showApiKey'),
+                            icon: Icon(_apiKeyVisible
+                                ? Icons.visibility_off_rounded
+                                : Icons.visibility_rounded),
+                            onPressed: () => setState(
+                              () => _apiKeyVisible = !_apiKeyVisible,
+                            ),
+                          ),
                         ),
-                        obscureText: true,
+                        obscureText: !_apiKeyVisible,
                         autocorrect: false,
                         enableSuggestions: false,
                       ),
@@ -448,8 +458,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           prefixIcon: const Icon(Icons.timeline_rounded),
                         ),
                         keyboardType: TextInputType.number,
-                        autovalidateMode:
-                            AutovalidateMode.onUserInteraction,
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
                         validator: _positiveInt,
                       ),
                       const SizedBox(height: 8),
@@ -471,8 +480,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           prefixIcon: const Icon(Icons.history_rounded),
                         ),
                         keyboardType: TextInputType.number,
-                        autovalidateMode:
-                            AutovalidateMode.onUserInteraction,
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
                         validator: _positiveInt,
                       ),
                       const SizedBox(height: 20),
@@ -542,9 +550,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       if (!_batteryProtected) ...[
                         const SizedBox(height: 14),
                         OutlinedButton.icon(
-                          onPressed: _batteryBusy
-                              ? null
-                              : _requestBatteryProtection,
+                          onPressed:
+                              _batteryBusy ? null : _requestBatteryProtection,
                           icon: _batteryBusy
                               ? const SizedBox(
                                   width: 18,
@@ -569,9 +576,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   String? _positiveInt(String? value) {
     final n = int.tryParse(value ?? '');
-    return n == null || n <= 0
-        ? context.l10n.t('positiveNumber')
-        : null;
+    return n == null || n <= 0 ? context.l10n.t('positiveNumber') : null;
   }
 }
 
@@ -610,9 +615,8 @@ class _StatusBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = success
-        ? const Color(0xFF157A4A)
-        : Theme.of(context).colorScheme.error;
+    final color =
+        success ? const Color(0xFF157A4A) : Theme.of(context).colorScheme.error;
 
     return Container(
       padding: const EdgeInsets.all(14),
@@ -623,9 +627,7 @@ class _StatusBox extends StatelessWidget {
       child: Row(
         children: [
           Icon(
-            success
-                ? Icons.check_circle_outline
-                : Icons.info_outline,
+            success ? Icons.check_circle_outline : Icons.info_outline,
             color: color,
           ),
           const SizedBox(width: 10),
