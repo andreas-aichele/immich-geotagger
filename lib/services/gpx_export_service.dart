@@ -1,11 +1,20 @@
+import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'dart:ui';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import 'database_service.dart';
+
+enum GpxExportResult {
+  completed,
+  cancelled,
+  empty,
+}
 
 class GpxExportService {
   GpxExportService({DatabaseService? database})
@@ -13,9 +22,42 @@ class GpxExportService {
 
   final DatabaseService _database;
 
-  Future<bool> export({Rect? sharePositionOrigin}) async {
+  Future<GpxExportResult> save() async {
+    final export = await _createExport();
+    if (export == null) return GpxExportResult.empty;
+
+    final path = await FilePicker.platform.saveFile(
+      dialogTitle: 'Save GPX',
+      fileName: export.fileName,
+      type: FileType.custom,
+      allowedExtensions: const ['gpx'],
+      bytes: export.bytes,
+    );
+
+    return path == null
+        ? GpxExportResult.cancelled
+        : GpxExportResult.completed;
+  }
+
+  Future<GpxExportResult> share({Rect? sharePositionOrigin}) async {
+    final export = await _createExport();
+    if (export == null) return GpxExportResult.empty;
+
+    final directory = await getTemporaryDirectory();
+    final file = File(p.join(directory.path, export.fileName));
+    await file.writeAsBytes(export.bytes, flush: true);
+
+    await Share.shareXFiles(
+      [XFile(file.path, mimeType: 'application/gpx+xml')],
+      subject: 'Immich GeoTagger GPX',
+      sharePositionOrigin: sharePositionOrigin,
+    );
+    return GpxExportResult.completed;
+  }
+
+  Future<_GpxExport?> _createExport() async {
     final points = await _database.allLocations();
-    if (points.isEmpty) return false;
+    if (points.isEmpty) return null;
 
     final buffer = StringBuffer()
       ..writeln('<?xml version="1.0" encoding="UTF-8"?>')
@@ -46,20 +88,25 @@ class GpxExportService {
       ..writeln('  </trk>')
       ..writeln('</gpx>');
 
-    final directory = await getTemporaryDirectory();
     final stamp = DateTime.now()
         .toUtc()
         .toIso8601String()
         .replaceAll(':', '-')
         .replaceAll('.', '-');
-    final file = File(p.join(directory.path, 'immich-geotagger-$stamp.gpx'));
-    await file.writeAsString(buffer.toString(), flush: true);
 
-    await Share.shareXFiles(
-      [XFile(file.path, mimeType: 'application/gpx+xml')],
-      subject: 'Immich GeoTagger GPX',
-      sharePositionOrigin: sharePositionOrigin,
+    return _GpxExport(
+      fileName: 'immich-geotagger-$stamp.gpx',
+      bytes: Uint8List.fromList(utf8.encode(buffer.toString())),
     );
-    return true;
   }
+}
+
+class _GpxExport {
+  const _GpxExport({
+    required this.fileName,
+    required this.bytes,
+  });
+
+  final String fileName;
+  final Uint8List bytes;
 }
