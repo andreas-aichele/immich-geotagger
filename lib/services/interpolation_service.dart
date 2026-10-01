@@ -19,15 +19,64 @@ class InterpolationResult {
 class InterpolationService {
   const InterpolationService();
 
+  static const maxInterpolationGap = Duration(minutes: 15);
   static const stationaryDistanceMeters = 100.0;
   static const stationaryMaxGap = Duration(minutes: 90);
-  static const manualAnchorMaxGap = Duration(hours: 12);
   static const nearestPointMaxGap = Duration(minutes: 5);
+
+  // Only very obvious single-point excursions are removed. The ratio-based
+  // check deliberately allows sustained high-speed travel (for example an
+  // aircraft), because consecutive points continue along the route instead of
+  // immediately returning close to the previous position.
+  static const outlierMinExcursionMeters = 10000.0;
+  static const outlierBaselineFloorMeters = 1000.0;
+  static const outlierDetourRatio = 5.0;
+
+  List<LocationPoint> withoutIsolatedOutliers(List<LocationPoint> points) {
+    if (points.length < 3) return List<LocationPoint>.of(points);
+
+    final filtered = <LocationPoint>[points.first];
+    for (var i = 1; i < points.length - 1; i++) {
+      final previous = points[i - 1];
+      final current = points[i];
+      final next = points[i + 1];
+
+      if (!_isIsolatedOutlier(previous, current, next)) {
+        filtered.add(current);
+      }
+    }
+    filtered.add(points.last);
+    return filtered;
+  }
+
+  bool _isIsolatedOutlier(
+    LocationPoint previous,
+    LocationPoint current,
+    LocationPoint next,
+  ) {
+    final previousTime = previous.timestamp.toUtc();
+    final currentTime = current.timestamp.toUtc();
+    final nextTime = next.timestamp.toUtc();
+    if (!currentTime.isAfter(previousTime) || !nextTime.isAfter(currentTime)) {
+      return false;
+    }
+
+    final intoExcursion = distanceMeters(previous, current);
+    final outOfExcursion = distanceMeters(current, next);
+    if (intoExcursion < outlierMinExcursionMeters ||
+        outOfExcursion < outlierMinExcursionMeters) {
+      return false;
+    }
+
+    final direct = distanceMeters(previous, next);
+    final baseline = math.max(direct, outlierBaselineFloorMeters);
+    final detour = intoExcursion + outOfExcursion;
+    return detour >= baseline * outlierDetourRatio;
+  }
 
   InterpolationResult? interpolate({
     required DateTime timestamp,
     required List<LocationPoint> points,
-    required Duration maxGap,
   }) {
     if (points.length < 2) return null;
     final target = timestamp.toUtc();
@@ -43,22 +92,13 @@ class InterpolationService {
       if (gap <= Duration.zero) return null;
 
       final distance = distanceMeters(a, b);
-      final speed = averageSpeedKmh(distance, gap);
       final stationary =
           distance <= stationaryDistanceMeters && gap <= stationaryMaxGap;
-      final manualAnchored =
-          a.isManual && b.isManual && gap <= manualAnchorMaxGap;
 
-      // Normal movement is bounded by the configured time gap. Stationary
-      // periods may be bridged for longer because Android can suppress fixes.
-      // Two explicit manual anchors are also allowed to span a longer segment:
-      // their measured speed is intentional input (e.g. an aircraft route),
-      // rather than a reason to discard the segment.
-      if (gap > maxGap && !stationary && !manualAnchored) return null;
-
-      // Guard corrupt/teleported automatic fixes. Deliberately do not impose
-      // this ceiling on two manual anchors: aircraft speeds are valid there.
-      if (!manualAnchored && speed > 300) return null;
+      // Moving segments are intentionally capped at 15 minutes. Stationary
+      // periods may be bridged for longer because Android can suppress fixes
+      // while the device is not moving.
+      if (gap > maxInterpolationGap && !stationary) return null;
 
       final elapsedMs = target.difference(at).inMilliseconds;
       final ratio = elapsedMs / gap.inMilliseconds;
