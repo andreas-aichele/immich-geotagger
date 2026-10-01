@@ -230,7 +230,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
   }
 
-  Future<void> _exportGpx(BuildContext buttonContext) async {
+  Future<void> _saveGpx() async {
+    if (_gpxExportBusy) return;
+    setState(() => _gpxExportBusy = true);
+    try {
+      final result = await _gpxExport.save();
+      if (!mounted) return;
+      switch (result) {
+        case GpxExportResult.empty:
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(context.l10n.t('gpxExportEmpty'))),
+          );
+        case GpxExportResult.completed:
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(context.l10n.t('gpxExportSaved'))),
+          );
+        case GpxExportResult.cancelled:
+          break;
+      }
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.t('gpxExportFailed'))),
+      );
+    } finally {
+      if (mounted) setState(() => _gpxExportBusy = false);
+    }
+  }
+
+  Future<void> _shareGpx(BuildContext buttonContext) async {
     if (_gpxExportBusy) return;
     setState(() => _gpxExportBusy = true);
     try {
@@ -238,14 +266,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
       final origin = renderBox == null
           ? null
           : renderBox.localToGlobal(Offset.zero) & renderBox.size;
-      final exported = await _gpxExport.export(sharePositionOrigin: origin);
+      final result = await _gpxExport.share(sharePositionOrigin: origin);
       if (!mounted) return;
-      if (!exported) {
+      if (result == GpxExportResult.empty) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(context.l10n.t('gpxExportEmpty'))),
         );
       }
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(context.l10n.t('gpxExportFailed'))),
@@ -498,22 +526,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      Builder(
-                        builder: (buttonContext) => OutlinedButton.icon(
-                          onPressed: _gpxExportBusy
-                              ? null
-                              : () => _exportGpx(buttonContext),
-                          icon: _gpxExportBusy
-                              ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : const Icon(Icons.file_download_outlined),
-                          label: Text(l.t('gpxExportButton')),
-                        ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: FilledButton.icon(
+                              onPressed: _gpxExportBusy ? null : _saveGpx,
+                              icon: _gpxExportBusy
+                                  ? const SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : const Icon(Icons.save_alt_rounded),
+                              label: Text(l.t('gpxSaveButton')),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Builder(
+                              builder: (buttonContext) => OutlinedButton.icon(
+                                onPressed: _gpxExportBusy
+                                    ? null
+                                    : () => _shareGpx(buttonContext),
+                                icon: const Icon(Icons.share_outlined),
+                                label: Text(l.t('gpxShareButton')),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
