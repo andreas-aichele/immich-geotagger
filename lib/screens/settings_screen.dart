@@ -20,7 +20,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final _url = TextEditingController();
   final _key = TextEditingController();
   final _retention = TextEditingController();
-  final _maxGap = TextEditingController();
   final _settings = SettingsService();
   final _immich = ImmichService();
   final _tracker = TrackingService();
@@ -43,7 +42,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   TrackingQuality _trackingQuality = TrackingQuality.balanced;
   int _retentionDays = 14;
-  int _maxGapMinutes = 15;
 
   @override
   void initState() {
@@ -53,9 +51,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   void dispose() {
-    // Persist the latest text-field values when leaving the screen. Without
-    // this flush, a pending debounce was discarded and the next sync could
-    // still use the previous interpolation gap.
+    // Persist the latest debounced tracking preferences when leaving.
     if (_autoSaveTimer?.isActive ?? false) {
       _autoSaveTimer!.cancel();
       _saveTrackingPreferences();
@@ -63,7 +59,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _url.dispose();
     _key.dispose();
     _retention.dispose();
-    _maxGap.dispose();
     super.dispose();
   }
 
@@ -74,8 +69,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _retentionDays = value.retentionDays;
     _retention.text = _retentionDays.toString();
     _trackingQuality = value.trackingQuality;
-    _maxGapMinutes = value.maxInterpolationGapMinutes;
-    _maxGap.text = _maxGapMinutes.toString();
 
     final batteryProtected = await _tracker.isBatteryOptimizationIgnored();
     if (!mounted) return;
@@ -184,7 +177,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await _settings.saveTrackingPreferences(
       retentionDays: _retentionDays,
       trackingQuality: _trackingQuality,
-      maxInterpolationGapMinutes: _maxGapMinutes,
     );
     if (applyPreset) {
       await _tracker.applyConfiguredPreset();
@@ -205,13 +197,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final parsed = int.tryParse(value);
     if (parsed == null || parsed <= 0) return;
     _retentionDays = parsed;
-    _scheduleTrackingSave();
-  }
-
-  void _maxGapChanged(String value) {
-    final parsed = int.tryParse(value);
-    if (parsed == null || parsed <= 0) return;
-    _maxGapMinutes = parsed;
     _scheduleTrackingSave();
   }
 
@@ -470,28 +455,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       const SizedBox(height: 8),
                       Text(
                         l.t('trackingSamplingHint'),
-                        style: const TextStyle(
-                          color: AppTheme.muted,
-                          fontSize: 12,
-                          height: 1.4,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      TextFormField(
-                        controller: _maxGap,
-                        onChanged: _maxGapChanged,
-                        decoration: InputDecoration(
-                          labelText: l.t('maximumInterpolationGap'),
-                          suffixText: l.t('minutes'),
-                          prefixIcon: const Icon(Icons.timeline_rounded),
-                        ),
-                        keyboardType: TextInputType.number,
-                        autovalidateMode: AutovalidateMode.onUserInteraction,
-                        validator: _positiveInt,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        l.t('maximumInterpolationGapDesc'),
                         style: const TextStyle(
                           color: AppTheme.muted,
                           fontSize: 12,
