@@ -22,6 +22,9 @@ class AppLocalizations {
 
   static const _values = <String, Map<String, String>>{
     'en': {
+      'gpxSaveButton': 'Save file',
+      'gpxShareButton': 'Share',
+      'gpxExportSaved': 'GPX file saved.',
       'missingTimeZoneWarning': '{count} image(s) have no timezone metadata in Immich. Their capture time is available only as an absolute UTC timestamp, so matching may be shifted if the camera clock was in another timezone.',
       'immichUnreachable': 'Immich server is not reachable. Check your connection or try again later.',
       'immichTimeout': 'The connection to Immich timed out. Please try again.',
@@ -182,6 +185,9 @@ class AppLocalizations {
       'appliedLocation': 'Applied photo location',
     },
     'de': {
+      'gpxSaveButton': 'Datei speichern',
+      'gpxShareButton': 'Teilen',
+      'gpxExportSaved': 'GPX-Datei gespeichert.',
       'missingTimeZoneWarning': 'Bei {count} Bild(ern) ist in Immich keine Zeitzone hinterlegt. Die Aufnahmezeit liegt nur als absoluter UTC-Zeitstempel vor. Die Zuordnung kann daher verschoben sein, wenn die Kamera auf eine andere Zeitzone eingestellt war.',
       'immichUnreachable': 'Der Immich-Server ist nicht erreichbar. Prüfe deine Verbindung oder versuche es später erneut.',
       'immichTimeout': 'Die Verbindung zu Immich hat zu lange gedauert. Bitte versuche es erneut.',
@@ -342,6 +348,9 @@ class AppLocalizations {
       'appliedLocation': 'Übernommener Fotostandort',
     },
     'fr': {
+      'gpxSaveButton': 'Enregistrer',
+      'gpxShareButton': 'Partager',
+      'gpxExportSaved': 'Fichier GPX enregistré.',
       'missingTimeZoneWarning': '{count} image(s) n’ont pas de fuseau horaire enregistré dans Immich. L’heure de prise de vue n’est disponible que sous forme d’horodatage UTC absolu ; l’association peut donc être décalée si l’appareil utilisait un autre fuseau horaire.',
       'immichUnreachable': 'Le serveur Immich est inaccessible. Vérifiez votre connexion ou réessayez plus tard.',
       'immichTimeout': 'La connexion à Immich a expiré. Veuillez réessayer.',
@@ -501,6 +510,9 @@ class AppLocalizations {
       'appliedLocation': 'Position appliquée à la photo',
     },
     'es': {
+      'gpxSaveButton': 'Guardar archivo',
+      'gpxShareButton': 'Compartir',
+      'gpxExportSaved': 'Archivo GPX guardado.',
       'missingTimeZoneWarning': '{count} imagen(es) no tienen zona horaria guardada en Immich. La hora de captura solo está disponible como marca de tiempo UTC absoluta, por lo que la asignación puede quedar desplazada si la cámara usaba otra zona horaria.',
       'immichUnreachable': 'No se puede acceder al servidor de Immich. Comprueba tu conexión o inténtalo más tarde.',
       'immichTimeout': 'La conexión con Immich agotó el tiempo de espera. Inténtalo de nuevo.',
@@ -661,6 +673,9 @@ class AppLocalizations {
       'appliedLocation': 'Ubicación aplicada a la foto',
     },
     'nl': {
+      'gpxSaveButton': 'Bestand opslaan',
+      'gpxShareButton': 'Delen',
+      'gpxExportSaved': 'GPX-bestand opgeslagen.',
       'missingTimeZoneWarning': 'Bij {count} afbeelding(en) is in Immich geen tijdzone opgeslagen. De opnametijd is alleen beschikbaar als absolute UTC-tijdstempel, waardoor de koppeling kan verschuiven als de camera op een andere tijdzone stond.',
       'immichUnreachable': 'De Immich-server is niet bereikbaar. Controleer je verbinding of probeer het later opnieuw.',
       'immichTimeout': 'De verbinding met Immich duurde te lang. Probeer het opnieuw.',
