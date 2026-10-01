@@ -43,13 +43,15 @@ Many DSLR, mirrorless, compact, and vintage digital cameras take excellent photo
 
 **Immich GeoTagger fills that gap.**
 
+GeoTagger is built as a companion for **[Immich](https://immich.app/)** — an outstanding open-source, self-hosted photo and video management project and a fantastic home for your personal photo library. GeoTagger focuses on one small missing piece: bringing reliable location data to photos from cameras that do not provide it themselves.
+
 Keep your phone with you while shooting. GeoTagger records your route in the background, matches it against the capture time of media imported into Immich, and lets you review the proposed locations before anything is changed.
 
 No camera pairing. No proprietary cloud. No manual pin-dropping for every photo.
 
 ## Highlights
 
-| | |
+| Feature | What it does |
 | --- | --- |
 | **📍 Automatic geotagging** | Match photos and videos against your recorded GPS timeline using their capture time. |
 | **🗺️ Smart interpolation** | Calculate positions between recorded GPS points while rejecting unsafe or implausible matches. |
@@ -66,9 +68,11 @@ No camera pairing. No proprietary cloud. No manual pin-dropping for every photo.
 
 ### Android
 
-The recommended way to install GeoTagger is with **[Obtainium](https://github.com/ImranR98/Obtainium)**. Obtainium can install the app directly from this GitHub repository and notify you when a new release is available.
+The recommended way to install GeoTagger is with **[Obtainium](https://github.com/ImranR98/Obtainium)**. Obtainium installs and updates Android apps directly from their original release sources, making it a great fit for GeoTagger.
 
-1. Install Obtainium.
+**[Get Obtainium →](https://github.com/ImranR98/Obtainium)**
+
+1. Install [Obtainium](https://github.com/ImranR98/Obtainium).
 2. Add this repository:
    `https://github.com/andreas-aichele/immich-geotagger`
 3. Install the latest APK offered by Obtainium.
@@ -185,7 +189,7 @@ From the settings, you can:
 ## What you need
 
 - an Android phone, or an iPhone with a suitable sideloading/signing workflow
-- a self-hosted **Immich** installation
+- a self-hosted **[Immich](https://immich.app/)** installation
 - an Immich API key
 - a camera with a reasonably accurate clock
 
