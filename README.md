@@ -90,6 +90,8 @@ Only photos and videos without location information are considered for matching.
 
 Your location history is stored **on your phone**. You can choose how long GeoTagger should keep it before deleting old points automatically.
 
+The updated-media history uses the same retention period. It stores only Immich asset IDs and update times locally; names, locations, and thumbnails are loaded from Immich when the history opens. Deleted media no longer appears there.
+
 On Android, GeoTagger uses the standard **AOSP LocationManager** through the open-source `libre_location` stack. It does **not require Google Play Services** for location tracking and is designed to work on de-Googled Android systems as well. Location previews use **OpenStreetMap** tiles through the open-source `flutter_map` package.
 
 GeoTagger does not require its own cloud service. When a media item is matched, only the calculated location is sent to **your own Immich server**.

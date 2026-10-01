@@ -6,8 +6,78 @@ import 'package:http/testing.dart';
 import 'package:immich_geotagger/services/immich_service.dart';
 
 void main() {
+  group('ImmichService.assetById', () {
+    test('loads current metadata for a saved asset ID', () async {
+      final client = MockClient((request) async {
+        expect(request.method, 'GET');
+        expect(request.url.path, '/api/assets/asset-1');
+        expect(request.headers['x-api-key'], 'secret');
+        return http.Response(
+            jsonEncode({
+              'id': 'asset-1',
+              'originalFileName': 'current.jpg',
+              'fileCreatedAt': '2026-09-30T12:00:00Z',
+              'exifInfo': {'latitude': 48.1, 'longitude': 11.5},
+            }),
+            200);
+      });
+
+      final asset = await ImmichService(client: client).assetById(
+        baseUrl: 'https://immich.example',
+        apiKey: 'secret',
+        assetId: 'asset-1',
+      );
+
+      expect(asset?.fileName, 'current.jpg');
+      expect(asset?.latitude, 48.1);
+    });
+
+    test('omits deleted and trashed assets', () async {
+      for (final statusCode in [404, 410]) {
+        final client = MockClient((_) async => http.Response('', statusCode));
+        expect(
+          await ImmichService(client: client).assetById(
+            baseUrl: 'https://immich.example',
+            apiKey: 'secret',
+            assetId: 'asset-1',
+          ),
+          isNull,
+        );
+      }
+      final client = MockClient((_) async => http.Response(
+          jsonEncode({
+            'id': 'asset-1',
+            'isTrashed': true,
+          }),
+          200));
+      expect(
+        await ImmichService(client: client).assetById(
+          baseUrl: 'https://immich.example',
+          apiKey: 'secret',
+          assetId: 'asset-1',
+        ),
+        isNull,
+      );
+    });
+
+    test('reports access errors instead of treating assets as deleted',
+        () async {
+      final client = MockClient((_) async => http.Response('', 403));
+      expect(
+        () => ImmichService(client: client).assetById(
+          baseUrl: 'https://immich.example',
+          apiKey: 'secret',
+          assetId: 'asset-1',
+        ),
+        throwsA(isA<StateError>()),
+      );
+    });
+  });
+
   group('ImmichService.assetsTakenBetween', () {
-    test('queries images and videos, paginates, ignores invalid assets, and sorts by capture time', () async {
+    test(
+        'queries images and videos, paginates, ignores invalid assets, and sorts by capture time',
+        () async {
       final requests = <Map<String, dynamic>>[];
 
       final client = MockClient((request) async {
@@ -115,9 +185,8 @@ void main() {
               'items': [
                 {
                   'id': 'same-id',
-                  'originalFileName': body['type'] == 'IMAGE'
-                      ? 'first.jpg'
-                      : 'second.mp4',
+                  'originalFileName':
+                      body['type'] == 'IMAGE' ? 'first.jpg' : 'second.mp4',
                   'type': body['type'],
                   'fileCreatedAt': '2026-09-30T10:00:00Z',
                 },

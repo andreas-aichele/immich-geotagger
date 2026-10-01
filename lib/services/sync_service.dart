@@ -248,10 +248,9 @@ class SyncService {
       final stationary =
           movement <= InterpolationService.stationaryDistanceMeters &&
               gap <= InterpolationService.stationaryMaxGap;
-      final manualAnchored =
-          a.isManual &&
-              b.isManual &&
-              gap <= InterpolationService.manualAnchorMaxGap;
+      final manualAnchored = a.isManual &&
+          b.isManual &&
+          gap <= InterpolationService.manualAnchorMaxGap;
       final speed = _interpolation.averageSpeedKmh(movement, gap);
       if ((gap > Duration(minutes: settings.maxInterpolationGapMinutes) &&
               !stationary &&
@@ -345,13 +344,6 @@ class SyncService {
       await _database.saveUpdatedAsset(
         GeotaggedAsset(
           assetId: candidate.asset.id,
-          fileName: candidate.asset.fileName,
-          captureTime: candidate.asset.takenAt,
-          trackBeforeTime: candidate.before,
-          trackAfterTime:
-              candidate.usedLastKnownLocation ? null : candidate.after,
-          latitude: candidate.latitude,
-          longitude: candidate.longitude,
           updatedAt: DateTime.now().toUtc(),
         ),
       );

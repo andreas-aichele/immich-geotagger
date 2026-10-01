@@ -15,7 +15,7 @@ class DatabaseService {
     final root = await getDatabasesPath();
     _db = await openDatabase(
       p.join(root, 'immich_geotagger.db'),
-      version: 3,
+      version: 4,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE location_points (
@@ -32,14 +32,7 @@ class DatabaseService {
         );
         await db.execute('''
           CREATE TABLE geotagged_assets (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            asset_id TEXT NOT NULL UNIQUE,
-            file_name TEXT NOT NULL,
-            capture_time_ms INTEGER NOT NULL,
-            track_before_ms INTEGER,
-            track_after_ms INTEGER,
-            latitude REAL NOT NULL,
-            longitude REAL NOT NULL,
+            asset_id TEXT PRIMARY KEY,
             updated_at_ms INTEGER NOT NULL
           )
         ''');
@@ -58,6 +51,22 @@ class DatabaseService {
             'ALTER TABLE location_points ADD COLUMN is_manual INTEGER NOT NULL DEFAULT 0',
           );
         }
+        if (oldVersion < 4) {
+          await db.execute('''
+            CREATE TABLE geotagged_assets_new (
+              asset_id TEXT PRIMARY KEY,
+              updated_at_ms INTEGER NOT NULL
+            )
+          ''');
+          await db.execute('''
+            INSERT INTO geotagged_assets_new (asset_id, updated_at_ms)
+            SELECT asset_id, updated_at_ms FROM geotagged_assets
+          ''');
+          await db.execute('DROP TABLE geotagged_assets');
+          await db.execute(
+            'ALTER TABLE geotagged_assets_new RENAME TO geotagged_assets',
+          );
+        }
       },
     );
     return _db!;
@@ -69,12 +78,16 @@ class DatabaseService {
     await db.insert('location_points', map);
   }
 
-  Future<List<LocationPoint>> locationsBetween(DateTime from, DateTime to) async {
+  Future<List<LocationPoint>> locationsBetween(
+      DateTime from, DateTime to) async {
     final db = await database;
     final rows = await db.query(
       'location_points',
       where: 'timestamp_ms >= ? AND timestamp_ms <= ?',
-      whereArgs: [from.toUtc().millisecondsSinceEpoch, to.toUtc().millisecondsSinceEpoch],
+      whereArgs: [
+        from.toUtc().millisecondsSinceEpoch,
+        to.toUtc().millisecondsSinceEpoch
+      ],
       orderBy: 'timestamp_ms ASC',
     );
     return rows.map(LocationPoint.fromMap).toList();
@@ -123,24 +136,34 @@ class DatabaseService {
   Future<void> purgeLocationsOlderThan(Duration retention) async {
     final db = await database;
     final cutoff = DateTime.now().toUtc().subtract(retention);
-    await db.delete('location_points', where: 'timestamp_ms < ?', whereArgs: [cutoff.millisecondsSinceEpoch]);
+    await db.delete('location_points',
+        where: 'timestamp_ms < ?', whereArgs: [cutoff.millisecondsSinceEpoch]);
   }
 
   Future<void> saveUpdatedAsset(GeotaggedAsset asset) async {
     final db = await database;
-    final map = asset.toMap()..remove('id');
-    await db.insert('geotagged_assets', map, conflictAlgorithm: ConflictAlgorithm.replace);
+    await db.insert('geotagged_assets', asset.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
-  Future<List<GeotaggedAsset>> updatedAssets({int limit = 250}) async {
+  Future<List<GeotaggedAsset>> updatedAssets({
+    required Duration retention,
+    int limit = 250,
+  }) async {
     final db = await database;
-    final rows = await db.query('geotagged_assets', orderBy: 'updated_at_ms DESC', limit: limit);
+    final cutoff =
+        DateTime.now().toUtc().subtract(retention).millisecondsSinceEpoch;
+    await db.delete('geotagged_assets',
+        where: 'updated_at_ms < ?', whereArgs: [cutoff]);
+    final rows = await db.query('geotagged_assets',
+        orderBy: 'updated_at_ms DESC', limit: limit);
     return rows.map(GeotaggedAsset.fromMap).toList();
   }
 
   Future<int> locationCount() async {
     final db = await database;
-    final result = await db.rawQuery('SELECT COUNT(*) AS c FROM location_points');
+    final result =
+        await db.rawQuery('SELECT COUNT(*) AS c FROM location_points');
     return (result.first['c'] as int?) ?? 0;
   }
 }

@@ -67,14 +67,14 @@ class ImmichService {
 
   Future<void> verifyConnection(String baseUrl, String apiKey) async {
     final readResponse = await _request(() => _client.post(
-      _uri(baseUrl, '/search/metadata'),
-      headers: _headers(apiKey),
-      body: jsonEncode({
-        'page': 1,
-        'size': 1,
-        'withExif': true,
-      }),
-    ));
+          _uri(baseUrl, '/search/metadata'),
+          headers: _headers(apiKey),
+          body: jsonEncode({
+            'page': 1,
+            'size': 1,
+            'withExif': true,
+          }),
+        ));
 
     if (readResponse.statusCode == 401 || readResponse.statusCode == 403) {
       throw StateError(
@@ -88,8 +88,7 @@ class ImmichService {
     }
 
     final decoded = jsonDecode(readResponse.body) as Map<String, dynamic>;
-    final assetsNode =
-        decoded['assets'] as Map<String, dynamic>? ?? decoded;
+    final assetsNode = decoded['assets'] as Map<String, dynamic>? ?? decoded;
     final items = (assetsNode['items'] as List<dynamic>? ?? const [])
         .whereType<Map<String, dynamic>>();
 
@@ -97,9 +96,9 @@ class ImmichService {
       final assetId = items.first['id'] as String?;
       if (assetId != null) {
         final viewResponse = await _request(() => _client.get(
-          _uri(baseUrl, '/assets/$assetId/thumbnail?size=thumbnail'),
-          headers: _headers(apiKey),
-        ));
+              _uri(baseUrl, '/assets/$assetId/thumbnail?size=thumbnail'),
+              headers: _headers(apiKey),
+            ));
 
         if (viewResponse.statusCode == 401 || viewResponse.statusCode == 403) {
           throw StateError(
@@ -116,10 +115,10 @@ class ImmichService {
 
     const missingAssetId = '00000000-0000-0000-0000-000000000000';
     final updateResponse = await _request(() => _client.put(
-      _uri(baseUrl, '/assets/$missingAssetId'),
-      headers: _headers(apiKey),
-      body: jsonEncode({'latitude': 0.0, 'longitude': 0.0}),
-    ));
+          _uri(baseUrl, '/assets/$missingAssetId'),
+          headers: _headers(apiKey),
+          body: jsonEncode({'latitude': 0.0, 'longitude': 0.0}),
+        ));
 
     if (updateResponse.statusCode == 401 || updateResponse.statusCode == 403) {
       throw StateError(
@@ -141,17 +140,17 @@ class ImmichService {
 
       while (true) {
         final response = await _request(() => _client.post(
-          _uri(baseUrl, '/search/metadata'),
-          headers: _headers(apiKey),
-          body: jsonEncode({
-            'takenAfter': from.toUtc().toIso8601String(),
-            'takenBefore': to.toUtc().toIso8601String(),
-            'type': assetType,
-            'withExif': true,
-            'page': page,
-            'size': 500,
-          }),
-        ));
+              _uri(baseUrl, '/search/metadata'),
+              headers: _headers(apiKey),
+              body: jsonEncode({
+                'takenAfter': from.toUtc().toIso8601String(),
+                'takenBefore': to.toUtc().toIso8601String(),
+                'type': assetType,
+                'withExif': true,
+                'page': page,
+                'size': 500,
+              }),
+            ));
 
         if (response.statusCode < 200 || response.statusCode >= 300) {
           throw StateError(
@@ -193,9 +192,9 @@ class ImmichService {
     required String assetId,
   }) async {
     final response = await _request(() => _client.get(
-      _uri(baseUrl, '/assets/$assetId/thumbnail?size=thumbnail'),
-      headers: _headers(apiKey),
-    ));
+          _uri(baseUrl, '/assets/$assetId/thumbnail?size=thumbnail'),
+          headers: _headers(apiKey),
+        ));
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw StateError(
@@ -204,6 +203,26 @@ class ImmichService {
     }
 
     return response.bodyBytes;
+  }
+
+  Future<ImmichAsset?> assetById({
+    required String baseUrl,
+    required String apiKey,
+    required String assetId,
+  }) async {
+    final response = await _request(() => _client.get(
+          _uri(baseUrl, '/assets/${Uri.encodeComponent(assetId)}'),
+          headers: _headers(apiKey),
+        ));
+    if (response.statusCode == 404 || response.statusCode == 410) return null;
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw StateError(
+        'Loading asset $assetId failed with HTTP ${response.statusCode}.',
+      );
+    }
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    if (data['isTrashed'] == true) return null;
+    return ImmichAsset.fromJson(data);
   }
 
   Future<void> updateLocation({
@@ -219,17 +238,17 @@ class ImmichService {
     });
 
     var response = await _request(() => _client.put(
-      _uri(baseUrl, '/assets/$assetId'),
-      headers: _headers(apiKey),
-      body: body,
-    ));
+          _uri(baseUrl, '/assets/$assetId'),
+          headers: _headers(apiKey),
+          body: body,
+        ));
 
     if (response.statusCode == 404 || response.statusCode == 405) {
       response = await _request(() => _client.patch(
-        _uri(baseUrl, '/assets/$assetId'),
-        headers: _headers(apiKey),
-        body: body,
-      ));
+            _uri(baseUrl, '/assets/$assetId'),
+            headers: _headers(apiKey),
+            body: body,
+          ));
     }
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
