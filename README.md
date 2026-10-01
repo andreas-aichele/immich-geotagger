@@ -7,15 +7,9 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/andreas-aichele/immich-geotagger/releases/latest">
-    <img src="https://img.shields.io/github/v/release/andreas-aichele/immich-geotagger?display_name=tag&style=flat-square" alt="Latest release">
-  </a>
-  <a href="https://github.com/andreas-aichele/immich-geotagger/actions/workflows/flutter.yml">
-    <img src="https://github.com/andreas-aichele/immich-geotagger/actions/workflows/flutter.yml/badge.svg" alt="Build">
-  </a>
-  <a href="LICENSE">
-    <img src="https://img.shields.io/github/license/andreas-aichele/immich-geotagger?style=flat-square" alt="MIT License">
-  </a>
+  <a href="https://github.com/andreas-aichele/immich-geotagger/releases/latest"><img src="https://img.shields.io/github/v/release/andreas-aichele/immich-geotagger?display_name=tag&style=flat-square" alt="Latest release"></a>
+  <a href="https://github.com/andreas-aichele/immich-geotagger/actions/workflows/flutter.yml"><img src="https://github.com/andreas-aichele/immich-geotagger/actions/workflows/flutter.yml/badge.svg" alt="Build"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/andreas-aichele/immich-geotagger?style=flat-square" alt="MIT License"></a>
   <img src="https://img.shields.io/badge/Android-supported-3DDC84?style=flat-square&logo=android&logoColor=white" alt="Android supported">
   <img src="https://img.shields.io/badge/iOS-unsigned_build-000000?style=flat-square&logo=apple&logoColor=white" alt="iOS unsigned build">
   <img src="https://img.shields.io/badge/Flutter-3.22%2B-02569B?style=flat-square&logo=flutter&logoColor=white" alt="Flutter 3.22+">
