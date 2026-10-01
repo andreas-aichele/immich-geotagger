@@ -3,132 +3,212 @@
 </p>
 
 <p align="center">
-  <strong>GPS for cameras without</strong>
+  <strong>Bring accurate location data to photos and videos from cameras without GPS.</strong>
 </p>
 
 <p align="center">
-  <a href="https://github.com/andreas-aichele/immich-geotagger/releases/latest"><strong>⬇ Download latest release</strong></a>
+  <a href="https://github.com/andreas-aichele/immich-geotagger/releases/latest">
+    <img src="https://img.shields.io/github/v/release/andreas-aichele/immich-geotagger?display_name=tag&style=flat-square" alt="Latest release">
+  </a>
+  <a href="https://github.com/andreas-aichele/immich-geotagger/actions/workflows/flutter.yml">
+    <img src="https://github.com/andreas-aichele/immich-geotagger/actions/workflows/flutter.yml/badge.svg" alt="Build">
+  </a>
+  <a href="LICENSE">
+    <img src="https://img.shields.io/github/license/andreas-aichele/immich-geotagger?style=flat-square" alt="MIT License">
+  </a>
+  <img src="https://img.shields.io/badge/Android-supported-3DDC84?style=flat-square&logo=android&logoColor=white" alt="Android supported">
+  <img src="https://img.shields.io/badge/iOS-unsigned_build-000000?style=flat-square&logo=apple&logoColor=white" alt="iOS unsigned build">
+  <img src="https://img.shields.io/badge/Flutter-3.22%2B-02569B?style=flat-square&logo=flutter&logoColor=white" alt="Flutter 3.22+">
+</p>
+
+<p align="center">
+  <a href="https://github.com/andreas-aichele/immich-geotagger/releases/latest"><strong>Download</strong></a>
   &nbsp;·&nbsp;
-  <a href="https://github.com/andreas-aichele/immich-geotagger/issues">Report an issue</a>
+  <a href="#installation">Install</a>
+  &nbsp;·&nbsp;
+  <a href="#how-it-works">How it works</a>
+  &nbsp;·&nbsp;
+  <a href="https://github.com/andreas-aichele/immich-geotagger/issues">Issues</a>
 </p>
 
 <p align="center">
-  <sub>Open source · Built for self-hosted Immich · Location history stays on your phone</sub>
+  <sub>Open source · Built for self-hosted Immich · No Google Play Services required · Your location history stays on your phone</sub>
 </p>
 
 ---
 
-**Give photos and videos from cameras without GPS the location they were actually taken at.**
+## Your camera takes the photo. Your phone remembers where.
 
-Immich GeoTagger is a small companion app for **Immich**. It was created for people who take photos with a DSLR, mirrorless camera, or any other camera without reliable GPS and still want their photos and videos to appear at the correct places on the Immich map.
+Many DSLR, mirrorless, compact, and vintage digital cameras take excellent photos but have no GPS — or GPS that is too slow or unreliable to be useful.
 
-Instead of manually assigning locations to photos and videos afterwards, you simply take your phone with you. GeoTagger records where you were and later matches that information with the capture time of your photos and videos. You can choose between a battery-friendly **Balanced** mode for all-day tracking and a more detailed **Precise** mode for dedicated photo trips.
+**Immich GeoTagger fills that gap.**
 
-## Get Immich GeoTagger
+Keep your phone with you while shooting. GeoTagger records your route in the background, matches it against the capture time of media imported into Immich, and lets you review the proposed locations before anything is changed.
 
-Ready to try it? Download the latest version from **GitHub Releases**.
+No camera pairing. No proprietary cloud. No manual pin-dropping for every photo.
 
-### [⬇ Download Immich GeoTagger](https://github.com/andreas-aichele/immich-geotagger/releases/latest)
+## Highlights
 
-**Android:** download the APK and install it on your phone. The first-start guide walks you through location access and connecting your Immich server.
+| | |
+| --- | --- |
+| **📍 Automatic geotagging** | Match photos and videos against your recorded GPS timeline using their capture time. |
+| **🗺️ Smart interpolation** | Calculate positions between recorded GPS points while rejecting unsafe or implausible matches. |
+| **✅ Review before applying** | Inspect thumbnails, timestamps, map positions, and matching quality before writing anything to Immich. |
+| **🛡️ Existing GPS stays untouched** | Media that already contains a location is skipped automatically. |
+| **🔋 Adaptive background tracking** | Choose between battery-friendly **Balanced** tracking and more detailed **Precise** tracking. |
+| **📌 Manual location points** | Save your current position whenever you want an additional reliable GPS anchor. |
+| **📤 GPX export** | Save or share your recorded location history as a GPX file. |
+| **🔐 Privacy-first** | Location history remains local on your phone; GeoTagger has no separate backend or cloud service. |
+| **🌐 Self-hosted by design** | Connect directly to your own Immich server using an API key. |
+| **📵 Google-free Android support** | Background tracking uses Android's AOSP LocationManager and does not require Google Play Services. |
 
-> **Note for iPhone users:** iOS builds currently require manual signing and are not yet available as a normal App Store installation.
+## Installation
 
-## Why does this app exist?
+### Android
 
-Many dedicated cameras create excellent photos but do not save a GPS location. After importing those photos into Immich, the timeline is complete, but the map is not.
+The recommended way to install GeoTagger is with **[Obtainium](https://github.com/ImranR98/Obtainium)**. Obtainium can install the app directly from this GitHub repository and notify you when a new release is available.
 
-Immich GeoTagger fills that gap.
+1. Install Obtainium.
+2. Add this repository:
+   `https://github.com/andreas-aichele/immich-geotagger`
+3. Install the latest APK offered by Obtainium.
 
-The idea is simple:
+You can also install the APK manually from **[GitHub Releases](https://github.com/andreas-aichele/immich-geotagger/releases/latest)**.
 
-**Your camera records the photo. Your phone records where you are. GeoTagger brings both together.**
+### iOS
 
-You do not need to connect your camera to your phone, install anything on the camera, or change the way you import photos.
+Unsigned iOS builds are published with GitHub releases. They currently require manual signing or sideloading and are not distributed through the App Store.
 
 ## How it works
 
-The workflow is intentionally simple — GeoTagger stays out of the way of your normal photography and Immich import process.
+GeoTagger is designed to fit into your existing photography workflow.
 
-1. **Start tracking before taking photos.**  
-   GeoTagger records your location in the background while your phone stays in your pocket.
+### 1. Start tracking
 
-2. **Take photos and videos as usual.**  
-   Use your DSLR or mirrorless camera exactly as you normally would.
+Start GeoTagger before taking photos. Your phone records your location in the background while it stays in your pocket or bag.
 
-3. **Import the photos and videos into Immich.**  
-   Your normal photo workflow does not change.
+### 2. Take photos normally
 
-> **Important:** Before taking photos, make sure your **camera and phone use the same time and the same time zone**. GeoTagger matches media to your recorded route using the capture timestamp. Even a small clock difference can assign a photo to the wrong place.
+Use your DSLR, mirrorless camera, compact camera, or any other camera exactly as usual. The camera does not need to communicate with your phone.
 
-4. **Let GeoTagger match the media.**  
-   The app compares the capture time of photos and videos without a location with your recorded location history.
+### 3. Import into Immich
 
-5. **Review the proposed matches.**  
-   Before anything is changed, GeoTagger shows a preview with Immich thumbnails, capture times, the proposed locations on an interactive **OpenStreetMap** map, and a reliability indicator for each match. You can inspect individual markers, deselect photos, or keep the full selection.
+Import your photos and videos through your normal Immich workflow.
 
-6. **Apply only what you approve.**  
-   Only the selected media items receive their calculated position and can then appear correctly on the Immich map.
+> [!IMPORTANT]
+> Keep the **camera clock and time zone aligned with your phone**. GeoTagger matches media using its capture timestamp. Images without explicit timezone information are highlighted during synchronization so ambiguous timestamps can be reviewed.
 
-### What if media was captured between two recorded locations?
+### 4. Let GeoTagger find the matches
 
-Your phone does not need to record GPS every second.
+GeoTagger compares media without an existing GPS location against your recorded route.
 
-For example, if GeoTagger knows where you were at **10:00** and again at **10:10**, a photo or video captured at **10:05** can be placed between those two positions.
+Its matching logic uses nearby GPS points, interpolation, movement, stationary periods, and track consistency to avoid assigning obviously implausible locations.
 
-GeoTagger only does this when it has enough information for a safe match. It does not guess a position outside the recorded route, and you can configure how large the gap between location measurements may be.
+### 5. Review everything
+
+Before making changes, GeoTagger shows the proposed matches with:
+
+- Immich thumbnails
+- capture timestamps
+- surrounding GPS timestamps
+- an interactive OpenStreetMap map
+- the calculated location
+- matching diagnostics for media that could not be safely placed
+
+You decide which matches should be applied.
+
+### 6. Apply to Immich
+
+GeoTagger writes latitude and longitude only to the selected media on your own Immich server.
+
+## Smart matching without constant GPS recording
+
+Your phone does not need to save a GPS point every second.
+
+If GeoTagger knows where you were at **10:00** and again at **10:10**, a photo taken at **10:05** can usually be placed between those positions.
+
+The matching engine is deliberately conservative:
+
+- normal movement is interpolated only across short, consistent GPS gaps
+- stationary periods can safely span longer gaps
+- a nearby GPS point can be used when interpolation is not possible
+- isolated GPS spikes are ignored for matching
+- sustained high-speed travel is not mistaken for a single bad GPS jump
+- media is left unmatched when there is not enough reliable information
+
+The goal is not to assign a location at any cost — it is to assign one only when the recorded track provides a useful answer.
 
 ## Your existing locations are safe
 
-GeoTagger is designed to complement the location data already in your photo library.
-
-**Photos and videos that already have a GPS location are left untouched.**
+**GeoTagger does not overwrite media that already has GPS coordinates.**
 
 Only photos and videos without location information are considered for matching.
 
-## Privacy and Google-free tracking
+Every synchronization starts with a preview, and only the media you approve is updated.
 
-Your location history is stored **on your phone**. You can choose how long GeoTagger should keep it before deleting old points automatically.
+## Privacy by design
 
-The updated-media history uses the same retention period. It stores only Immich asset IDs and update times locally; names, locations, and thumbnails are loaded from Immich when the history opens. Deleted media no longer appears there.
+GeoTagger does not need its own cloud service.
 
-On Android, GeoTagger uses the standard **AOSP LocationManager** through the open-source `libre_location` stack. It does **not require Google Play Services** for location tracking and is designed to work on de-Googled Android systems as well. Location previews use **OpenStreetMap** tiles through the open-source `flutter_map` package.
+- Your GPS history is stored **locally on your phone**.
+- You decide how long recorded locations are retained.
+- The update history stores only Immich asset IDs and update timestamps locally.
+- Current names, thumbnails, and metadata are loaded from your Immich server when needed.
+- Deleted or trashed Immich media is automatically omitted from the history.
+- Only approved calculated locations are written back to **your own Immich server**.
+- Android location tracking does **not** require Google Play Services.
 
-GeoTagger does not require its own cloud service. When a media item is matched, only the calculated location is sent to **your own Immich server**.
+Map previews use **OpenStreetMap** data through the open-source Flutter mapping stack.
+
+## Tracking modes
+
+### Balanced
+
+Designed for everyday and all-day use. GeoTagger adapts location recording to movement while reducing unnecessary GPS activity.
+
+### Precise
+
+Designed for dedicated photo trips or situations where a denser location history is more important than battery consumption.
+
+You can also save a **manual location point** at any time when you want to create an additional known position in the track.
+
+## GPX export
+
+Your recorded GPS history is not locked into the app.
+
+From the settings, you can:
+
+- save the recorded track as a GPX file
+- share the GPX file with another app or device
+- use the export as a backup or with compatible mapping and photography tools
 
 ## What you need
 
-- an Android phone or iPhone
-- your own Immich installation
+- an Android phone, or an iPhone with a suitable sideloading/signing workflow
+- a self-hosted **Immich** installation
 - an Immich API key
-- a camera whose **clock and time zone match your phone**
+- a camera with a reasonably accurate clock
 
-During the first start, GeoTagger guides you through the required location permission and Immich connection.
+The first-start guide walks you through location permissions and the Immich connection.
 
 ## Languages
 
-The app currently supports:
+Immich GeoTagger currently supports:
 
 **English · Deutsch · Français · Español · Nederlands**
 
-GeoTagger automatically uses the language configured on your device. Unsupported languages fall back to English.
+The app follows your device language and falls back to English when the configured language is not available.
 
-## F-Droid
+## Open source
 
-The Android codebase is prepared for F-Droid: the application uses a stable package ID, includes localized Fastlane/F-Droid metadata, and does not depend on Google Play Services for location tracking. Submission to the official F-Droid repository is still pending.
+Immich GeoTagger is built in **Flutter** and released under the **MIT License**.
 
-## Current status
+Contributions, bug reports, and feature ideas are welcome:
 
-Immich GeoTagger is a young open-source project and is still being actively developed.
-
-The core workflow is already implemented: recording a location timeline, safely matching photos and videos by capture time, previewing proposed location updates with thumbnails, selecting which media items should be changed, preserving existing GPS data, and applying confirmed locations to Immich.
-
-If you find a problem or have an idea for an improvement, feel free to open an issue.
-
-## Development
-
-For local setup and the shared GitHub/local workflow, see [Platform setup](docs/PLATFORM_SETUP.md).
+- [Report an issue](https://github.com/andreas-aichele/immich-geotagger/issues)
+- [View releases](https://github.com/andreas-aichele/immich-geotagger/releases)
+- [Platform setup for development](docs/PLATFORM_SETUP.md)
 
 ## License
 
-Immich GeoTagger is open source and available under the **MIT License**.
+Immich GeoTagger is available under the [MIT License](LICENSE).
