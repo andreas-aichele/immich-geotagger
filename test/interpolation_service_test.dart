@@ -19,7 +19,6 @@ void main() {
     final result = service.interpolate(
       timestamp: start.add(const Duration(minutes: 5)),
       points: points,
-      maxGap: const Duration(minutes: 15),
     );
 
     expect(result, isNotNull);
@@ -27,73 +26,38 @@ void main() {
     expect(result.longitude, closeTo(11.05, 0.000001));
   });
 
-  test('does not interpolate across a gap larger than the limit', () {
+  test('does not interpolate a moving gap larger than 15 minutes', () {
     final start = DateTime.utc(2026, 9, 19, 10, 0);
     final result = service.interpolate(
-      timestamp: start.add(const Duration(minutes: 30)),
+      timestamp: start.add(const Duration(minutes: 10)),
       points: [
         LocationPoint(timestamp: start, latitude: 48.0, longitude: 11.0),
         LocationPoint(
-          timestamp: start.add(const Duration(hours: 1)),
-          latitude: 49.0,
-          longitude: 12.0,
+          timestamp: start.add(const Duration(minutes: 16)),
+          latitude: 48.1,
+          longitude: 11.1,
         ),
       ],
-      maxGap: const Duration(minutes: 15),
     );
 
     expect(result, isNull);
   });
 
-  test('allows a long gap when both points are at nearly the same place', () {
+  test('allows a stationary gap up to 90 minutes within 100 meters', () {
     final start = DateTime.utc(2026, 9, 19, 10, 0);
     final result = service.interpolate(
-      timestamp: start.add(const Duration(minutes: 30)),
+      timestamp: start.add(const Duration(minutes: 45)),
       points: [
+        LocationPoint(timestamp: start, latitude: 48.4, longitude: 10.95),
         LocationPoint(
-          timestamp: start,
-          latitude: 48.400000,
-          longitude: 10.950000,
-        ),
-        LocationPoint(
-          timestamp: start.add(const Duration(hours: 1)),
-          latitude: 48.400100,
-          longitude: 10.950100,
+          timestamp: start.add(const Duration(minutes: 90)),
+          latitude: 48.4004,
+          longitude: 10.9504,
         ),
       ],
-      maxGap: const Duration(minutes: 15),
     );
 
     expect(result, isNotNull);
-  });
-
-  test('does not extrapolate outside the track', () {
-    final start = DateTime.utc(2026, 9, 19, 10, 0);
-    final points = [
-      LocationPoint(timestamp: start, latitude: 48.0, longitude: 11.0),
-      LocationPoint(
-        timestamp: start.add(const Duration(minutes: 10)),
-        latitude: 49.0,
-        longitude: 12.0,
-      ),
-    ];
-
-    expect(
-      service.interpolate(
-        timestamp: start.subtract(const Duration(minutes: 1)),
-        points: points,
-        maxGap: const Duration(minutes: 15),
-      ),
-      isNull,
-    );
-    expect(
-      service.interpolate(
-        timestamp: start.add(const Duration(minutes: 11)),
-        points: points,
-        maxGap: const Duration(minutes: 15),
-      ),
-      isNull,
-    );
   });
 
   test('rejects a stationary-looking gap beyond 90 minutes', () {
@@ -108,28 +72,132 @@ void main() {
           longitude: 10.9501,
         ),
       ],
-      maxGap: const Duration(minutes: 15),
     );
 
     expect(result, isNull);
   });
 
-  test('allows a stationary gap exactly at 90 minutes within 100 meters', () {
+  test('manual points use the same 15-minute interpolation rules', () {
     final start = DateTime.utc(2026, 9, 19, 10, 0);
     final result = service.interpolate(
-      timestamp: start.add(const Duration(minutes: 45)),
+      timestamp: start.add(const Duration(hours: 1)),
       points: [
-        LocationPoint(timestamp: start, latitude: 48.4, longitude: 10.95),
         LocationPoint(
-          timestamp: start.add(const Duration(minutes: 90)),
-          latitude: 48.4004,
-          longitude: 10.9504,
+          timestamp: start,
+          latitude: 48.35,
+          longitude: 11.79,
+          isManual: true,
+        ),
+        LocationPoint(
+          timestamp: start.add(const Duration(hours: 2)),
+          latitude: 53.55,
+          longitude: 9.99,
+          isManual: true,
         ),
       ],
-      maxGap: const Duration(minutes: 15),
+    );
+
+    expect(result, isNull);
+  });
+
+  test('allows sustained high-speed travel when points form a consistent route', () {
+    final start = DateTime.utc(2026, 9, 19, 10, 0);
+    final points = [
+      LocationPoint(timestamp: start, latitude: 48.3538, longitude: 11.7861),
+      LocationPoint(
+        timestamp: start.add(const Duration(minutes: 5)),
+        latitude: 49.2,
+        longitude: 11.7,
+      ),
+      LocationPoint(
+        timestamp: start.add(const Duration(minutes: 10)),
+        latitude: 50.0,
+        longitude: 11.6,
+      ),
+      LocationPoint(
+        timestamp: start.add(const Duration(minutes: 15)),
+        latitude: 50.8,
+        longitude: 11.5,
+      ),
+    ];
+
+    final filtered = service.withoutIsolatedOutliers(points);
+    final result = service.interpolate(
+      timestamp: start.add(const Duration(minutes: 7)),
+      points: filtered,
+    );
+
+    expect(filtered, hasLength(4));
+    expect(result, isNotNull);
+    expect(
+      service.averageSpeedKmh(
+        service.distanceMeters(points[1], points[2]),
+        const Duration(minutes: 5),
+      ),
+      greaterThan(300),
+    );
+  });
+
+  test('removes an obvious single-point GPS excursion', () {
+    final start = DateTime.utc(2026, 9, 19, 10, 0);
+    final points = [
+      LocationPoint(timestamp: start, latitude: 48.1372, longitude: 11.5756),
+      LocationPoint(
+        timestamp: start.add(const Duration(minutes: 2)),
+        latitude: 48.1373,
+        longitude: 11.5757,
+      ),
+      LocationPoint(
+        timestamp: start.add(const Duration(minutes: 4)),
+        latitude: 53.5511,
+        longitude: 9.9937,
+      ),
+      LocationPoint(
+        timestamp: start.add(const Duration(minutes: 6)),
+        latitude: 48.1374,
+        longitude: 11.5758,
+      ),
+      LocationPoint(
+        timestamp: start.add(const Duration(minutes: 8)),
+        latitude: 48.1375,
+        longitude: 11.5759,
+      ),
+    ];
+
+    final filtered = service.withoutIsolatedOutliers(points);
+
+    expect(filtered, hasLength(4));
+    expect(filtered.any((point) => point.latitude > 53), isFalse);
+  });
+
+  test('uses the cleaned track for interpolation across a removed spike', () {
+    final start = DateTime.utc(2026, 9, 19, 10, 0);
+    final points = [
+      LocationPoint(timestamp: start, latitude: 48.1372, longitude: 11.5756),
+      LocationPoint(
+        timestamp: start.add(const Duration(minutes: 2)),
+        latitude: 48.1373,
+        longitude: 11.5757,
+      ),
+      LocationPoint(
+        timestamp: start.add(const Duration(minutes: 4)),
+        latitude: 53.5511,
+        longitude: 9.9937,
+      ),
+      LocationPoint(
+        timestamp: start.add(const Duration(minutes: 6)),
+        latitude: 48.1374,
+        longitude: 11.5758,
+      ),
+    ];
+
+    final result = service.interpolate(
+      timestamp: start.add(const Duration(minutes: 4)),
+      points: service.withoutIsolatedOutliers(points),
     );
 
     expect(result, isNotNull);
+    expect(result!.latitude, closeTo(48.13735, 0.00001));
   });
 
   test('uses a GPS point exactly five minutes away as nearest fallback', () {
@@ -157,9 +225,7 @@ void main() {
     );
 
     final result = service.nearestPoint(
-      timestamp: start.add(
-        const Duration(minutes: 5, milliseconds: 1),
-      ),
+      timestamp: start.add(const Duration(minutes: 5, milliseconds: 1)),
       points: [point],
     );
 
@@ -187,94 +253,31 @@ void main() {
     expect(result, same(closer));
   });
 
-  test('allows high-speed interpolation between manual anchors', () {
+  test('does not extrapolate outside the track', () {
     final start = DateTime.utc(2026, 9, 19, 10, 0);
-    final result = service.interpolate(
-      timestamp: start.add(const Duration(hours: 1)),
-      points: [
-        LocationPoint(
-          timestamp: start,
-          latitude: 48.35,
-          longitude: 11.79,
-          isManual: true,
-        ),
-        LocationPoint(
-          timestamp: start.add(const Duration(hours: 2)),
-          latitude: 35.55,
-          longitude: 139.78,
-          isManual: true,
-        ),
-      ],
-      maxGap: const Duration(minutes: 15),
+    final points = [
+      LocationPoint(timestamp: start, latitude: 48.0, longitude: 11.0),
+      LocationPoint(
+        timestamp: start.add(const Duration(minutes: 10)),
+        latitude: 49.0,
+        longitude: 12.0,
+      ),
+    ];
+
+    expect(
+      service.interpolate(
+        timestamp: start.subtract(const Duration(minutes: 1)),
+        points: points,
+      ),
+      isNull,
     );
-
-    expect(result, isNotNull);
-  });
-
-  test('allows manual anchors exactly 12 hours apart', () {
-    final start = DateTime.utc(2026, 9, 19, 10, 0);
-    final result = service.interpolate(
-      timestamp: start.add(const Duration(hours: 6)),
-      points: [
-        LocationPoint(
-          timestamp: start,
-          latitude: 48.35,
-          longitude: 11.79,
-          isManual: true,
-        ),
-        LocationPoint(
-          timestamp: start.add(const Duration(hours: 12)),
-          latitude: 35.55,
-          longitude: 139.78,
-          isManual: true,
-        ),
-      ],
-      maxGap: const Duration(minutes: 15),
+    expect(
+      service.interpolate(
+        timestamp: start.add(const Duration(minutes: 11)),
+        points: points,
+      ),
+      isNull,
     );
-
-    expect(result, isNotNull);
-  });
-
-  test('rejects manual anchors beyond the 12-hour maximum gap', () {
-    final start = DateTime.utc(2026, 9, 19, 10, 0);
-    final result = service.interpolate(
-      timestamp: start.add(const Duration(hours: 6)),
-      points: [
-        LocationPoint(
-          timestamp: start,
-          latitude: 48.35,
-          longitude: 11.79,
-          isManual: true,
-        ),
-        LocationPoint(
-          timestamp: start.add(const Duration(hours: 13)),
-          latitude: 35.55,
-          longitude: 139.78,
-          isManual: true,
-        ),
-      ],
-      maxGap: const Duration(minutes: 15),
-    );
-
-    expect(result, isNull);
-  });
-
-  test('rejects implausibly fast automatic segments', () {
-    final start = DateTime.utc(2026, 9, 19, 10, 0);
-    final result = service.interpolate(
-      timestamp: start.add(const Duration(minutes: 1)),
-      points: [
-        LocationPoint(timestamp: start, latitude: 48.0, longitude: 11.0),
-        LocationPoint(
-          timestamp: start.add(const Duration(minutes: 2)),
-          latitude: 49.0,
-          longitude: 12.0,
-        ),
-      ],
-      maxGap: const Duration(minutes: 15),
-    );
-
-    expect(result, isNull);
   });
 
   test('rejects duplicate timestamps instead of dividing by zero', () {
@@ -285,7 +288,6 @@ void main() {
         LocationPoint(timestamp: instant, latitude: 48.0, longitude: 11.0),
         LocationPoint(timestamp: instant, latitude: 48.1, longitude: 11.1),
       ],
-      maxGap: const Duration(minutes: 15),
     );
 
     expect(result, isNull);
