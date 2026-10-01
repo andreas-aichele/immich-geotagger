@@ -143,7 +143,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
           apiKey: _key.text.trim(),
           retentionDays: current.retentionDays,
           trackingQuality: current.trackingQuality,
-          maxInterpolationGapMinutes: current.maxInterpolationGapMinutes,
         ),
       );
       if (!mounted) return;

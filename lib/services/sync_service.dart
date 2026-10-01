@@ -65,7 +65,8 @@ class SyncService {
 
     final now = DateTime.now().toUtc();
     final retentionStart = now.subtract(retention);
-    final points = await _database.locationsBetween(retentionStart, now);
+    final rawPoints = await _database.locationsBetween(retentionStart, now);
+    final points = _interpolation.withoutIsolatedOutliers(rawPoints);
 
     // The retention setting defines the Immich review window as well as the
     // local GPS retention window. This keeps the preview transparent: every
@@ -93,7 +94,6 @@ class SyncService {
           ? _interpolation.interpolate(
               timestamp: asset.takenAt,
               points: points,
-              maxGap: Duration(minutes: settings.maxInterpolationGapMinutes),
             )
           : null;
 
@@ -139,7 +139,7 @@ class SyncService {
         }
 
         noTrack++;
-        unmatched.add(_diagnoseUnmatched(asset, points, settings));
+        unmatched.add(_diagnoseUnmatched(asset, points));
         continue;
       }
 
@@ -161,7 +161,8 @@ class SyncService {
       skippedWithLocation: existing,
       skippedWithoutTrack: noTrack,
       unmatched: unmatched,
-      maxInterpolationGapMinutes: settings.maxInterpolationGapMinutes,
+      maxInterpolationGapMinutes:
+          InterpolationService.maxInterpolationGap.inMinutes,
     );
   }
 
@@ -194,7 +195,6 @@ class SyncService {
   SyncUnmatched _diagnoseUnmatched(
     ImmichAsset asset,
     List<LocationPoint> points,
-    AppSettings settings,
   ) {
     if (points.isEmpty) {
       return SyncUnmatched(
@@ -248,14 +248,7 @@ class SyncService {
       final stationary =
           movement <= InterpolationService.stationaryDistanceMeters &&
               gap <= InterpolationService.stationaryMaxGap;
-      final manualAnchored = a.isManual &&
-          b.isManual &&
-          gap <= InterpolationService.manualAnchorMaxGap;
-      final speed = _interpolation.averageSpeedKmh(movement, gap);
-      if ((gap > Duration(minutes: settings.maxInterpolationGapMinutes) &&
-              !stationary &&
-              !manualAnchored) ||
-          (!manualAnchored && speed > 300)) {
+      if (gap > InterpolationService.maxInterpolationGap && !stationary) {
         return SyncUnmatched(
           asset: asset,
           reason: UnmatchedReason.unsafeGap,
@@ -279,18 +272,10 @@ class SyncService {
       match.after.latitude,
       match.after.longitude,
     );
-    final speed = _interpolation.averageSpeedKmh(distance, gap);
-
-    if (match.before.isManual && match.after.isManual) {
-      return gap <= const Duration(hours: 6)
-          ? MatchReliability.medium
-          : MatchReliability.low;
-    }
-
-    if (gap <= const Duration(minutes: 2) && speed <= 300) {
+    if (gap <= const Duration(minutes: 2)) {
       return MatchReliability.high;
     }
-    if (gap <= const Duration(minutes: 5) && speed <= 300) {
+    if (gap <= const Duration(minutes: 5)) {
       return MatchReliability.medium;
     }
     if (distance <= InterpolationService.stationaryDistanceMeters &&

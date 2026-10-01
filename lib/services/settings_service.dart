@@ -12,14 +12,12 @@ class AppSettings {
     required this.apiKey,
     required this.retentionDays,
     required this.trackingQuality,
-    required this.maxInterpolationGapMinutes,
   });
 
   final String immichUrl;
   final String apiKey;
   final int retentionDays;
   final TrackingQuality trackingQuality;
-  final int maxInterpolationGapMinutes;
 }
 
 class SettingsService {
@@ -42,8 +40,6 @@ class SettingsService {
       apiKey: await _secure.read(key: _apiKey) ?? '',
       retentionDays: prefs.getInt('retention_days') ?? 14,
       trackingQuality: quality,
-      maxInterpolationGapMinutes:
-          prefs.getInt('max_interpolation_gap_minutes') ?? 15,
     );
   }
 
@@ -55,7 +51,6 @@ class SettingsService {
     await saveTrackingPreferences(
       retentionDays: settings.retentionDays,
       trackingQuality: settings.trackingQuality,
-      maxInterpolationGapMinutes: settings.maxInterpolationGapMinutes,
     );
   }
 
@@ -71,15 +66,10 @@ class SettingsService {
   Future<void> saveTrackingPreferences({
     required int retentionDays,
     required TrackingQuality trackingQuality,
-    required int maxInterpolationGapMinutes,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('retention_days', retentionDays);
     await prefs.setString(_trackingQuality, trackingQuality.name);
-    await prefs.setInt(
-      'max_interpolation_gap_minutes',
-      maxInterpolationGapMinutes,
-    );
   }
 
   Future<bool> isOnboardingComplete() async {
