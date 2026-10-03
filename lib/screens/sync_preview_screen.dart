@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:flutter_map_maplibre/flutter_map_maplibre.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../l10n/app_localizations.dart';
@@ -27,11 +28,11 @@ class SyncPreviewScreen extends StatefulWidget {
   State<SyncPreviewScreen> createState() => _SyncPreviewScreenState();
 }
 
-class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
-  static const _tileUrl = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
-  static const _userAgent = 'io.github.andreasaichele.immichgeotagger';
-  static const _minMapZoom = 2.0;
-  static const _maxMapZoom = 19.0;
+class _SyncPreviewScreenState extends State<SyncPreviewScreen>
+    with SingleTickerProviderStateMixin {
+  static const _mapStyle = 'https://tiles.openfreemap.org/styles/liberty';
+  static const _minMapZoom = 0.0;
+  static const _maxMapZoom = 20.0;
   static const _clusterToleranceMeters = 20.0;
 
   final _settings = SettingsService();
@@ -45,11 +46,29 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
 
   AppSettings? _appSettings;
   bool _applying = false;
+  late final TabController _tabController;
+  bool _mapActivated = false;
 
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 3, initialIndex: 1, vsync: this)
+      ..addListener(_handleTabChange);
     _loadSettings();
+  }
+
+  void _handleTabChange() {
+    if (!_mapActivated && _tabController.index == 0) {
+      setState(() => _mapActivated = true);
+    }
+  }
+
+  @override
+  void dispose() {
+    _tabController
+      ..removeListener(_handleTabChange)
+      ..dispose();
+    super.dispose();
   }
 
   Future<void> _loadSettings() async {
@@ -122,10 +141,7 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
   Widget build(BuildContext context) {
     final l = context.l10n;
 
-    return DefaultTabController(
-      length: 3,
-      initialIndex: 1,
-      child: Scaffold(
+    return Scaffold(
         appBar: AppBar(
           title: Text(l.t('syncPreviewTitle')),
         ),
@@ -140,6 +156,7 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
                     child: _summaryCard(),
                   ),
                   TabBar(
+                    controller: _tabController,
                     labelPadding: EdgeInsets.zero,
                     tabs: [
                       Tab(
@@ -167,8 +184,9 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
             ),
             Expanded(
               child: TabBarView(
+                controller: _tabController,
                 children: [
-                  _mapTab(),
+                  _mapActivated ? _mapTab() : const SizedBox.expand(),
                   _assignableTab(),
                   _unmatchedTab(),
                 ],
@@ -204,8 +222,7 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
             ),
           ),
         ),
-      ),
-    );
+      );
   }
 
   Widget _summaryCard() {
@@ -469,7 +486,9 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
         ),
       ),
       children: [
-        _tileLayer(),
+        const MapLibreLayer(
+          initStyle: _mapStyle,
+        ),
         MarkerLayer(
           markers: [
             for (final group in _groupCandidates(candidates))
@@ -820,7 +839,9 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
                             ),
                           ),
                           children: [
-                            _tileLayer(),
+                            const MapLibreLayer(
+                              initStyle: _mapStyle,
+                            ),
                             MarkerLayer(
                               markers: [
                                 for (var i = 0; i < group.length; i++)
@@ -952,18 +973,6 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
     );
 
     pageController.dispose();
-  }
-
-  TileLayer _tileLayer() {
-    return TileLayer(
-      urlTemplate: _tileUrl,
-      userAgentPackageName: _userAgent,
-      minZoom: _minMapZoom,
-      maxZoom: _maxMapZoom,
-      minNativeZoom: 0,
-      maxNativeZoom: 19,
-      keepBuffer: 4,
-    );
   }
 
   Widget _mapMarker({required bool selected}) {
