@@ -26,6 +26,7 @@ void main() {
         ),
       ),
     ));
+    await tester.pumpAndSettle();
 
     expect(find.text('Version 1.0.9 ist verfügbar'), findsOneWidget);
     expect(find.text('Du kannst auch über Obtainium oder F-Droid aktualisieren.'),
@@ -53,6 +54,7 @@ void main() {
         ),
       ),
     ));
+    await tester.pumpAndSettle();
     expect(find.text('Update-Hinweis testen'), findsOneWidget);
     expect(find.textContaining('99.0.0'), findsNothing);
   });
