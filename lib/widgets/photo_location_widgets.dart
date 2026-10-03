@@ -124,6 +124,81 @@ class PhotoThumbnail extends StatelessWidget {
   }
 }
 
+/// A photo-sized touch target with a compact, accessible selection indicator.
+class SelectableThumbnail extends StatelessWidget {
+  const SelectableThumbnail({
+    required this.child,
+    required this.selected,
+    required this.label,
+    required this.onChanged,
+    super.key,
+  });
+
+  final Widget child;
+  final bool selected;
+  final String label;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+        label: label,
+        checked: selected,
+        button: true,
+        onTap: () => onChanged(!selected),
+        child: ExcludeSemantics(
+          child: Stack(
+            children: [
+              child,
+              Positioned.fill(
+                child: Material(
+                  color: Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
+                  clipBehavior: Clip.antiAlias,
+                  child: InkWell(
+                    onTap: () => onChanged(!selected),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 160),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color:
+                              selected ? AppTheme.primary : Colors.transparent,
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 6,
+                right: 6,
+                child: IgnorePointer(
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 160),
+                    width: 24,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: selected ? AppTheme.primary : Colors.white,
+                      border: Border.all(color: Colors.white, width: 2),
+                      boxShadow: const [
+                        BoxShadow(color: Color(0x33000000), blurRadius: 4),
+                      ],
+                    ),
+                    child: selected
+                        ? const Icon(Icons.check_rounded,
+                            color: Colors.white, size: 16)
+                        : null,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+}
+
 Future<void> showPhotoLocationSheet(
   BuildContext context, {
   required String assetId,
