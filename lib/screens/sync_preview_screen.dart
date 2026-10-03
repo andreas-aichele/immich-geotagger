@@ -449,7 +449,34 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen>
         crossAxisAlignment:
             detail ? CrossAxisAlignment.center : CrossAxisAlignment.start,
         children: [
-          _thumbnailView(candidate.asset),
+          Stack(
+            children: [
+              _thumbnailView(candidate.asset),
+              Positioned(
+                top: 0,
+                right: 0,
+                child: Checkbox(
+                  side: const BorderSide(color: AppTheme.primary, width: 2),
+                  checkColor: Colors.white,
+                  fillColor: WidgetStateProperty.resolveWith((states) =>
+                      states.contains(WidgetState.selected)
+                          ? AppTheme.primary
+                          : Colors.white),
+                  value: _selected.contains(candidate.asset.id),
+                  onChanged: (value) {
+                    setState(() {
+                      if (value ?? false) {
+                        _selected.add(candidate.asset.id);
+                      } else {
+                        _selected.remove(candidate.asset.id);
+                      }
+                    });
+                    onSelectionChanged?.call();
+                  },
+                ),
+              ),
+            ],
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -477,19 +504,6 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen>
                 ],
               ],
             ),
-          ),
-          Checkbox(
-            value: _selected.contains(candidate.asset.id),
-            onChanged: (value) {
-              setState(() {
-                if (value ?? false) {
-                  _selected.add(candidate.asset.id);
-                } else {
-                  _selected.remove(candidate.asset.id);
-                }
-              });
-              onSelectionChanged?.call();
-            },
           ),
         ],
       );
