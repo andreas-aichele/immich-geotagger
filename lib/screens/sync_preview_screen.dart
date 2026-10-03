@@ -428,8 +428,11 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen>
           footer: TextButton.icon(
             onPressed: () => _showCandidateGroup([candidate]),
             style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              minimumSize: const Size(0, 36),
+              padding: EdgeInsets.zero,
+              minimumSize: const Size(0, 32),
+              visualDensity: VisualDensity.compact,
+              textStyle:
+                  const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
             ),
             icon: const Icon(Icons.map_outlined, size: 18),
             label: Text(l.t('showOnMap')),
@@ -441,69 +444,62 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen>
 
   Widget _candidateContent(
     SyncCandidate candidate, {
-    bool detail = false,
     Widget? footer,
     VoidCallback? onSelectionChanged,
   }) =>
-      Row(
-        crossAxisAlignment:
-            detail ? CrossAxisAlignment.center : CrossAxisAlignment.start,
+      Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Stack(
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _thumbnailView(candidate.asset),
-              Positioned(
-                top: 0,
-                right: 0,
-                child: Checkbox(
-                  side: const BorderSide(color: AppTheme.primary, width: 2),
-                  checkColor: Colors.white,
-                  fillColor: WidgetStateProperty.resolveWith((states) =>
-                      states.contains(WidgetState.selected)
-                          ? AppTheme.primary
-                          : Colors.white),
-                  value: _selected.contains(candidate.asset.id),
-                  onChanged: (value) {
-                    setState(() {
-                      if (value ?? false) {
-                        _selected.add(candidate.asset.id);
-                      } else {
-                        _selected.remove(candidate.asset.id);
-                      }
-                    });
-                    onSelectionChanged?.call();
-                  },
+              SelectableThumbnail(
+                selected: _selected.contains(candidate.asset.id),
+                label: candidate.asset.fileName,
+                onChanged: (selected) {
+                  setState(() {
+                    if (selected) {
+                      _selected.add(candidate.asset.id);
+                    } else {
+                      _selected.remove(candidate.asset.id);
+                    }
+                  });
+                  onSelectionChanged?.call();
+                },
+                child: _thumbnailView(candidate.asset, size: 96),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      candidate.asset.fileName,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        height: 1.3,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    _reliabilityChip(candidate.reliability),
+                    if (footer != null) ...[
+                      const SizedBox(height: 4),
+                      footer,
+                    ],
+                  ],
                 ),
               ),
             ],
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment:
-                  detail ? MainAxisAlignment.center : MainAxisAlignment.start,
-              children: [
-                Text(
-                  candidate.asset.fileName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontWeight: FontWeight.w700),
-                ),
-                MatchTimeline(
-                  photoTime: candidate.asset.takenAt,
-                  before: candidate.before,
-                  after:
-                      candidate.usedLastKnownLocation ? null : candidate.after,
-                ),
-                if (!detail) const SizedBox(height: 8),
-                _reliabilityChip(candidate.reliability),
-                if (footer != null) ...[
-                  SizedBox(height: detail ? 6 : 4),
-                  footer
-                ],
-              ],
-            ),
+          const SizedBox(height: 10),
+          MatchTimeline(
+            photoTime: candidate.asset.takenAt,
+            before: candidate.before,
+            after: candidate.usedLastKnownLocation ? null : candidate.after,
           ),
         ],
       );
@@ -586,18 +582,25 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen>
         ),
     };
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        l.t('reliabilityLabel', {'value': label}),
-        style: TextStyle(
-          color: color,
-          fontSize: 12,
-          fontWeight: FontWeight.w700,
+    return Tooltip(
+      message: l.t('reliabilityLabel', {'value': label}),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: background,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.verified_outlined, color: color, size: 14),
+            const SizedBox(width: 5),
+            Text(
+              label,
+              style: TextStyle(
+                  color: color, fontSize: 12, fontWeight: FontWeight.w600),
+            ),
+          ],
         ),
       ),
     );
@@ -721,7 +724,7 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen>
                   ),
                   const SizedBox(height: 12),
                   SizedBox(
-                    height: 190,
+                    height: 230,
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: PageView.builder(
@@ -741,7 +744,6 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen>
                             padding: const EdgeInsets.all(10),
                             child: _candidateContent(
                               candidate,
-                              detail: true,
                               onSelectionChanged: () => setSheetState(() {}),
                               footer: group.length > 1
                                   ? Text(
