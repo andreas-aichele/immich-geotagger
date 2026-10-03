@@ -43,17 +43,6 @@ class SettingsService {
     );
   }
 
-  Future<void> save(AppSettings settings) async {
-    await saveConnection(
-      immichUrl: settings.immichUrl,
-      apiKey: settings.apiKey,
-    );
-    await saveTrackingPreferences(
-      retentionDays: settings.retentionDays,
-      trackingQuality: settings.trackingQuality,
-    );
-  }
-
   Future<void> saveConnection({
     required String immichUrl,
     required String apiKey,

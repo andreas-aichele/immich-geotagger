@@ -136,14 +136,9 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
     try {
       await _immich.verifyConnection(_url.text.trim(), _key.text.trim());
-      final current = await _settings.load();
-      await _settings.save(
-        AppSettings(
-          immichUrl: _url.text.trim(),
-          apiKey: _key.text.trim(),
-          retentionDays: current.retentionDays,
-          trackingQuality: current.trackingQuality,
-        ),
+      await _settings.saveConnection(
+        immichUrl: _url.text.trim(),
+        apiKey: _key.text.trim(),
       );
       if (!mounted) return;
       setState(() {
@@ -161,9 +156,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   Future<void> _finish() async {
     await _settings.setOnboardingComplete(true);
     if (!mounted) return;
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const HomeScreen()),
-    );
+    Navigator.of(context)
+        .pushReplacement(MaterialPageRoute(builder: (_) => const HomeScreen()));
   }
 
   @override
@@ -321,10 +315,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         const SizedBox(height: 28),
         SizedBox(
           width: double.infinity,
-          child: FilledButton(
-            onPressed: _next,
-            child: Text(l.t('continue')),
-          ),
+          child: FilledButton(onPressed: _next, child: Text(l.t('continue'))),
         ),
       ],
     );
@@ -360,10 +351,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
               ),
               if (_message != null) ...[
                 const SizedBox(height: 18),
-                _StatusMessage(
-                  text: _message!,
-                  success: _permissionReady,
-                ),
+                _StatusMessage(text: _message!, success: _permissionReady),
               ],
             ],
           ),
@@ -473,19 +461,18 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             prefixIcon: const Icon(Icons.key_rounded),
             suffixIcon: IconButton(
               tooltip: l.t(_apiKeyVisible ? 'hideApiKey' : 'showApiKey'),
-              icon: Icon(_apiKeyVisible
-                  ? Icons.visibility_off_rounded
-                  : Icons.visibility_rounded),
+              icon: Icon(
+                _apiKeyVisible
+                    ? Icons.visibility_off_rounded
+                    : Icons.visibility_rounded,
+              ),
               onPressed: () => setState(() => _apiKeyVisible = !_apiKeyVisible),
             ),
           ),
         ),
         if (_message != null) ...[
           const SizedBox(height: 14),
-          _StatusMessage(
-            text: _message!,
-            success: _connectionReady,
-          ),
+          _StatusMessage(text: _message!, success: _connectionReady),
         ],
         const SizedBox(height: 20),
         SizedBox(
@@ -531,27 +518,17 @@ class _FeatureRow extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(
-          icon,
-          size: 22,
-          color: Theme.of(context).colorScheme.primary,
-        ),
+        Icon(icon, size: 22, color: Theme.of(context).colorScheme.primary),
         const SizedBox(width: 14),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                title,
-                style: const TextStyle(fontWeight: FontWeight.w700),
-              ),
+              Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
               const SizedBox(height: 3),
               Text(
                 subtitle,
-                style: const TextStyle(
-                  color: AppTheme.muted,
-                  height: 1.35,
-                ),
+                style: const TextStyle(color: AppTheme.muted, height: 1.35),
               ),
             ],
           ),
@@ -562,10 +539,7 @@ class _FeatureRow extends StatelessWidget {
 }
 
 class _PermissionCode extends StatelessWidget {
-  const _PermissionCode({
-    required this.label,
-    required this.description,
-  });
+  const _PermissionCode({required this.label, required this.description});
 
   final String label;
   final String description;
@@ -575,10 +549,7 @@ class _PermissionCode extends StatelessWidget {
     return Row(
       children: [
         Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 10,
-            vertical: 7,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
           decoration: BoxDecoration(
             color: AppTheme.primarySoft,
             borderRadius: BorderRadius.circular(10),
@@ -604,10 +575,7 @@ class _PermissionCode extends StatelessWidget {
 }
 
 class _StatusMessage extends StatelessWidget {
-  const _StatusMessage({
-    required this.text,
-    required this.success,
-  });
+  const _StatusMessage({required this.text, required this.success});
 
   final String text;
   final bool success;
@@ -633,10 +601,7 @@ class _StatusMessage extends StatelessWidget {
           ),
           const SizedBox(width: 10),
           Expanded(
-            child: Text(
-              text,
-              style: TextStyle(color: color, height: 1.35),
-            ),
+            child: Text(text, style: TextStyle(color: color, height: 1.35)),
           ),
         ],
       ),

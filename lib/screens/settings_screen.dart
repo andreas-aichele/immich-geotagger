@@ -8,6 +8,7 @@ import '../services/immich_service.dart';
 import '../services/settings_service.dart';
 import '../services/tracking_service.dart';
 import '../theme/app_theme.dart';
+import '../widgets/error_message.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -135,26 +136,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (!mounted) return;
       setState(() {
         _serverStatusSuccess = false;
-        _serverStatus = _immichErrorMessage(e);
+        _serverStatus = immichErrorMessage(context, e);
       });
     } finally {
       if (mounted) setState(() => _testing = false);
     }
-  }
-
-  String _immichErrorMessage(Object error) {
-    final l = context.l10n;
-    if (error is ImmichConnectionException) {
-      return switch (error.error) {
-        ImmichConnectionError.unreachable => l.t('immichUnreachable'),
-        ImmichConnectionError.timeout => l.t('immichTimeout'),
-        ImmichConnectionError.server => l.t(
-            'immichServerError',
-            {'code': error.statusCode ?? 500},
-          ),
-      };
-    }
-    return error.toString().replaceFirst('Bad state: ', '');
   }
 
   Future<void> _saveConnection() async {
@@ -185,12 +171,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   void _scheduleTrackingSave() {
     _autoSaveTimer?.cancel();
-    _autoSaveTimer = Timer(
-      const Duration(milliseconds: 500),
-      () {
-        _saveTrackingPreferences();
-      },
-    );
+    _autoSaveTimer = Timer(const Duration(milliseconds: 500), () {
+      _saveTrackingPreferences();
+    });
   }
 
   void _retentionChanged(String value) {
@@ -326,10 +309,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           prefixIcon: const Icon(Icons.key_rounded),
                           suffixIcon: IconButton(
                             tooltip: l.t(
-                                _apiKeyVisible ? 'hideApiKey' : 'showApiKey'),
-                            icon: Icon(_apiKeyVisible
-                                ? Icons.visibility_off_rounded
-                                : Icons.visibility_rounded),
+                              _apiKeyVisible ? 'hideApiKey' : 'showApiKey',
+                            ),
+                            icon: Icon(
+                              _apiKeyVisible
+                                  ? Icons.visibility_off_rounded
+                                  : Icons.visibility_rounded,
+                            ),
                             onPressed: () => setState(
                               () => _apiKeyVisible = !_apiKeyVisible,
                             ),
@@ -418,9 +404,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       const SizedBox(height: 18),
                       Text(
                         l.t('trackingQuality'),
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w700,
-                        ),
+                        style: const TextStyle(fontWeight: FontWeight.w700),
                       ),
                       const SizedBox(height: 8),
                       SegmentedButton<TrackingQuality>(
@@ -566,9 +550,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   ),
                                 )
                               : const Icon(Icons.battery_saver_outlined),
-                          label: Text(
-                            l.t('allowUnrestrictedBattery'),
-                          ),
+                          label: Text(l.t('allowUnrestrictedBattery')),
                         ),
                       ],
                     ],
@@ -610,10 +592,7 @@ class _ScopeChip extends StatelessWidget {
 }
 
 class _StatusBox extends StatelessWidget {
-  const _StatusBox({
-    required this.text,
-    required this.success,
-  });
+  const _StatusBox({required this.text, required this.success});
 
   final String text;
   final bool success;
@@ -637,10 +616,7 @@ class _StatusBox extends StatelessWidget {
           ),
           const SizedBox(width: 10),
           Expanded(
-            child: Text(
-              text,
-              style: TextStyle(color: color),
-            ),
+            child: Text(text, style: TextStyle(color: color)),
           ),
         ],
       ),

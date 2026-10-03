@@ -100,11 +100,6 @@ class TrackingService {
     return !await LibreLocation.checkBatteryOptimization();
   }
 
-  Future<bool> isBackgroundModeEnabled() async {
-    await initialize();
-    return LibreLocation.isTracking;
-  }
-
   Future<void> openSystemSettings() async {
     await LibreLocation.openAppSettings();
   }
@@ -282,10 +277,7 @@ class TrackingService {
 }
 
 class _NotificationCopy {
-  const _NotificationCopy({
-    required this.title,
-    required this.subtitle,
-  });
+  const _NotificationCopy({required this.title, required this.subtitle});
 
   final String title;
   final String subtitle;

@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
@@ -7,6 +5,7 @@ import '../models/immich_asset.dart';
 import '../services/database_service.dart';
 import '../services/immich_service.dart';
 import '../services/settings_service.dart';
+import '../services/thumbnail_cache.dart';
 import '../theme/app_theme.dart';
 import '../widgets/photo_location_widgets.dart';
 import '../widgets/match_timeline.dart';
@@ -21,10 +20,9 @@ class HistoryScreen extends StatefulWidget {
 class _HistoryScreenState extends State<HistoryScreen> {
   final _settings = SettingsService();
   final _immich = ImmichService();
-  final _thumbnailFutures = <String, Future<Uint8List>>{};
+  ThumbnailCache? _thumbnails;
   final _timelineFutures = <String, Future<(DateTime?, DateTime?)>>{};
 
-  AppSettings? _appSettings;
   late final Future<List<ImmichAsset>> _history;
 
   @override
@@ -35,7 +33,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   Future<List<ImmichAsset>> _loadHistory() async {
     final settings = await _settings.load();
-    _appSettings = settings;
+    _thumbnails = ThumbnailCache(settings, _immich);
     final records = await DatabaseService.instance.updatedAssets(
       retention: Duration(days: settings.retentionDays),
     );
@@ -43,32 +41,23 @@ class _HistoryScreenState extends State<HistoryScreen> {
     // Limit concurrent requests when a long history is opened.
     for (var start = 0; start < records.length; start += 8) {
       final end = (start + 8).clamp(0, records.length);
-      final batch = await Future.wait(records.sublist(start, end).map(
-            (record) => _immich.assetById(
-              baseUrl: settings.immichUrl,
-              apiKey: settings.apiKey,
-              assetId: record.assetId,
+      final batch = await Future.wait(
+        records.sublist(start, end).map(
+              (record) => _immich.assetById(
+                baseUrl: settings.immichUrl,
+                apiKey: settings.apiKey,
+                assetId: record.assetId,
+              ),
             ),
-          ));
-      assets.addAll(batch.whereType<ImmichAsset>().where((asset) => asset.hasLocation));
+      );
+      assets.addAll(
+        batch.whereType<ImmichAsset>().where((asset) => asset.hasLocation),
+      );
     }
     return assets;
   }
 
-  Future<Uint8List> _thumbnail(String assetId) {
-    final settings = _appSettings!;
-    return _thumbnailFutures.putIfAbsent(
-      assetId,
-      () => _immich.thumbnail(
-        baseUrl: settings.immichUrl,
-        apiKey: settings.apiKey,
-        assetId: assetId,
-      ),
-    );
-  }
-
-  ThumbnailLoader? get _thumbnailLoader =>
-      _appSettings == null ? null : _thumbnail;
+  ThumbnailLoader? get _thumbnailLoader => _thumbnails?.load;
 
   Future<(DateTime?, DateTime?)> _timelineTimes(ImmichAsset item) {
     return _timelineFutures.putIfAbsent(
@@ -122,10 +111,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            PhotoThumbnail(
-              assetId: item.id,
-              loader: _thumbnailLoader,
-            ),
+            PhotoThumbnail(assetId: item.id, loader: _thumbnailLoader),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -171,10 +157,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
             ),
             const Padding(
               padding: EdgeInsets.only(top: 4),
-              child: Icon(
-                Icons.check_circle_rounded,
-                color: Color(0xFF157A4A),
-              ),
+              child: Icon(Icons.check_circle_rounded, color: Color(0xFF157A4A)),
             ),
           ],
         ),

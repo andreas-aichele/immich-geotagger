@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import '../models/location_point.dart';
+import '../utils/geo_distance.dart' as geo;
 
 class InterpolationResult {
   const InterpolationResult({
@@ -134,21 +135,8 @@ class InterpolationService {
     return nearest;
   }
 
-  double distanceMeters(LocationPoint a, LocationPoint b) {
-    const earthRadius = 6371000.0;
-    final phi1 = a.latitude * math.pi / 180;
-    final phi2 = b.latitude * math.pi / 180;
-    final deltaPhi = (b.latitude - a.latitude) * math.pi / 180;
-    final deltaLambda = (b.longitude - a.longitude) * math.pi / 180;
-
-    final h = math.sin(deltaPhi / 2) * math.sin(deltaPhi / 2) +
-        math.cos(phi1) *
-            math.cos(phi2) *
-            math.sin(deltaLambda / 2) *
-            math.sin(deltaLambda / 2);
-    final angle = 2 * math.atan2(math.sqrt(h), math.sqrt(1 - h));
-    return earthRadius * angle;
-  }
+  double distanceMeters(LocationPoint a, LocationPoint b) =>
+      geo.distanceMeters(a.latitude, a.longitude, b.latitude, b.longitude);
 
   double averageSpeedKmh(double distanceMeters, Duration duration) {
     if (duration <= Duration.zero) return double.infinity;
