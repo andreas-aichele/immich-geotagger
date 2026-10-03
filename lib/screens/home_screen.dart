@@ -7,6 +7,8 @@ import '../services/database_service.dart';
 import '../services/sync_service.dart';
 import '../services/settings_service.dart';
 import '../services/tracking_service.dart';
+import '../services/update_service.dart';
+import '../widgets/update_banner.dart';
 import '../theme/app_theme.dart';
 import '../widgets/error_message.dart';
 import '../widgets/camera_clock_tip.dart';
@@ -25,6 +27,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   final _tracker = TrackingService();
   final _sync = SyncService();
   final _settings = SettingsService();
+  final _updates = UpdateService();
+  AppRelease? _release;
+  bool _checkingUpdate = false;
 
   bool _trackingBusy = false;
   bool _syncBusy = false;
@@ -41,6 +46,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     _refreshStats();
     _restoreTracking();
+    _checkUpdate();
     _statsTimer = Timer.periodic(
       const Duration(seconds: 15),
       (_) => _refreshStats(),
@@ -50,6 +56,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   @override
   void dispose() {
     _statsTimer?.cancel();
+    _updates.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -58,7 +65,23 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       _restoreTracking();
+      _checkUpdate();
     }
+  }
+
+  Future<void> _checkUpdate() async {
+    if (_checkingUpdate) return;
+    _checkingUpdate = true;
+    final release = await _updates.check();
+    _checkingUpdate = false;
+    if (mounted) setState(() => _release = release);
+  }
+
+  Future<void> _dismissUpdate() async {
+    final release = _release;
+    if (release == null) return;
+    setState(() => _release = null);
+    await _updates.dismiss(release);
   }
 
   Future<void> _restoreTracking() async {
@@ -174,6 +197,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             children: [
               _header(context),
               const SizedBox(height: 28),
+              if (_release != null) ...[
+                UpdateBanner(
+                  release: _release!,
+                  onDismiss: _dismissUpdate,
+                ),
+                const SizedBox(height: 16),
+              ],
               _trackingHero(context),
               const SizedBox(height: 16),
               const CameraClockTip(),
@@ -225,8 +255,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         ),
         IconButton.filledTonal(
           tooltip: l.t('settings'),
-          onPressed: () => Navigator.of(context)
-              .push(MaterialPageRoute(builder: (_) => const SettingsScreen())),
+          onPressed: () async {
+            await Navigator.of(context).push<void>(
+              MaterialPageRoute(builder: (_) => const SettingsScreen()),
+            );
+            if (mounted) _checkUpdate();
+          },
           icon: const Icon(Icons.tune_rounded),
         ),
       ],
