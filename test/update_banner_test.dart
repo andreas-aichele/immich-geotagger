@@ -9,6 +9,10 @@ import 'package:pub_semver/pub_semver.dart';
 void main() {
   testWidgets('shows release and manager hint, and supports dismissing',
       (tester) async {
+    tester.view.physicalSize = const Size(360, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
     var dismissed = false;
     await tester.pumpWidget(MaterialApp(
       locale: const Locale('de'),
@@ -29,9 +33,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Version 1.0.9 ist verfügbar'), findsOneWidget);
+    expect(tester.getSize(find.byType(UpdateBanner)).height, lessThan(140));
     expect(find.text('Du kannst auch über Obtainium oder F-Droid aktualisieren.'),
         findsOneWidget);
-    expect(find.text('Release öffnen'), findsOneWidget);
+    expect(find.byTooltip('Release öffnen'), findsOneWidget);
     await tester.tap(find.byTooltip('Diese Version ausblenden'));
     expect(dismissed, isTrue);
   });

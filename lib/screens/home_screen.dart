@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:pub_semver/pub_semver.dart';
 
 import '../l10n/app_localizations.dart';
 import '../services/database_service.dart';
@@ -30,6 +31,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   final _updates = UpdateService();
   AppRelease? _release;
   bool _checkingUpdate = false;
+  bool _updatePreview = false;
 
   bool _trackingBusy = false;
   bool _syncBusy = false;
@@ -70,18 +72,22 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _checkUpdate() async {
-    if (_checkingUpdate) return;
+    if (_checkingUpdate || _updatePreview) return;
     _checkingUpdate = true;
     final release = await _updates.check();
     _checkingUpdate = false;
-    if (mounted) setState(() => _release = release);
+    if (mounted && !_updatePreview) setState(() => _release = release);
   }
 
   Future<void> _dismissUpdate() async {
     final release = _release;
     if (release == null) return;
     setState(() => _release = null);
-    await _updates.dismiss(release);
+    if (_updatePreview) {
+      _updatePreview = false;
+    } else {
+      await _updates.dismiss(release);
+    }
   }
 
   Future<void> _restoreTracking() async {
@@ -198,7 +204,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               _header(context),
               const SizedBox(height: 28),
               if (_release != null) ...[
-                UpdateBanner(release: _release!, onDismiss: _dismissUpdate),
+                UpdateBanner(
+                  release: _release!,
+                  preview: _updatePreview,
+                  onDismiss: _dismissUpdate,
+                ),
                 const SizedBox(height: 16),
               ],
               _trackingHero(context),
@@ -253,9 +263,19 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         IconButton.filledTonal(
           tooltip: l.t('settings'),
           onPressed: () async {
-            await Navigator.of(context)
-                .push(MaterialPageRoute(builder: (_) => const SettingsScreen()));
-            if (mounted) _checkUpdate();
+            final preview = await Navigator.of(context).push<bool>(
+              MaterialPageRoute(builder: (_) => const SettingsScreen()),
+            );
+            if (!mounted) return;
+            if (preview == true) {
+              setState(() {
+                _updatePreview = true;
+                _release = AppRelease(Version(99, 0, 0));
+              });
+            } else {
+              _updatePreview = false;
+              _checkUpdate();
+            }
           },
           icon: const Icon(Icons.tune_rounded),
         ),

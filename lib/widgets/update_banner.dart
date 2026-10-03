@@ -41,35 +41,40 @@ class UpdateBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = context.l10n;
     return AppSurface(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      padding: const EdgeInsets.fromLTRB(12, 10, 4, 10),
+      child: Row(
         children: [
-          Row(
-            children: [
-              Icon(Icons.system_update_rounded,
-                  color: Theme.of(context).colorScheme.primary),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
+          Icon(Icons.system_update_rounded,
+              size: 20, color: Theme.of(context).colorScheme.primary),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
                   preview
                       ? l.t('updateTest')
-                      : l.t('updateAvailable', {'version': release.version.toString()}),
-                  style: const TextStyle(fontWeight: FontWeight.w700),
+                      : l.t('updateAvailable',
+                          {'version': release.version.toString()}),
+                  style: const TextStyle(
+                      fontSize: 13, fontWeight: FontWeight.w600),
                 ),
-              ),
-              IconButton(
-                tooltip: l.t('updateDismiss'),
-                onPressed: onDismiss,
-                icon: const Icon(Icons.close_rounded),
-              ),
-            ],
+                const SizedBox(height: 3),
+                Text(l.t('updateManagerHint'),
+                    style: const TextStyle(fontSize: 11, color: AppTheme.muted)),
+              ],
+            ),
           ),
-          Text(l.t('updateManagerHint')),
-          const SizedBox(height: 12),
-          TextButton.icon(
+          IconButton(
+            tooltip: l.t('updateOpenRelease'),
             onPressed: () => _openRelease(context),
-            icon: const Icon(Icons.open_in_new_rounded),
-            label: Text(l.t('updateOpenRelease')),
+            icon: const Icon(Icons.open_in_new_rounded, size: 18),
+          ),
+          IconButton(
+            tooltip: l.t('updateDismiss'),
+            onPressed: onDismiss,
+            icon: const Icon(Icons.close_rounded, size: 18),
           ),
         ],
       ),
