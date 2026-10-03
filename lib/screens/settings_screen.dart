@@ -1,12 +1,15 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:pub_semver/pub_semver.dart';
 
 import '../l10n/app_localizations.dart';
 import '../services/gpx_export_service.dart';
 import '../services/immich_service.dart';
 import '../services/settings_service.dart';
 import '../services/tracking_service.dart';
+import '../services/update_service.dart';
+import '../widgets/update_banner.dart';
 import '../theme/app_theme.dart';
 import '../widgets/error_message.dart';
 
@@ -29,6 +32,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Timer? _autoSaveTimer;
 
   bool _loading = true;
+  bool _updateCheckEnabled = true;
   bool _testing = false;
   bool _savingConnection = false;
   bool _connectionVerified = false;
@@ -65,6 +69,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _load() async {
     final value = await _settings.load();
+    _updateCheckEnabled = await UpdateService.isEnabled();
     _url.text = value.immichUrl;
     _key.text = value.apiKey;
     _retentionDays = value.retentionDays;
@@ -553,6 +558,43 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           label: Text(l.t('allowUnrestrictedBattery')),
                         ),
                       ],
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                AppSurface(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SwitchListTile.adaptive(
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(l.t('updateCheckTitle')),
+                        subtitle: Text(l.t('updateCheckDescription')),
+                        value: _updateCheckEnabled,
+                        onChanged: (value) async {
+                          setState(() => _updateCheckEnabled = value);
+                          await UpdateService.setEnabled(value);
+                        },
+                      ),
+                      // TEMPORARY: remove this preview button before release.
+                      TextButton.icon(
+                        icon: const Icon(Icons.preview_outlined),
+                        label: Text(l.t('updateTest')),
+                        onPressed: () => showModalBottomSheet<void>(
+                          context: context,
+                          isScrollControlled: true,
+                          builder: (sheetContext) => SafeArea(
+                            child: Padding(
+                              padding: const EdgeInsets.all(20),
+                              child: UpdateBanner(
+                                release: AppRelease(Version(99, 0, 0)),
+                                preview: true,
+                                onDismiss: () => Navigator.of(sheetContext).pop(),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),
