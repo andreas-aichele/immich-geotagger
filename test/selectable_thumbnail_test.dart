@@ -42,28 +42,31 @@ void main() {
   testWidgets('screen readers receive filename and selection state',
       (tester) async {
     final semantics = tester.ensureSemantics();
-    addTearDown(semantics.dispose);
-    var selected = false;
-    await tester.pumpWidget(MaterialApp(
-      home: Scaffold(
-        body: StatefulBuilder(
-            builder: (context, setState) => SelectableThumbnail(
-                  label: 'camera.jpg',
-                  selected: selected,
-                  onChanged: (value) => setState(() => selected = value),
-                  child: const SizedBox(width: 96, height: 96),
-                )),
-      ),
-    ));
+    try {
+      var selected = false;
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: StatefulBuilder(
+              builder: (context, setState) => SelectableThumbnail(
+                    label: 'camera.jpg',
+                    selected: selected,
+                    onChanged: (value) => setState(() => selected = value),
+                    child: const SizedBox(width: 96, height: 96),
+                  )),
+        ),
+      ));
 
-    final photo = find.byType(SelectableThumbnail);
-    var node = tester.getSemantics(photo);
-    expect(node.label, 'camera.jpg');
-    expect(node.flagsCollection.isButton, isTrue);
-    expect(node.flagsCollection.isChecked, CheckedState.isFalse);
-    await tester.tap(photo);
-    await tester.pumpAndSettle();
-    node = tester.getSemantics(photo);
-    expect(node.flagsCollection.isChecked, CheckedState.isTrue);
+      final photo = find.byType(SelectableThumbnail);
+      var node = tester.getSemantics(photo);
+      expect(node.label, 'camera.jpg');
+      expect(node.flagsCollection.isButton, isTrue);
+      expect(node.flagsCollection.isChecked, CheckedState.isFalse);
+      await tester.tap(photo);
+      await tester.pumpAndSettle();
+      node = tester.getSemantics(photo);
+      expect(node.flagsCollection.isChecked, CheckedState.isTrue);
+    } finally {
+      semantics.dispose();
+    }
   });
 }
