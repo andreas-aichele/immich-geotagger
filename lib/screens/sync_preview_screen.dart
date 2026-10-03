@@ -757,7 +757,7 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen>
   }
 
   Future<void> _showCandidateGroup(List<SyncCandidate> group) async {
-    final pageController = PageController(viewportFraction: 0.9);
+    final pageController = PageController();
     final mapController = MapController();
     var activeIndex = 0;
 
@@ -869,7 +869,9 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen>
                   const SizedBox(height: 12),
                   SizedBox(
                     height: 190,
-                    child: PageView.builder(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: PageView.builder(
                       controller: pageController,
                       itemCount: group.length,
                       onPageChanged: (index) {
@@ -888,11 +890,9 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen>
                         final selected =
                             _selected.contains(candidate.asset.id);
 
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 5),
-                          child: AppSurface(
-                            padding: const EdgeInsets.all(10),
-                            child: Row(
+                        return AppSurface(
+                          padding: const EdgeInsets.all(10),
+                          child: Row(
                               children: [
                                 _thumbnailView(
                                   candidate.asset,
@@ -957,10 +957,10 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen>
                                   },
                                 ),
                               ],
-                            ),
                           ),
                         );
                       },
+                    ),
                     ),
                   ),
                   const SizedBox(height: 18),
