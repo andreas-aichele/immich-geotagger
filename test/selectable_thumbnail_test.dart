@@ -1,5 +1,3 @@
-import 'dart:ui' show SemanticsFlag;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:immich_geotagger/widgets/photo_location_widgets.dart';
@@ -57,13 +55,18 @@ void main() {
     ));
 
     final photo = find.byType(SelectableThumbnail);
-    var node = tester.getSemantics(photo);
-    expect(node.label, 'camera.jpg');
-    expect(node.hasFlag(SemanticsFlag.hasCheckedState), isTrue);
-    expect(node.hasFlag(SemanticsFlag.isChecked), isFalse);
+    expect(
+      tester.getSemantics(photo),
+      containsSemantics(
+        label: 'camera.jpg',
+        isButton: true,
+        hasCheckedState: true,
+        isChecked: false,
+        hasTapAction: true,
+      ),
+    );
     await tester.tap(photo);
     await tester.pumpAndSettle();
-    node = tester.getSemantics(photo);
-    expect(node.hasFlag(SemanticsFlag.isChecked), isTrue);
+    expect(tester.getSemantics(photo), containsSemantics(isChecked: true));
   });
 }
