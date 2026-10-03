@@ -144,8 +144,6 @@ class SyncService {
       skippedWithLocation: existing,
       skippedWithoutTrack: unmatched.length,
       unmatched: unmatched,
-      maxInterpolationGapMinutes:
-          InterpolationService.maxInterpolationGap.inMinutes,
     );
   }
 

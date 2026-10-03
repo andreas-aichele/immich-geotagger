@@ -27,19 +27,8 @@ class PhotoThumbnail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final thumbnailLoader = loader;
-    if (thumbnailLoader == null) {
-      return _placeholder(
-        const SizedBox(
-          width: 20,
-          height: 20,
-          child: CircularProgressIndicator(strokeWidth: 2),
-        ),
-      );
-    }
-
     return FutureBuilder<Uint8List>(
-      future: thumbnailLoader(assetId),
+      future: loader?.call(assetId),
       builder: (context, snapshot) {
         if (snapshot.hasData) {
           return ClipRRect(
