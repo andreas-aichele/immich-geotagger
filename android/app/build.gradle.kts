@@ -54,6 +54,10 @@ android {
 
     buildTypes {
         release {
+            // Work around flutter-maplibre 0.3.6 release-mode rendering on Android 17.
+            // Remove once the upstream ProGuard fix is available in a released version.
+            proguardFiles("proguard-rules.pro")
+
             // Upstream releases are signed only when the persistent key is supplied.
             // Builds without key.properties stay unsigned, which is what F-Droid
             // needs when reproducing the APK before copying the upstream signature.
