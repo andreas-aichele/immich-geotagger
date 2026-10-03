@@ -2,10 +2,10 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:flutter_map_maplibre/flutter_map_maplibre.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../theme/app_theme.dart';
+import 'location_map.dart';
 
 typedef ThumbnailLoader = Future<Uint8List> Function(String assetId);
 
@@ -96,10 +96,7 @@ class PhotoThumbnail extends StatelessWidget {
 
         if (snapshot.hasError) {
           return _placeholder(
-            const Icon(
-              Icons.broken_image_outlined,
-              color: AppTheme.muted,
-            ),
+            const Icon(Icons.broken_image_outlined, color: AppTheme.muted),
           );
         }
 
@@ -149,7 +146,6 @@ Future<void> showPhotoLocationSheet(
   bool isVideo = false,
   Duration? duration,
 }) async {
-  const mapStyle = 'https://tiles.openfreemap.org/styles/liberty';
   final point = LatLng(latitude, longitude);
 
   await showModalBottomSheet<void>(
@@ -222,35 +218,14 @@ Future<void> showPhotoLocationSheet(
               Expanded(
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(16),
-                  child: FlutterMap(
-                    options: MapOptions(
-                      initialCenter: point,
-                      initialZoom: 16,
-                      minZoom: 0,
-                      maxZoom: 20,
-                      cameraConstraint: CameraConstraint.containCenter(
-                        bounds: LatLngBounds(
-                          const LatLng(-85.05112878, -180),
-                          const LatLng(85.05112878, 180),
-                        ),
-                      ),
-                      interactionOptions: const InteractionOptions(
-                        flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
-                      ),
-                    ),
-                    children: [
-                      const MapLibreLayer(
-                        initStyle: mapStyle,
-                      ),
-                      MarkerLayer(
-                        markers: [
-                          Marker(
-                            point: point,
-                            width: 48,
-                            height: 48,
-                            child: const PhotoLocationMarker(),
-                          ),
-                        ],
+                  child: LocationMap(
+                    center: point,
+                    markers: [
+                      Marker(
+                        point: point,
+                        width: 48,
+                        height: 48,
+                        child: const PhotoLocationMarker(),
                       ),
                     ],
                   ),
@@ -260,10 +235,7 @@ Future<void> showPhotoLocationSheet(
               Text(
                 '${latitude.toStringAsFixed(6)}, '
                 '${longitude.toStringAsFixed(6)}',
-                style: const TextStyle(
-                  color: AppTheme.muted,
-                  fontSize: 13,
-                ),
+                style: const TextStyle(color: AppTheme.muted, fontSize: 13),
               ),
             ],
           ),
@@ -274,12 +246,10 @@ Future<void> showPhotoLocationSheet(
 }
 
 class PhotoLocationMarker extends StatelessWidget {
-  const PhotoLocationMarker({
-    this.selected = true,
-    super.key,
-  });
+  const PhotoLocationMarker({this.selected = true, this.count, super.key});
 
   final bool selected;
+  final int? count;
 
   @override
   Widget build(BuildContext context) {
@@ -296,11 +266,17 @@ class PhotoLocationMarker extends StatelessWidget {
           ),
         ],
       ),
-      child: const Icon(
-        Icons.perm_media_outlined,
-        color: Colors.white,
-        size: 20,
-      ),
+      alignment: Alignment.center,
+      child: count == null
+          ? const Icon(Icons.perm_media_outlined, color: Colors.white, size: 20)
+          : Text(
+              '$count',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
     );
   }
 }

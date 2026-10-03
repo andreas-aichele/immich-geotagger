@@ -1,9 +1,8 @@
-import 'dart:math' as math;
-
 import '../models/geotagged_asset.dart';
 import '../models/immich_asset.dart';
 import '../models/location_point.dart';
 import '../models/sync_preview.dart';
+import '../utils/geo_distance.dart';
 import 'database_service.dart';
 import 'immich_service.dart';
 import 'interpolation_service.dart';
@@ -82,7 +81,6 @@ class SyncService {
     final candidates = <SyncCandidate>[];
     final unmatched = <SyncUnmatched>[];
     var existing = 0;
-    var noTrack = 0;
 
     for (final asset in assets) {
       if (asset.hasLocation) {
@@ -90,38 +88,22 @@ class SyncService {
         continue;
       }
 
-      final match = points.length >= 2
-          ? _interpolation.interpolate(
-              timestamp: asset.takenAt,
-              points: points,
-            )
-          : null;
+      final match = _interpolation.interpolate(
+        timestamp: asset.takenAt,
+        points: points,
+      );
 
       if (match == null) {
         final nearest = _interpolation.nearestPoint(
           timestamp: asset.takenAt,
           points: points,
         );
-        if (nearest != null) {
-          candidates.add(
-            SyncCandidate(
-              asset: asset,
-              latitude: nearest.latitude,
-              longitude: nearest.longitude,
-              before: nearest.timestamp,
-              after: nearest.timestamp,
-              reliability: MatchReliability.medium,
-              usedLastKnownLocation: true,
-            ),
-          );
-          continue;
-        }
-
-        final fallback = _lastKnownLocationFallback(
-          assetTime: asset.takenAt,
-          points: points,
-          trackingActive: trackingActive,
-        );
+        final fallback = nearest ??
+            _lastKnownLocationFallback(
+              assetTime: asset.takenAt,
+              points: points,
+              trackingActive: trackingActive,
+            );
 
         if (fallback != null) {
           candidates.add(
@@ -131,14 +113,15 @@ class SyncService {
               longitude: fallback.longitude,
               before: fallback.timestamp,
               after: fallback.timestamp,
-              reliability: MatchReliability.low,
+              reliability: nearest != null
+                  ? MatchReliability.medium
+                  : MatchReliability.low,
               usedLastKnownLocation: true,
             ),
           );
           continue;
         }
 
-        noTrack++;
         unmatched.add(_diagnoseUnmatched(asset, points));
         continue;
       }
@@ -159,7 +142,7 @@ class SyncService {
       candidates: candidates,
       scanned: assets.length,
       skippedWithLocation: existing,
-      skippedWithoutTrack: noTrack,
+      skippedWithoutTrack: unmatched.length,
       unmatched: unmatched,
       maxInterpolationGapMinutes:
           InterpolationService.maxInterpolationGap.inMinutes,
@@ -181,7 +164,7 @@ class SyncService {
     if (!target.isAfter(lastTime)) return null;
     if (target.difference(lastTime) > const Duration(minutes: 15)) return null;
 
-    final movement = _distanceMeters(
+    final movement = distanceMeters(
       previous.latitude,
       previous.longitude,
       last.latitude,
@@ -197,10 +180,7 @@ class SyncService {
     List<LocationPoint> points,
   ) {
     if (points.isEmpty) {
-      return SyncUnmatched(
-        asset: asset,
-        reason: UnmatchedReason.noTrackData,
-      );
+      return SyncUnmatched(asset: asset, reason: UnmatchedReason.noTrackData);
     }
 
     final target = asset.takenAt.toUtc();
@@ -239,7 +219,7 @@ class SyncService {
       if (target.isBefore(at) || target.isAfter(bt)) continue;
 
       final gap = bt.difference(at);
-      final movement = _distanceMeters(
+      final movement = distanceMeters(
         a.latitude,
         a.longitude,
         b.latitude,
@@ -258,15 +238,12 @@ class SyncService {
       }
     }
 
-    return SyncUnmatched(
-      asset: asset,
-      reason: UnmatchedReason.noSegment,
-    );
+    return SyncUnmatched(asset: asset, reason: UnmatchedReason.noSegment);
   }
 
   MatchReliability _reliabilityFor(InterpolationResult match) {
     final gap = match.after.timestamp.difference(match.before.timestamp);
-    final distance = _distanceMeters(
+    final distance = distanceMeters(
       match.before.latitude,
       match.before.longitude,
       match.after.latitude,
@@ -283,27 +260,6 @@ class SyncService {
       return MatchReliability.medium;
     }
     return MatchReliability.low;
-  }
-
-  double _distanceMeters(
-    double lat1,
-    double lon1,
-    double lat2,
-    double lon2,
-  ) {
-    const earthRadius = 6371000.0;
-    final phi1 = lat1 * math.pi / 180;
-    final phi2 = lat2 * math.pi / 180;
-    final deltaPhi = (lat2 - lat1) * math.pi / 180;
-    final deltaLambda = (lon2 - lon1) * math.pi / 180;
-
-    final a = math.sin(deltaPhi / 2) * math.sin(deltaPhi / 2) +
-        math.cos(phi1) *
-            math.cos(phi2) *
-            math.sin(deltaLambda / 2) *
-            math.sin(deltaLambda / 2);
-    final angle = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
-    return earthRadius * angle;
   }
 
   Future<SyncResult> applySync(

@@ -4,11 +4,11 @@ import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
 import '../services/database_service.dart';
-import '../services/immich_service.dart';
 import '../services/sync_service.dart';
 import '../services/settings_service.dart';
 import '../services/tracking_service.dart';
 import '../theme/app_theme.dart';
+import '../widgets/error_message.dart';
 import '../widgets/camera_clock_tip.dart';
 import 'history_screen.dart';
 import 'settings_screen.dart';
@@ -64,23 +64,20 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Future<void> _restoreTracking() async {
     try {
       final desired = await _settings.isTrackingDesired();
-      final backgroundActive = await _tracker.isBackgroundModeEnabled();
+      final backgroundActive = await _tracker.isTracking;
 
       if (desired && !backgroundActive) {
         await _tracker.resumeIfNeeded();
       }
 
-      final active = desired &&
-          (await _tracker.isBackgroundModeEnabled() || await _tracker.isTracking);
+      final active = desired && await _tracker.isTracking;
 
       if (mounted) {
         setState(() => _tracking = active);
       }
     } catch (e) {
       if (!mounted) return;
-      setState(
-        () => _error = e.toString().replaceFirst('Bad state: ', ''),
-      );
+      setState(() => _error = e.toString().replaceFirst('Bad state: ', ''));
     }
   }
 
@@ -106,9 +103,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       await _refreshStats();
     } catch (e) {
       if (!mounted) return;
-      setState(
-        () => _error = e.toString().replaceFirst('Bad state: ', ''),
-      );
+      setState(() => _error = e.toString().replaceFirst('Bad state: ', ''));
     } finally {
       if (mounted) setState(() => _trackingBusy = false);
     }
@@ -134,9 +129,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       );
     } catch (e) {
       if (!mounted) return;
-      setState(
-        () => _error = e.toString().replaceFirst('Bad state: ', ''),
-      );
+      setState(() => _error = e.toString().replaceFirst('Bad state: ', ''));
     } finally {
       if (mounted) setState(() => _manualPointBusy = false);
     }
@@ -155,9 +148,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       setState(() => _syncBusy = false);
 
       final result = await Navigator.of(context).push<SyncResult>(
-        MaterialPageRoute(
-          builder: (_) => SyncPreviewScreen(preview: preview),
-        ),
+        MaterialPageRoute(builder: (_) => SyncPreviewScreen(preview: preview)),
       );
 
       if (!mounted || result == null) return;
@@ -166,25 +157,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       setState(() => _lastSync = result);
     } catch (e) {
       if (!mounted) return;
-      setState(() => _error = _immichErrorMessage(e));
+      setState(() => _error = immichErrorMessage(context, e));
     } finally {
       if (mounted && _syncBusy) setState(() => _syncBusy = false);
     }
-  }
-
-  String _immichErrorMessage(Object error) {
-    final l = context.l10n;
-    if (error is ImmichConnectionException) {
-      return switch (error.error) {
-        ImmichConnectionError.unreachable => l.t('immichUnreachable'),
-        ImmichConnectionError.timeout => l.t('immichTimeout'),
-        ImmichConnectionError.server => l.t(
-            'immichServerError',
-            {'code': error.statusCode ?? 500},
-          ),
-      };
-    }
-    return error.toString().replaceFirst('Bad state: ', '');
   }
 
   @override
@@ -242,19 +218,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               const SizedBox(height: 2),
               Text(
                 l.t('appSubtitle'),
-                style: const TextStyle(
-                  color: AppTheme.muted,
-                  fontSize: 13,
-                ),
+                style: const TextStyle(color: AppTheme.muted, fontSize: 13),
               ),
             ],
           ),
         ),
         IconButton.filledTonal(
           tooltip: l.t('settings'),
-          onPressed: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const SettingsScreen()),
-          ),
+          onPressed: () => Navigator.of(context)
+              .push(MaterialPageRoute(builder: (_) => const SettingsScreen())),
           icon: const Icon(Icons.tune_rounded),
         ),
       ],
@@ -265,9 +237,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     final l = context.l10n;
     final primary = Theme.of(context).colorScheme.primary;
     final foreground = _tracking ? Colors.white : AppTheme.ink;
-    final secondary = _tracking
-        ? Colors.white.withValues(alpha: 0.78)
-        : AppTheme.muted;
+    final secondary =
+        _tracking ? Colors.white.withValues(alpha: 0.78) : AppTheme.muted;
 
     return Container(
       padding: const EdgeInsets.all(22),
@@ -297,9 +268,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           ),
           const SizedBox(height: 28),
           Text(
-            _tracking
-                ? l.t('trackingHeroActive')
-                : l.t('trackingHeroStopped'),
+            _tracking ? l.t('trackingHeroActive') : l.t('trackingHeroStopped'),
             style: TextStyle(
               color: foreground,
               fontSize: 27,
@@ -312,11 +281,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             _tracking
                 ? l.t('trackingHeroActiveDesc')
                 : l.t('trackingHeroStoppedDesc'),
-            style: TextStyle(
-              color: secondary,
-              fontSize: 15,
-              height: 1.45,
-            ),
+            style: TextStyle(color: secondary, fontSize: 15, height: 1.45),
           ),
           const SizedBox(height: 24),
           SizedBox(
@@ -341,7 +306,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             child: OutlinedButton.icon(
               style: OutlinedButton.styleFrom(
                 backgroundColor: _tracking ? Colors.white : null,
-                foregroundColor: _tracking ? primary : primary,
+                foregroundColor: primary,
                 side: BorderSide(
                   color: _tracking
                       ? Colors.white
@@ -379,18 +344,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         children: [
           Text(
             l.t('matchSync'),
-            style: const TextStyle(
-              fontSize: 21,
-              fontWeight: FontWeight.w700,
-            ),
+            style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 8),
           Text(
             l.t('matchSyncDesc'),
-            style: const TextStyle(
-              color: AppTheme.muted,
-              height: 1.45,
-            ),
+            style: const TextStyle(color: AppTheme.muted, height: 1.45),
           ),
           if (_lastSync != null) ...[
             const SizedBox(height: 18),
@@ -406,14 +365,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      l.t(
-                        'syncSummary',
-                        {
-                          'updated': _lastSync!.updated,
-                          'located': _lastSync!.skippedWithLocation,
-                          'unmatched': _lastSync!.skippedWithoutTrack,
-                        },
-                      ),
+                      l.t('syncSummary', {
+                        'updated': _lastSync!.updated,
+                        'located': _lastSync!.skippedWithLocation,
+                        'unmatched': _lastSync!.skippedWithoutTrack,
+                      }),
                     ),
                   ),
                 ],
@@ -437,9 +393,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           ),
           const SizedBox(height: 8),
           TextButton.icon(
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const HistoryScreen()),
-            ),
+            onPressed: () => Navigator.of(context)
+                .push(MaterialPageRoute(builder: (_) => const HistoryScreen())),
             icon: const Icon(Icons.photo_library_outlined),
             label: Text(l.t('updatedPhotos')),
           ),
@@ -463,10 +418,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           Icon(Icons.error_outline_rounded, color: color),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(
-              _error!,
-              style: TextStyle(color: color, height: 1.4),
-            ),
+            child: Text(_error!, style: TextStyle(color: color, height: 1.4)),
           ),
         ],
       ),
