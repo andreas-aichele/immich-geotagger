@@ -167,6 +167,7 @@ class ImmichService {
         for (final item in items) {
           try {
             final asset = ImmichAsset.fromJson(item);
+            if (asset.isMotionPhotoCover) continue;
             assetsById[asset.id] = asset;
           } on FormatException {
             // Ignore assets without a reliable timestamp.
@@ -222,7 +223,8 @@ class ImmichService {
     }
     final data = jsonDecode(response.body) as Map<String, dynamic>;
     if (data['isTrashed'] == true) return null;
-    return ImmichAsset.fromJson(data);
+    final asset = ImmichAsset.fromJson(data);
+    return asset.isMotionPhotoCover ? null : asset;
   }
 
   Future<void> updateLocation({

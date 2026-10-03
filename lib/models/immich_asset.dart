@@ -27,6 +27,11 @@ class ImmichAsset {
   bool get hasLocation => latitude != null && longitude != null;
   bool get isVideo => type == ImmichAssetType.video;
 
+  static final _motionPhotoCoverPattern =
+      RegExp(r'\.MP\.COVER(?:\.|$)', caseSensitive: false);
+
+  bool get isMotionPhotoCover => _motionPhotoCoverPattern.hasMatch(fileName);
+
   factory ImmichAsset.fromJson(Map<String, dynamic> json) {
     final exif = json['exifInfo'] as Map<String, dynamic>?;
 
