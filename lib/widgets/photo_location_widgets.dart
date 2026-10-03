@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:flutter_map_maplibre/flutter_map_maplibre.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../theme/app_theme.dart';
@@ -148,8 +149,7 @@ Future<void> showPhotoLocationSheet(
   bool isVideo = false,
   Duration? duration,
 }) async {
-  const tileUrl = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
-  const userAgent = 'io.github.andreasaichele.immichgeotagger';
+  const mapStyle = 'https://tiles.openfreemap.org/styles/liberty';
   final point = LatLng(latitude, longitude);
 
   await showModalBottomSheet<void>(
@@ -226,8 +226,8 @@ Future<void> showPhotoLocationSheet(
                     options: MapOptions(
                       initialCenter: point,
                       initialZoom: 16,
-                      minZoom: 2,
-                      maxZoom: 19,
+                      minZoom: 0,
+                      maxZoom: 20,
                       cameraConstraint: CameraConstraint.containCenter(
                         bounds: LatLngBounds(
                           const LatLng(-85.05112878, -180),
@@ -239,14 +239,8 @@ Future<void> showPhotoLocationSheet(
                       ),
                     ),
                     children: [
-                      TileLayer(
-                        urlTemplate: tileUrl,
-                        userAgentPackageName: userAgent,
-                        minZoom: 2,
-                        maxZoom: 19,
-                        minNativeZoom: 0,
-                        maxNativeZoom: 19,
-                        keepBuffer: 4,
+                      const MapLibreLayer(
+                        initStyle: mapStyle,
                       ),
                       MarkerLayer(
                         markers: [
