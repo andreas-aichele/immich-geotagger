@@ -2,6 +2,28 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:immich_geotagger/models/immich_asset.dart';
 
 void main() {
+  test('recognizes only complete motion photo cover filename segments', () {
+    const cases = {
+      'PXL_XXXXX.RAW-01.MP.COVER.jpg': true,
+      'PXL_XXXXX.MP.COVER': true,
+      'pxl_xxxxx.raw-01.mp.cover.jpeg': true,
+      'PXL_XXXXX.RAW-01.dng': false,
+      'PXL_XXXXX.MP.jpg': false,
+      'PXL_XXXXX.MP.mp4': false,
+      'cover.jpg': false,
+      'holiday.COVER.jpg': false,
+      'PXL_XXXXX.MP.COVERAGE.jpg': false,
+    };
+    for (final entry in cases.entries) {
+      final asset = ImmichAsset.fromJson({
+        'id': 'asset-1',
+        'originalFileName': entry.key,
+        'fileCreatedAt': '2026-09-30T12:00:00Z',
+      });
+      expect(asset.isMotionPhotoCover, entry.value, reason: entry.key);
+    }
+  });
+
   group('ImmichAsset.fromJson', () {
     test('prefers absolute fileCreatedAt and converts it to UTC', () {
       final asset = ImmichAsset.fromJson({

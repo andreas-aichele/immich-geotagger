@@ -32,6 +32,25 @@ void main() {
       expect(asset?.latitude, 48.1);
     });
 
+    test('omits motion photo covers from saved asset lookups', () async {
+      final client = MockClient((_) async => http.Response(
+            jsonEncode({
+              'id': 'cover',
+              'originalFileName': 'PXL_XXXXX.RAW-01.MP.COVER.jpg',
+              'fileCreatedAt': '2026-09-30T12:00:00Z',
+            }),
+            200,
+          ));
+      expect(
+        await ImmichService(client: client).assetById(
+          baseUrl: 'https://immich.example',
+          apiKey: 'secret',
+          assetId: 'cover',
+        ),
+        isNull,
+      );
+    });
+
     test('omits deleted and trashed assets', () async {
       for (final statusCode in [404, 410]) {
         final client = MockClient((_) async => http.Response('', statusCode));
@@ -174,6 +193,52 @@ void main() {
         requests.every((request) => request['size'] == 500),
         isTrue,
       );
+    });
+
+    test('skips cover-only pages and retains ordinary RAW photos and videos',
+        () async {
+      final requests = <Map<String, dynamic>>[];
+      final client = MockClient((request) async {
+        final body = jsonDecode(request.body) as Map<String, dynamic>;
+        requests.add(body);
+        final coverPage = body['type'] == 'IMAGE' && body['page'] == 1;
+        return http.Response(
+          jsonEncode({
+            'assets': {
+              'items': [
+                {
+                  'id': coverPage ? 'cover' : body['type'],
+                  'originalFileName': coverPage
+                      ? 'PXL_XXXXX.RAW-01.MP.COVER.jpg'
+                      : body['type'] == 'IMAGE'
+                          ? 'PXL_XXXXX.RAW-01.dng'
+                          : 'PXL_XXXXX.MP.mp4',
+                  'type': body['type'],
+                  'fileCreatedAt': '2026-09-30T10:00:00Z',
+                  if (coverPage)
+                    'exifInfo': {'latitude': 48.1, 'longitude': 11.5},
+                },
+              ],
+              'nextPage': coverPage ? 2 : null,
+            },
+          }),
+          200,
+        );
+      });
+
+      final assets = await ImmichService(client: client).assetsTakenBetween(
+        baseUrl: 'https://immich.example',
+        apiKey: 'secret',
+        from: DateTime.utc(2026, 9, 30),
+        to: DateTime.utc(2026, 10, 1),
+      );
+
+      expect(assets.map((asset) => asset.id), unorderedEquals(['IMAGE', 'VIDEO']));
+      expect(requests.map((body) => [body['type'], body['page']]), [
+        ['IMAGE', 1],
+        ['IMAGE', 2],
+        ['VIDEO', 1],
+      ]);
     });
 
     test('deduplicates assets returned more than once', () async {
