@@ -3,7 +3,6 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:flutter_map_maplibre/flutter_map_maplibre.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../l10n/app_localizations.dart';
@@ -29,9 +28,10 @@ class SyncPreviewScreen extends StatefulWidget {
 }
 
 class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
-  static const _mapStyle = 'https://tiles.openfreemap.org/styles/liberty';
-  static const _minMapZoom = 0.0;
-  static const _maxMapZoom = 20.0;
+  static const _tileUrl = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+  static const _userAgent = 'io.github.andreasaichele.immichgeotagger';
+  static const _minMapZoom = 2.0;
+  static const _maxMapZoom = 19.0;
   static const _clusterToleranceMeters = 20.0;
 
   final _settings = SettingsService();
@@ -469,9 +469,7 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
         ),
       ),
       children: [
-        const MapLibreLayer(
-          initStyle: _mapStyle,
-        ),
+        _tileLayer(),
         MarkerLayer(
           markers: [
             for (final group in _groupCandidates(candidates))
@@ -822,9 +820,7 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
                             ),
                           ),
                           children: [
-                            const MapLibreLayer(
-                              initStyle: _mapStyle,
-                            ),
+                            _tileLayer(),
                             MarkerLayer(
                               markers: [
                                 for (var i = 0; i < group.length; i++)
@@ -956,6 +952,18 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen> {
     );
 
     pageController.dispose();
+  }
+
+  TileLayer _tileLayer() {
+    return TileLayer(
+      urlTemplate: _tileUrl,
+      userAgentPackageName: _userAgent,
+      minZoom: _minMapZoom,
+      maxZoom: _maxMapZoom,
+      minNativeZoom: 0,
+      maxNativeZoom: 19,
+      keepBuffer: 4,
+    );
   }
 
   Widget _mapMarker({required bool selected}) {
