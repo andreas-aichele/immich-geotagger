@@ -40,27 +40,4 @@ void main() {
     await tester.tap(find.byTooltip('Diese Version ausblenden'));
     expect(dismissed, isTrue);
   });
-
-  testWidgets('marks the temporary preview as a test', (tester) async {
-    await tester.pumpWidget(MaterialApp(
-      locale: const Locale('de'),
-      supportedLocales: AppLocalizations.supportedLocales,
-      localizationsDelegates: const [
-        AppLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      home: Scaffold(
-        body: UpdateBanner(
-          release: AppRelease(Version(99, 0, 0)),
-          preview: true,
-          onDismiss: () {},
-        ),
-      ),
-    ));
-    await tester.pumpAndSettle();
-    expect(find.text('Update-Hinweis testen'), findsOneWidget);
-    expect(find.textContaining('99.0.0'), findsNothing);
-  });
 }

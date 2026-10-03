@@ -574,12 +574,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           await UpdateService.setEnabled(value);
                         },
                       ),
-                      // TEMPORARY: remove this preview button before release.
-                      TextButton.icon(
-                        icon: const Icon(Icons.preview_outlined),
-                        label: Text(l.t('updateTest')),
-                        onPressed: () => Navigator.of(context).pop(true),
-                      ),
                     ],
                   ),
                 ),

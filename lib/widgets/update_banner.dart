@@ -10,21 +10,16 @@ class UpdateBanner extends StatelessWidget {
     super.key,
     required this.release,
     required this.onDismiss,
-    this.preview = false,
   });
 
   final AppRelease release;
   final VoidCallback onDismiss;
-  final bool preview;
 
   Future<void> _openRelease(BuildContext context) async {
     var opened = false;
     try {
       opened = await launchUrl(
-        preview
-            ? Uri.https('github.com',
-                '/andreas-aichele/immich-geotagger/releases/latest')
-            : release.url,
+        release.url,
         mode: LaunchMode.externalApplication,
       );
     } catch (_) {
@@ -53,10 +48,8 @@ class UpdateBanner extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  preview
-                      ? l.t('updateTest')
-                      : l.t('updateAvailable',
-                          {'version': release.version.toString()}),
+                  l.t('updateAvailable',
+                      {'version': release.version.toString()}),
                   style: const TextStyle(
                       fontSize: 13, fontWeight: FontWeight.w600),
                 ),

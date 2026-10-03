@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:pub_semver/pub_semver.dart';
 
 import '../l10n/app_localizations.dart';
 import '../services/database_service.dart';
@@ -31,7 +30,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   final _updates = UpdateService();
   AppRelease? _release;
   bool _checkingUpdate = false;
-  bool _updatePreview = false;
 
   bool _trackingBusy = false;
   bool _syncBusy = false;
@@ -72,22 +70,18 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _checkUpdate() async {
-    if (_checkingUpdate || _updatePreview) return;
+    if (_checkingUpdate) return;
     _checkingUpdate = true;
     final release = await _updates.check();
     _checkingUpdate = false;
-    if (mounted && !_updatePreview) setState(() => _release = release);
+    if (mounted) setState(() => _release = release);
   }
 
   Future<void> _dismissUpdate() async {
     final release = _release;
     if (release == null) return;
     setState(() => _release = null);
-    if (_updatePreview) {
-      _updatePreview = false;
-    } else {
-      await _updates.dismiss(release);
-    }
+    await _updates.dismiss(release);
   }
 
   Future<void> _restoreTracking() async {
@@ -206,7 +200,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               if (_release != null) ...[
                 UpdateBanner(
                   release: _release!,
-                  preview: _updatePreview,
                   onDismiss: _dismissUpdate,
                 ),
                 const SizedBox(height: 16),
@@ -263,19 +256,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         IconButton.filledTonal(
           tooltip: l.t('settings'),
           onPressed: () async {
-            final preview = await Navigator.of(context).push<bool>(
+            await Navigator.of(context).push<void>(
               MaterialPageRoute(builder: (_) => const SettingsScreen()),
             );
-            if (!mounted) return;
-            if (preview == true) {
-              setState(() {
-                _updatePreview = true;
-                _release = AppRelease(Version(99, 0, 0));
-              });
-            } else {
-              _updatePreview = false;
-              _checkUpdate();
-            }
+            if (mounted) _checkUpdate();
           },
           icon: const Icon(Icons.tune_rounded),
         ),
