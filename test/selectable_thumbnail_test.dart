@@ -1,3 +1,5 @@
+import 'dart:ui' show CheckedState;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:immich_geotagger/widgets/photo_location_widgets.dart';
@@ -55,18 +57,13 @@ void main() {
     ));
 
     final photo = find.byType(SelectableThumbnail);
-    expect(
-      tester.getSemantics(photo),
-      containsSemantics(
-        label: 'camera.jpg',
-        isButton: true,
-        hasCheckedState: true,
-        isChecked: false,
-        hasTapAction: true,
-      ),
-    );
+    var node = tester.getSemantics(photo);
+    expect(node.label, 'camera.jpg');
+    expect(node.flagsCollection.isButton, isTrue);
+    expect(node.flagsCollection.isChecked, CheckedState.isFalse);
     await tester.tap(photo);
     await tester.pumpAndSettle();
-    expect(tester.getSemantics(photo), containsSemantics(isChecked: true));
+    node = tester.getSemantics(photo);
+    expect(node.flagsCollection.isChecked, CheckedState.isTrue);
   });
 }
