@@ -177,6 +177,7 @@ jobs:
       - ios
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
           path: dist
@@ -187,7 +188,12 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
+          NOTES_PATH="docs/releases/${GITHUB_REF_NAME}.md"
+          NOTES_ARGS=(--generate-notes)
+          if [[ -f "$NOTES_PATH" ]]; then
+            NOTES_ARGS=(--notes-file "$NOTES_PATH")
+          fi
           gh release create "${GITHUB_REF_NAME}" dist/* \
             --repo "${GITHUB_REPOSITORY}" \
             --title "${GITHUB_REF_NAME}" \
-            --generate-notes
+            "${NOTES_ARGS[@]}"
