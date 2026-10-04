@@ -11,7 +11,7 @@
   <a href="https://github.com/andreas-aichele/immich-geotagger/actions/workflows/flutter.yml"><img src="https://github.com/andreas-aichele/immich-geotagger/actions/workflows/flutter.yml/badge.svg" alt="Build"></a>
   <a href="LICENSE"><img src="https://img.shields.io/github/license/andreas-aichele/immich-geotagger?style=flat-square" alt="MIT License"></a>
   <img src="https://img.shields.io/badge/Android-supported-3DDC84?style=flat-square&logo=android&logoColor=white" alt="Android supported">
-  <img src="https://img.shields.io/badge/iOS-unsigned_build-000000?style=flat-square&logo=apple&logoColor=white" alt="iOS unsigned build">
+  <img src="https://img.shields.io/badge/iOS-experimental-000000?style=flat-square&logo=apple&logoColor=white" alt="iOS experimental">
   <img src="https://img.shields.io/badge/Flutter-3.44%2B-02569B?style=flat-square&logo=flutter&logoColor=white" alt="Flutter 3.44+">
 </p>
 
@@ -75,7 +75,7 @@ You can also install the APK manually from **[GitHub Releases](https://github.co
 
 ### iOS
 
-Unsigned iOS builds are published with GitHub releases. They currently require manual signing or sideloading and are not distributed through the App Store.
+iOS support is experimental and has not been fully tested. Automated iOS release builds are temporarily disabled; current releases provide Android builds only.
 
 ## How it works
 

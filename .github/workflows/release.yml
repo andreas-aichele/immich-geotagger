@@ -116,6 +116,8 @@ jobs:
           path: dist/*
 
   ios:
+    # Temporarily disabled until iOS has been tested.
+    if: ${{ false }}
     name: Build iOS unsigned
     runs-on: macos-latest
     steps:
@@ -174,14 +176,13 @@ jobs:
     if: github.ref_type == 'tag'
     needs:
       - android
-      - ios
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
+          name: android
           path: dist
-          merge-multiple: true
 
       - name: Publish release
         env:

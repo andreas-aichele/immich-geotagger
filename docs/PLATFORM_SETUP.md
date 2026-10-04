@@ -39,7 +39,7 @@ python3 tool/configure_platforms.py
 flutter pub get
 ```
 
-The configuration script applies the settings below to iOS only. The release workflow follows the same process.
+The configuration script applies the settings below to iOS only. The iOS release job is temporarily disabled until iOS support has been tested.
 
 The generated `ios/Runner/Info.plist` receives:
 
