@@ -160,7 +160,7 @@ class SyncService {
     final lastTime = last.timestamp.toUtc();
 
     if (!target.isAfter(lastTime)) return null;
-    if (target.difference(lastTime) > const Duration(minutes: 15)) return null;
+    if (target.difference(lastTime) > const Duration(minutes: 30)) return null;
 
     final movement = distanceMeters(
       previous.latitude,
