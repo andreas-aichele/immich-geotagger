@@ -26,14 +26,14 @@ void main() {
     expect(result.longitude, closeTo(11.05, 0.000001));
   });
 
-  test('does not interpolate a moving gap larger than 15 minutes', () {
+  test('does not interpolate an implausible moving gap beyond 30 minutes', () {
     final start = DateTime.utc(2026, 9, 19, 10, 0);
     final result = service.interpolate(
       timestamp: start.add(const Duration(minutes: 10)),
       points: [
         LocationPoint(timestamp: start, latitude: 48.0, longitude: 11.0),
         LocationPoint(
-          timestamp: start.add(const Duration(minutes: 16)),
+          timestamp: start.add(const Duration(minutes: 61)),
           latitude: 48.1,
           longitude: 11.1,
         ),
@@ -43,10 +43,10 @@ void main() {
     expect(result, isNull);
   });
 
-  test('allows a stationary gap up to 90 minutes within 100 meters', () {
+  test('allows a stationary gap up to 180 minutes within 150 meters', () {
     final start = DateTime.utc(2026, 9, 19, 10, 0);
     final result = service.interpolate(
-      timestamp: start.add(const Duration(minutes: 45)),
+      timestamp: start.add(const Duration(minutes: 90)),
       points: [
         LocationPoint(timestamp: start, latitude: 48.4, longitude: 10.95),
         LocationPoint(
@@ -60,14 +60,14 @@ void main() {
     expect(result, isNotNull);
   });
 
-  test('rejects a stationary-looking gap beyond 90 minutes', () {
+  test('rejects a stationary-looking gap beyond 180 minutes', () {
     final start = DateTime.utc(2026, 9, 19, 10, 0);
     final result = service.interpolate(
-      timestamp: start.add(const Duration(hours: 1)),
+      timestamp: start.add(const Duration(hours: 2)),
       points: [
         LocationPoint(timestamp: start, latitude: 48.4, longitude: 10.95),
         LocationPoint(
-          timestamp: start.add(const Duration(hours: 2)),
+          timestamp: start.add(const Duration(hours: 4)),
           latitude: 48.4001,
           longitude: 10.9501,
         ),
@@ -77,7 +77,7 @@ void main() {
     expect(result, isNull);
   });
 
-  test('manual points use the same 15-minute interpolation rules', () {
+  test('manual points use the same extended interpolation rules', () {
     final start = DateTime.utc(2026, 9, 19, 10, 0);
     final result = service.interpolate(
       timestamp: start.add(const Duration(hours: 1)),
@@ -200,7 +200,7 @@ void main() {
     expect(result!.latitude, closeTo(48.13735, 0.00001));
   });
 
-  test('uses a GPS point exactly five minutes away as nearest fallback', () {
+  test('uses a GPS point exactly ten minutes away as nearest fallback', () {
     final start = DateTime.utc(2026, 9, 19, 10, 0);
     final point = LocationPoint(
       timestamp: start,
@@ -209,14 +209,14 @@ void main() {
     );
 
     final result = service.nearestPoint(
-      timestamp: start.add(const Duration(minutes: 5)),
+      timestamp: start.add(const Duration(minutes: 10)),
       points: [point],
     );
 
     expect(result, same(point));
   });
 
-  test('does not use a GPS point beyond the five-minute fallback window', () {
+  test('does not use a GPS point beyond the ten-minute fallback window', () {
     final start = DateTime.utc(2026, 9, 19, 10, 0);
     final point = LocationPoint(
       timestamp: start,
@@ -225,7 +225,7 @@ void main() {
     );
 
     final result = service.nearestPoint(
-      timestamp: start.add(const Duration(minutes: 5, milliseconds: 1)),
+      timestamp: start.add(const Duration(minutes: 10, milliseconds: 1)),
       points: [point],
     );
 
@@ -251,6 +251,39 @@ void main() {
     );
 
     expect(result, same(closer));
+  });
+
+
+  test('interpolates an approximate position during a 45-minute drive', () {
+    final start = DateTime.utc(2026, 9, 19, 10);
+    final result = service.interpolate(
+      timestamp: start.add(const Duration(minutes: 20)),
+      points: [
+        LocationPoint(timestamp: start, latitude: 48.0, longitude: 11.0),
+        LocationPoint(
+          timestamp: start.add(const Duration(minutes: 45)),
+          latitude: 48.3,
+          longitude: 11.2,
+        ),
+      ],
+    );
+    expect(result, isNotNull);
+  });
+
+  test('does not bridge more than 60 minutes of driving', () {
+    final start = DateTime.utc(2026, 9, 19, 10);
+    final result = service.interpolate(
+      timestamp: start.add(const Duration(minutes: 30)),
+      points: [
+        LocationPoint(timestamp: start, latitude: 48.0, longitude: 11.0),
+        LocationPoint(
+          timestamp: start.add(const Duration(minutes: 65)),
+          latitude: 48.3,
+          longitude: 11.2,
+        ),
+      ],
+    );
+    expect(result, isNull);
   });
 
   test('does not extrapolate outside the track', () {
