@@ -26,7 +26,7 @@ void main() {
     expect(result.longitude, closeTo(11.05, 0.000001));
   });
 
-  test('does not interpolate an implausible moving gap beyond 30 minutes', () {
+  test('does not interpolate a moving gap beyond 60 minutes', () {
     final start = DateTime.utc(2026, 9, 19, 10, 0);
     final result = service.interpolate(
       timestamp: start.add(const Duration(minutes: 10)),
@@ -50,7 +50,7 @@ void main() {
       points: [
         LocationPoint(timestamp: start, latitude: 48.4, longitude: 10.95),
         LocationPoint(
-          timestamp: start.add(const Duration(minutes: 90)),
+          timestamp: start.add(const Duration(minutes: 180)),
           latitude: 48.4004,
           longitude: 10.9504,
         ),
