@@ -20,10 +20,13 @@ class InterpolationResult {
 class InterpolationService {
   const InterpolationService();
 
-  static const maxInterpolationGap = Duration(minutes: 15);
-  static const stationaryDistanceMeters = 100.0;
-  static const stationaryMaxGap = Duration(minutes: 90);
-  static const nearestPointMaxGap = Duration(minutes: 5);
+  static const maxInterpolationGap = Duration(minutes: 30);
+  static const extendedDrivingGap = Duration(minutes: 60);
+  static const drivingMinDistanceMeters = 2000.0;
+  static const drivingMaxAverageSpeedKmh = 160.0;
+  static const stationaryDistanceMeters = 150.0;
+  static const stationaryMaxGap = Duration(minutes: 180);
+  static const nearestPointMaxGap = Duration(minutes: 10);
 
   // Only very obvious single-point excursions are removed. The ratio-based
   // check deliberately allows sustained high-speed travel (for example an
@@ -96,10 +99,15 @@ class InterpolationService {
       final stationary =
           distance <= stationaryDistanceMeters && gap <= stationaryMaxGap;
 
-      // Moving segments are intentionally capped at 15 minutes. Stationary
-      // periods may be bridged for longer because Android can suppress fixes
-      // while the device is not moving.
-      if (gap > maxInterpolationGap && !stationary) return null;
+      // Longer gaps are acceptable when the endpoints suggest a plausible
+      // drive. The result is approximate (straight-line interpolation), and
+      // the sync preview marks long gaps as low reliability.
+      final plausibleDrive = gap <= extendedDrivingGap &&
+          distance >= drivingMinDistanceMeters &&
+          averageSpeedKmh(distance, gap) <= drivingMaxAverageSpeedKmh;
+      if (gap > maxInterpolationGap && !stationary && !plausibleDrive) {
+        return null;
+      }
 
       final elapsedMs = target.difference(at).inMilliseconds;
       final ratio = elapsedMs / gap.inMilliseconds;
