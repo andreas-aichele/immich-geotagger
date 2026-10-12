@@ -2,9 +2,7 @@
 
 Logging is active at INFO by default. In Settings → About the app, tap the
 build number seven times (no more than three seconds between taps) to reveal
-Developer options. The unlocked state survives restarts. This section opens
-automatically when unlocked and can be collapsed afterwards; on the next visit,
-expand it to change diagnostic settings. Hiding the options
+Developer options. The unlocked state survives restarts. Hiding the options
 restores enabled INFO logging.
 
 Options: enable/disable logging, ERROR/WARN/INFO/DEBUG/TRACE, total log storage

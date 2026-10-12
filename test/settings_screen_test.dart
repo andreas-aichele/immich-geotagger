@@ -24,18 +24,18 @@ void main() {
       final loader = FontLoader(family);
       for (final name in ['Regular', 'Medium', 'Bold']) {
         loader.addFont(
-          File(
-            '$directory/Roboto-$name.ttf',
-          ).readAsBytes().then((bytes) => ByteData.sublistView(bytes)),
+          File('$directory/Roboto-$name.ttf')
+              .readAsBytes()
+              .then((bytes) => ByteData.sublistView(bytes)),
         );
       }
       await loader.load();
     }
     final icons = FontLoader('MaterialIcons')
       ..addFont(
-        File(
-          '$directory/MaterialIcons-Regular.otf',
-        ).readAsBytes().then((bytes) => ByteData.sublistView(bytes)),
+        File('$directory/MaterialIcons-Regular.otf')
+            .readAsBytes()
+            .then((bytes) => ByteData.sublistView(bytes)),
       );
     await icons.load();
   });
@@ -124,9 +124,8 @@ void main() {
       GlobalCupertinoLocalizations.delegate,
     ],
     builder: (context, child) => MediaQuery(
-      data: MediaQuery.of(
-        context,
-      ).copyWith(textScaler: TextScaler.linear(scale)),
+      data: MediaQuery.of(context)
+          .copyWith(textScaler: TextScaler.linear(scale)),
       child: RepaintBoundary(key: const ValueKey('screen'), child: child!),
     ),
     home: const SettingsScreen(),
@@ -147,47 +146,42 @@ void main() {
     });
   }
 
-  testWidgets(
-    'compact overview keeps details discoverable and saves retention',
-    (tester) async {
-      debugDefaultTargetPlatformOverride = TargetPlatform.android;
-      try {
-        tester.view.physicalSize = const Size(360, 800);
-        tester.view.devicePixelRatio = 1;
-        addTearDown(tester.view.resetPhysicalSize);
-        addTearDown(tester.view.resetDevicePixelRatio);
-        await tester.pumpWidget(app(1));
-        await tester.pumpAndSettle();
-        expect(tester.takeException(), isNull);
-        await capture(tester, 'settings-top');
-        expect(find.text('asset.read'), findsNothing);
-        await tester.tap(find.byTooltip('Weitere Informationen').first);
-        await tester.pumpAndSettle();
-        expect(find.text('asset.read'), findsOneWidget);
-        await tester.tap(find.text('Schließen'));
-        await tester.pumpAndSettle();
-        final retention = find.byType(TextFormField);
-        await tester.ensureVisible(retention);
-        await tester.enterText(retention, '45');
-        await tester.pump(const Duration(milliseconds: 600));
-        expect(
-          (await SharedPreferences.getInstance()).getInt('retention_days'),
-          45,
-        );
-        tester.testTextInput.hide();
-        await tester.scrollUntilVisible(
-          find.text('Über die App'),
-          200,
-          scrollable: find.byType(Scrollable).first,
-        );
-        await tester.pumpAndSettle();
-        await capture(tester, 'settings-bottom');
-        expect(tester.takeException(), isNull);
-      } finally {
-        debugDefaultTargetPlatformOverride = null;
-      }
-    },
-  );
+  testWidgets('original sections keep inline guidance and save retention', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    try {
+      tester.view.physicalSize = const Size(360, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(app(1));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      await capture(tester, 'settings-top');
+      expect(find.text('asset.read'), findsOneWidget);
+      expect(find.byTooltip('Weitere Informationen'), findsNothing);
+      final retention = find.byType(TextFormField);
+      await tester.ensureVisible(retention);
+      await tester.enterText(retention, '45');
+      await tester.pump(const Duration(milliseconds: 600));
+      expect(
+        (await SharedPreferences.getInstance()).getInt('retention_days'),
+        45,
+      );
+      tester.testTextInput.hide();
+      await tester.scrollUntilVisible(
+        find.text('Über die App'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
+      await capture(tester, 'settings-bottom');
+      expect(tester.takeException(), isNull);
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
+  });
 
   testWidgets('narrow screen and larger text keep actions reachable', (
     tester,
