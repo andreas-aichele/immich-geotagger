@@ -12,6 +12,7 @@ import '../services/update_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/error_message.dart';
 import '../widgets/diagnostics_settings.dart';
+import '../widgets/settings_section.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -262,48 +263,71 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
+    final theme = Theme.of(context);
+    const compactButtons = Size(0, 44);
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          l.t('settings'),
-          style: const TextStyle(fontWeight: FontWeight.w700),
-        ),
-      ),
+      appBar: AppBar(title: Text(l.t('settings'))),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
-          : ListView(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-              children: [
-                AppSurface(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+          : Theme(
+              data: theme.copyWith(
+                inputDecorationTheme: theme.inputDecorationTheme.copyWith(
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 12,
+                  ),
+                ),
+                filledButtonTheme: FilledButtonThemeData(
+                  style: theme.filledButtonTheme.style?.copyWith(
+                    minimumSize: const WidgetStatePropertyAll(compactButtons),
+                    padding: const WidgetStatePropertyAll(
+                      EdgeInsets.symmetric(horizontal: 12),
+                    ),
+                  ),
+                ),
+                outlinedButtonTheme: OutlinedButtonThemeData(
+                  style: theme.outlinedButtonTheme.style?.copyWith(
+                    minimumSize: const WidgetStatePropertyAll(compactButtons),
+                    padding: const WidgetStatePropertyAll(
+                      EdgeInsets.symmetric(horizontal: 12),
+                    ),
+                  ),
+                ),
+              ),
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                children: [
+                  SettingsSection(
+                    title: l.t('serverConnection'),
+                    icon: Icons.dns_outlined,
+                    help: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(l.t('serverConnectionSaveHint')),
+                        const SizedBox(height: 16),
+                        const Wrap(
+                          spacing: 6,
+                          runSpacing: 6,
+                          children: [
+                            _ScopeChip('asset.read'),
+                            _ScopeChip('asset.view'),
+                            _ScopeChip('asset.update'),
+                          ],
+                        ),
+                      ],
+                    ),
                     children: [
-                      SectionEyebrow(l.t('immich')),
-                      const SizedBox(height: 8),
-                      Text(
-                        l.t('serverConnection'),
-                        style: const TextStyle(
-                          fontSize: 21,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        l.t('serverConnectionSaveHint'),
-                        style: const TextStyle(
-                          color: AppTheme.muted,
-                          fontSize: 13,
-                          height: 1.4,
-                        ),
-                      ),
-                      const SizedBox(height: 18),
                       TextField(
                         controller: _url,
                         onChanged: _connectionChanged,
                         decoration: InputDecoration(
                           labelText: l.t('immichUrl'),
                           hintText: 'https://immich.example.com',
-                          prefixIcon: const Icon(Icons.language_rounded),
+                          prefixIcon: const Icon(
+                            Icons.language_rounded,
+                            size: 20,
+                          ),
                         ),
                         keyboardType: TextInputType.url,
                         autocorrect: false,
@@ -314,7 +338,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         onChanged: _connectionChanged,
                         decoration: InputDecoration(
                           labelText: l.t('apiKey'),
-                          prefixIcon: const Icon(Icons.key_rounded),
+                          prefixIcon: const Icon(Icons.key_rounded, size: 20),
                           suffixIcon: IconButton(
                             tooltip: l.t(
                               _apiKeyVisible ? 'hideApiKey' : 'showApiKey',
@@ -323,6 +347,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               _apiKeyVisible
                                   ? Icons.visibility_off_rounded
                                   : Icons.visibility_rounded,
+                              size: 20,
                             ),
                             onPressed: () => setState(
                               () => _apiKeyVisible = !_apiKeyVisible,
@@ -333,248 +358,237 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         autocorrect: false,
                         enableSuggestions: false,
                       ),
-                      const SizedBox(height: 14),
-                      const Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          _ScopeChip('asset.read'),
-                          _ScopeChip('asset.view'),
-                          _ScopeChip('asset.update'),
-                        ],
-                      ),
                       if (_serverStatus != null) ...[
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 12),
                         _StatusBox(
                           text: _serverStatus!,
                           success: _serverStatusSuccess,
                         ),
                       ],
-                      const SizedBox(height: 18),
-                      OutlinedButton.icon(
-                        onPressed: _testing ? null : _testConnection,
-                        icon: _testing
-                            ? const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Icon(Icons.wifi_tethering_rounded),
-                        label: Text(l.t('testConnection')),
-                      ),
-                      if (_connectionVerified) ...[
-                        const SizedBox(height: 10),
-                        FilledButton.icon(
-                          onPressed:
-                              _testedConnectionStillMatches &&
-                                  !_savingConnection
-                              ? _saveConnection
-                              : null,
-                          icon: _savingConnection
-                              ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
+                      const SizedBox(height: 12),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          OutlinedButton.icon(
+                            onPressed: _testing ? null : _testConnection,
+                            icon: _testing
+                                ? _busyIcon()
+                                : const Icon(
+                                    Icons.wifi_tethering_rounded,
+                                    size: 18,
                                   ),
-                                )
-                              : const Icon(Icons.save_outlined),
-                          label: Text(l.t('saveConnection')),
-                        ),
-                      ],
+                            label: Text(l.t('testConnection')),
+                          ),
+                          if (_connectionVerified)
+                            FilledButton.icon(
+                              onPressed:
+                                  _testedConnectionStillMatches &&
+                                      !_savingConnection
+                                  ? _saveConnection
+                                  : null,
+                              icon: _savingConnection
+                                  ? _busyIcon()
+                                  : const Icon(Icons.save_outlined, size: 18),
+                              label: Text(l.t('saveConnection')),
+                            ),
+                        ],
+                      ),
                     ],
                   ),
-                ),
-                const SizedBox(height: 16),
-                AppSurface(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  const SizedBox(height: 12),
+                  SettingsSection(
+                    title: l.t('timelineBehavior'),
+                    icon: Icons.route_outlined,
+                    help: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(l.t('trackingAutoSaveHint')),
+                        const SizedBox(height: 12),
+                        Text(l.t('trackingBalancedDesc')),
+                        const SizedBox(height: 12),
+                        Text(l.t('trackingPreciseDesc')),
+                        const SizedBox(height: 12),
+                        Text(l.t('trackingSamplingHint')),
+                        const SizedBox(height: 12),
+                        Text(l.t('batteryProtectionDesc')),
+                        const SizedBox(height: 12),
+                        Text(l.t('gpxExportDesc')),
+                      ],
+                    ),
                     children: [
-                      SectionEyebrow(l.t('tracking')),
-                      const SizedBox(height: 8),
-                      Text(
-                        l.t('timelineBehavior'),
-                        style: const TextStyle(
-                          fontSize: 21,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        l.t('trackingAutoSaveHint'),
-                        style: const TextStyle(
-                          color: AppTheme.muted,
-                          fontSize: 13,
-                          height: 1.4,
-                        ),
-                      ),
-                      const SizedBox(height: 18),
                       Text(
                         l.t('trackingQuality'),
-                        style: const TextStyle(fontWeight: FontWeight.w700),
+                        style: const TextStyle(fontWeight: FontWeight.w600),
                       ),
                       const SizedBox(height: 8),
-                      SegmentedButton<TrackingQuality>(
-                        segments: [
-                          ButtonSegment(
-                            value: TrackingQuality.balanced,
-                            icon: const Icon(Icons.battery_saver_outlined),
-                            label: Text(l.t('trackingBalanced')),
+                      if (MediaQuery.textScalerOf(context).scale(14) > 18)
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            for (final quality in TrackingQuality.values)
+                              ChoiceChip(
+                                label: Text(
+                                  l.t(
+                                    quality == TrackingQuality.balanced
+                                        ? 'trackingBalanced'
+                                        : 'trackingPrecise',
+                                  ),
+                                ),
+                                selected: _trackingQuality == quality,
+                                selectedColor: AppTheme.primarySoftStrong,
+                                showCheckmark: false,
+                                onSelected: (_) =>
+                                    _trackingQualityChanged(quality),
+                              ),
+                          ],
+                        )
+                      else
+                        SegmentedButton<TrackingQuality>(
+                          expandedInsets: EdgeInsets.zero,
+                          style: SegmentedButton.styleFrom(
+                            selectedBackgroundColor: AppTheme.primarySoftStrong,
+                            selectedForegroundColor: AppTheme.primary,
+                            side: const BorderSide(color: AppTheme.border),
+                            minimumSize: const Size(0, 44),
                           ),
-                          ButtonSegment(
-                            value: TrackingQuality.precise,
-                            icon: const Icon(Icons.gps_fixed_rounded),
-                            label: Text(l.t('trackingPrecise')),
-                          ),
-                        ],
-                        selected: {_trackingQuality},
-                        onSelectionChanged: (selection) {
-                          _trackingQualityChanged(selection.first);
-                        },
-                      ),
-                      const SizedBox(height: 10),
+                          segments: [
+                            ButtonSegment(
+                              value: TrackingQuality.balanced,
+                              icon: const Icon(
+                                Icons.battery_saver_outlined,
+                                size: 18,
+                              ),
+                              label: Text(l.t('trackingBalanced')),
+                            ),
+                            ButtonSegment(
+                              value: TrackingQuality.precise,
+                              icon: const Icon(
+                                Icons.gps_fixed_rounded,
+                                size: 18,
+                              ),
+                              label: Text(l.t('trackingPrecise')),
+                            ),
+                          ],
+                          selected: {_trackingQuality},
+                          onSelectionChanged: (selection) =>
+                              _trackingQualityChanged(selection.first),
+                        ),
+                      const SizedBox(height: 8),
                       Text(
-                        _trackingQuality == TrackingQuality.balanced
-                            ? l.t('trackingBalancedDesc')
-                            : l.t('trackingPreciseDesc'),
+                        l.t(
+                          _trackingQuality == TrackingQuality.balanced
+                              ? 'settingsBalancedShort'
+                              : 'settingsPreciseShort',
+                        ),
                         style: const TextStyle(
                           color: AppTheme.muted,
                           fontSize: 13,
-                          height: 1.4,
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        l.t('trackingSamplingHint'),
-                        style: const TextStyle(
-                          color: AppTheme.muted,
-                          fontSize: 12,
-                          height: 1.4,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 16),
                       TextFormField(
                         controller: _retention,
                         onChanged: _retentionChanged,
                         decoration: InputDecoration(
-                          labelText: l.t('keepLocationHistory'),
+                          labelText: l.t('settingsRetention'),
                           suffixText: l.t('days'),
-                          prefixIcon: const Icon(Icons.history_rounded),
+                          prefixIcon: const Icon(
+                            Icons.history_rounded,
+                            size: 20,
+                          ),
                         ),
                         keyboardType: TextInputType.number,
                         autovalidateMode: AutovalidateMode.onUserInteraction,
                         validator: _positiveInt,
                       ),
-                      const SizedBox(height: 20),
-                      Text(
-                        l.t('gpxExportTitle'),
-                        style: const TextStyle(fontWeight: FontWeight.w700),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        l.t('gpxExportDesc'),
-                        style: const TextStyle(
-                          color: AppTheme.muted,
-                          fontSize: 12,
-                          height: 1.4,
-                        ),
-                      ),
                       const SizedBox(height: 12),
                       Row(
                         children: [
+                          Icon(
+                            _batteryProtected
+                                ? Icons.check_circle_outline
+                                : Icons.battery_alert_outlined,
+                            size: 20,
+                            color: _batteryProtected
+                                ? const Color(0xFF157A4A)
+                                : theme.colorScheme.error,
+                          ),
+                          const SizedBox(width: 8),
                           Expanded(
-                            child: FilledButton.icon(
-                              onPressed: _gpxExportBusy ? null : _saveGpx,
-                              icon: _gpxExportBusy
-                                  ? const SizedBox(
-                                      width: 18,
-                                      height: 18,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                      ),
-                                    )
-                                  : const Icon(Icons.save_alt_rounded),
-                              label: Text(l.t('gpxSaveButton')),
+                            child: Text(
+                              l.t(
+                                _batteryProtected
+                                    ? 'settingsBatteryReady'
+                                    : 'settingsBatteryRestricted',
+                              ),
+                              style: const TextStyle(fontSize: 13),
                             ),
                           ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Builder(
-                              builder: (buttonContext) => OutlinedButton.icon(
-                                onPressed: _gpxExportBusy
-                                    ? null
-                                    : () => _shareGpx(buttonContext),
-                                icon: const Icon(Icons.share_outlined),
-                                label: Text(l.t('gpxShareButton')),
-                              ),
+                          if (!_batteryProtected)
+                            TextButton(
+                              onPressed: _batteryBusy
+                                  ? null
+                                  : _requestBatteryProtection,
+                              child: _batteryBusy
+                                  ? _busyIcon()
+                                  : Text(l.t('settingsConfigure')),
+                            ),
+                        ],
+                      ),
+                      const Divider(height: 24),
+                      Text(
+                        l.t('gpxExportTitle'),
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          OutlinedButton.icon(
+                            onPressed: _gpxExportBusy ? null : _saveGpx,
+                            icon: _gpxExportBusy
+                                ? _busyIcon()
+                                : const Icon(Icons.save_alt_rounded, size: 18),
+                            label: Text(l.t('gpxSaveButton')),
+                          ),
+                          Builder(
+                            builder: (buttonContext) => OutlinedButton.icon(
+                              onPressed: _gpxExportBusy
+                                  ? null
+                                  : () => _shareGpx(buttonContext),
+                              icon: const Icon(Icons.share_outlined, size: 18),
+                              label: Text(l.t('gpxShareButton')),
                             ),
                           ),
                         ],
                       ),
                     ],
                   ),
-                ),
-                const SizedBox(height: 16),
-                AppSurface(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      SectionEyebrow(l.t('batteryProtection')),
-                      const SizedBox(height: 8),
-                      Text(
-                        l.t('batteryProtection'),
-                        style: const TextStyle(
-                          fontSize: 21,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        l.t('batteryProtectionDesc'),
-                        style: const TextStyle(
-                          color: AppTheme.muted,
-                          height: 1.45,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      _StatusBox(
-                        text: _batteryProtected
-                            ? l.t('batteryProtected')
-                            : l.t('batteryRestricted'),
-                        success: _batteryProtected,
-                      ),
-                      if (!_batteryProtected) ...[
-                        const SizedBox(height: 14),
-                        OutlinedButton.icon(
-                          onPressed: _batteryBusy
-                              ? null
-                              : _requestBatteryProtection,
-                          icon: _batteryBusy
-                              ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : const Icon(Icons.battery_saver_outlined),
-                          label: Text(l.t('allowUnrestrictedBattery')),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                AppSurface(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  const SizedBox(height: 12),
+                  SettingsSection(
+                    title: l.t('settingsApp'),
+                    icon: Icons.tune_rounded,
+                    help: Text(l.t('updateCheckDescription')),
                     children: [
                       SwitchListTile.adaptive(
                         contentPadding: EdgeInsets.zero,
-                        title: Text(l.t('updateCheckTitle')),
-                        subtitle: Text(l.t('updateCheckDescription')),
+                        title: Text(
+                          l.t('updateCheckTitle'),
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        subtitle: Text(
+                          l.t('settingsUpdatesShort'),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppTheme.muted,
+                          ),
+                        ),
                         value: _updateCheckEnabled,
                         onChanged: (value) async {
                           setState(() => _updateCheckEnabled = value);
@@ -583,13 +597,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     ],
                   ),
-                ),
-                const SizedBox(height: 16),
-                const DiagnosticsSettings(),
-              ],
+                  const SizedBox(height: 12),
+                  const DiagnosticsSettings(),
+                ],
+              ),
             ),
     );
   }
+
+  Widget _busyIcon() => const SizedBox(
+    width: 18,
+    height: 18,
+    child: CircularProgressIndicator(strokeWidth: 2),
+  );
 
   String? _positiveInt(String? value) {
     final n = int.tryParse(value ?? '');
@@ -605,7 +625,7 @@ class _ScopeChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       decoration: BoxDecoration(
         color: AppTheme.primarySoft,
         borderRadius: BorderRadius.circular(10),
@@ -614,7 +634,8 @@ class _ScopeChip extends StatelessWidget {
         label,
         style: const TextStyle(
           fontFamily: 'monospace',
-          fontWeight: FontWeight.w700,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );
@@ -634,7 +655,7 @@ class _StatusBox extends StatelessWidget {
         : Theme.of(context).colorScheme.error;
 
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),

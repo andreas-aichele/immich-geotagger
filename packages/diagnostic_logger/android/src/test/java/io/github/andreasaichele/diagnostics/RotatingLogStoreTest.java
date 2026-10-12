@@ -24,8 +24,8 @@ public class RotatingLogStoreTest {
         File[] logs = directory.listFiles((dir, name) -> name.startsWith("app.log"));
         assertEquals(5, logs.length);
         assertTrue(Arrays.stream(logs).mapToLong(File::length).sum() <= 500);
-        assertTrue(Files.readString(new File(directory, "app.log").toPath()).contains("entry-19"));
-        assertTrue(Files.readString(new File(directory, "app.log.4").toPath()).contains("entry-15"));
+        assertTrue(new String(Files.readAllBytes(new File(directory, "app.log").toPath()), StandardCharsets.UTF_8).contains("entry-19"));
+        assertTrue(new String(Files.readAllBytes(new File(directory, "app.log.4").toPath()), StandardCharsets.UTF_8).contains("entry-15"));
     }
 
     @Test public void concurrentWritesAndExportProduceCompleteSnapshot() throws Exception {

@@ -84,6 +84,8 @@ void main() {
       await tester.pumpWidget(app());
       await tester.pumpAndSettle();
       expect(find.text('Entwickleroptionen'), findsOneWidget);
+      await tester.tap(find.text('Entwickleroptionen'));
+      await tester.pumpAndSettle();
       final hide = find.text(
         'Entwickleroptionen ausblenden (INFO wiederherstellen)',
       );
