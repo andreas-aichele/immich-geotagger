@@ -6,6 +6,7 @@ import '../l10n/app_localizations.dart';
 import '../models/immich_asset.dart';
 import '../models/sync_preview.dart';
 import '../services/immich_service.dart';
+import '../services/logging_service.dart';
 import '../services/settings_service.dart';
 import '../services/thumbnail_cache.dart';
 import '../services/sync_service.dart';
@@ -97,7 +98,8 @@ class _SyncPreviewScreenState extends State<SyncPreviewScreen>
       final result = await _sync.applySync(widget.preview, selected);
       if (!mounted) return;
       Navigator.of(context).pop(result);
-    } catch (e) {
+    } catch (e, stack) {
+      await LoggingService.error('ui', 'sync_preview action failed', e, stack);
       if (!mounted) return;
       setState(() => _applying = false);
       ScaffoldMessenger.of(

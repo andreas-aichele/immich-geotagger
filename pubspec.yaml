@@ -8,6 +8,8 @@ environment:
   flutter: '>=3.44.0'
 
 dependencies:
+  diagnostic_logger:
+    path: packages/diagnostic_logger
   flutter:
     sdk: flutter
   flutter_localizations:

@@ -5,12 +5,23 @@ import 'l10n/app_localizations.dart';
 import 'screens/home_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'services/settings_service.dart';
+import 'services/logging_service.dart';
 import 'services/tracking_service.dart';
 import 'theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await TrackingService().initialize();
+  await LoggingService.initialize();
+  try {
+    await TrackingService().initialize();
+  } catch (error, stack) {
+    await LoggingService.error(
+      'app',
+      'Tracking initialization failed',
+      error,
+      stack,
+    );
+  }
   runApp(const ImmichGeoTaggerApp());
 }
 
@@ -50,8 +61,7 @@ class _StartupGate extends StatefulWidget {
 }
 
 class _StartupGateState extends State<_StartupGate> {
-  late final Future<bool> _ready =
-      SettingsService().isOnboardingComplete();
+  late final Future<bool> _ready = SettingsService().isOnboardingComplete();
 
   @override
   Widget build(BuildContext context) {

@@ -2,16 +2,17 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 
-import 'package:libre_location/libre_location.dart';
+import 'package:libre_location/libre_location.dart' hide LogLevel;
 
 import '../models/location_point.dart';
 import 'background_location_callback.dart';
 import 'database_service.dart';
 import 'settings_service.dart';
+import 'logging_service.dart';
 
 class TrackingService {
   TrackingService({SettingsService? settings})
-      : _settings = settings ?? SettingsService();
+    : _settings = settings ?? SettingsService();
 
   final SettingsService _settings;
 
@@ -118,8 +119,23 @@ class TrackingService {
   }
 
   Future<void> start({bool persistDesiredState = true}) async {
+    await LoggingService.log(
+      LogLevel.info,
+      'tracking',
+      'Tracking start requested',
+    );
     await initialize();
-    await requestRequiredPermissions();
+    try {
+      await requestRequiredPermissions();
+    } catch (error, stack) {
+      await LoggingService.error(
+        'tracking',
+        'Permission request failed',
+        error,
+        stack,
+      );
+      rethrow;
+    }
 
     if (await LibreLocation.isTracking) {
       await _ensureForegroundListeners();
@@ -147,6 +163,11 @@ class TrackingService {
     );
 
     await _ensureForegroundListeners();
+    await LoggingService.log(
+      LogLevel.info,
+      'tracking',
+      'Tracking started: quality=${settings.trackingQuality.name}',
+    );
 
     // LibreLocation will emit positions after start. Request one immediately as
     // a best-effort seed, but do not block the UI while waiting for a GPS fix.
@@ -170,7 +191,13 @@ class TrackingService {
       );
       await saveLibreLocationPosition(position);
       return position;
-    } catch (_) {
+    } catch (error, stack) {
+      await LoggingService.error(
+        'tracking',
+        'GPS capture failed',
+        error,
+        stack,
+      );
       return null;
     }
   }
@@ -198,7 +225,13 @@ class TrackingService {
       );
       await DatabaseService.instance.insertLocation(point);
       return point;
-    } catch (_) {
+    } catch (error, stack) {
+      await LoggingService.error(
+        'tracking',
+        'GPS capture failed',
+        error,
+        stack,
+      );
       return null;
     }
   }
@@ -214,16 +247,37 @@ class TrackingService {
     _heartbeatSubscription = null;
     await LibreLocation.stop();
     await _settings.setTrackingDesired(false);
+    await LoggingService.log(LogLevel.info, 'tracking', 'Tracking stopped');
   }
 
   Future<void> _ensureForegroundListeners() async {
     _positionSubscription ??= LibreLocation.onLocation.listen(
-      saveLibreLocationPosition,
+      (position) => _recordPosition(position),
+      onError: (Object error, StackTrace stack) => LoggingService.error(
+        'tracking',
+        'Location stream failed',
+        error,
+        stack,
+      ),
     );
 
     _heartbeatSubscription ??= LibreLocation.onHeartbeat.listen(
-      (event) => saveLibreLocationPosition(event.position),
+      (event) => _recordPosition(event.position),
+      onError: (Object error, StackTrace stack) => LoggingService.error(
+        'tracking',
+        'Heartbeat stream failed',
+        error,
+        stack,
+      ),
     );
+  }
+
+  Future<void> _recordPosition(Position position) async {
+    try {
+      await saveLibreLocationPosition(position);
+    } catch (error, stack) {
+      await LoggingService.error('tracking', 'Saving GPS failed', error, stack);
+    }
   }
 
   Future<void> applyConfiguredPreset() async {
@@ -243,8 +297,8 @@ class TrackingService {
   }
 
   _NotificationCopy _notificationCopy() {
-    final language =
-        PlatformDispatcher.instance.locale.languageCode.toLowerCase();
+    final language = PlatformDispatcher.instance.locale.languageCode
+        .toLowerCase();
 
     switch (language) {
       case 'de':

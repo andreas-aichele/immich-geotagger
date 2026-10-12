@@ -1,0 +1,15 @@
+name: diagnostic_logger
+description: Private Android diagnostic file logger for Immich GeoTagger.
+version: 0.0.1
+publish_to: none
+environment:
+  sdk: '>=3.12.0 <4.0.0'
+dependencies:
+  flutter:
+    sdk: flutter
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: io.github.andreasaichele.diagnostics
+        pluginClass: DiagnosticLoggerPlugin

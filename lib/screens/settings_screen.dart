@@ -5,11 +5,13 @@ import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import '../services/gpx_export_service.dart';
 import '../services/immich_service.dart';
+import '../services/logging_service.dart';
 import '../services/settings_service.dart';
 import '../services/tracking_service.dart';
 import '../services/update_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/error_message.dart';
+import '../widgets/diagnostics_settings.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -135,7 +137,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _serverStatusSuccess = true;
         _serverStatus = l.t('connectionVerifiedSaveHint');
       });
-    } catch (e) {
+    } catch (e, stack) {
+      await LoggingService.error('ui', 'settings action failed', e, stack);
       if (!mounted) return;
       setState(() {
         _serverStatusSuccess = false;
@@ -219,7 +222,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         case GpxExportResult.cancelled:
           break;
       }
-    } catch (_) {
+    } catch (error, stack) {
+      await LoggingService.error('ui', 'settings action failed', error, stack);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(context.l10n.t('gpxExportFailed'))),
@@ -244,7 +248,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           SnackBar(content: Text(context.l10n.t('gpxExportEmpty'))),
         );
       }
-    } catch (_) {
+    } catch (error, stack) {
+      await LoggingService.error('ui', 'settings action failed', error, stack);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(context.l10n.t('gpxExportFailed'))),
@@ -362,7 +367,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       if (_connectionVerified) ...[
                         const SizedBox(height: 10),
                         FilledButton.icon(
-                          onPressed: _testedConnectionStillMatches &&
+                          onPressed:
+                              _testedConnectionStillMatches &&
                                   !_savingConnection
                               ? _saveConnection
                               : null,
@@ -542,8 +548,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       if (!_batteryProtected) ...[
                         const SizedBox(height: 14),
                         OutlinedButton.icon(
-                          onPressed:
-                              _batteryBusy ? null : _requestBatteryProtection,
+                          onPressed: _batteryBusy
+                              ? null
+                              : _requestBatteryProtection,
                           icon: _batteryBusy
                               ? const SizedBox(
                                   width: 18,
@@ -577,6 +584,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ],
                   ),
                 ),
+                const SizedBox(height: 16),
+                const DiagnosticsSettings(),
               ],
             ),
     );
@@ -620,8 +629,9 @@ class _StatusBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color =
-        success ? const Color(0xFF157A4A) : Theme.of(context).colorScheme.error;
+    final color = success
+        ? const Color(0xFF157A4A)
+        : Theme.of(context).colorScheme.error;
 
     return Container(
       padding: const EdgeInsets.all(14),
