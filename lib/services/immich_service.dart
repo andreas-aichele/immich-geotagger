@@ -6,12 +6,9 @@ import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 
 import '../models/immich_asset.dart';
+import 'logging_service.dart';
 
-enum ImmichConnectionError {
-  unreachable,
-  timeout,
-  server,
-}
+enum ImmichConnectionError { unreachable, timeout, server }
 
 class ImmichConnectionException implements Exception {
   const ImmichConnectionException(this.error, {this.statusCode});
@@ -35,18 +32,24 @@ class ImmichService {
   }
 
   Map<String, String> _headers(String apiKey) => {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-      };
+    'Accept': 'application/json',
+    'Content-Type': 'application/json',
+    'x-api-key': apiKey,
+  };
 
   static const _requestTimeout = Duration(seconds: 15);
 
   Future<http.Response> _request(
     Future<http.Response> Function() request,
   ) async {
+    final timer = Stopwatch()..start();
     try {
       final response = await request().timeout(_requestTimeout);
+      await LoggingService.log(
+        response.statusCode >= 400 ? LogLevel.warn : LogLevel.debug,
+        'immich',
+        'API response: HTTP ${response.statusCode}, ${timer.elapsedMilliseconds}ms',
+      );
       if (response.statusCode >= 500) {
         throw ImmichConnectionException(
           ImmichConnectionError.server,
@@ -55,26 +58,44 @@ class ImmichService {
       }
       return response;
     } on TimeoutException {
+      await LoggingService.log(
+        LogLevel.warn,
+        'immich',
+        'API failed: TimeoutException, ${timer.elapsedMilliseconds}ms',
+      );
       throw const ImmichConnectionException(ImmichConnectionError.timeout);
     } on SocketException {
+      await LoggingService.log(
+        LogLevel.warn,
+        'immich',
+        'API failed: SocketException, ${timer.elapsedMilliseconds}ms',
+      );
       throw const ImmichConnectionException(ImmichConnectionError.unreachable);
     } on HandshakeException {
+      await LoggingService.log(
+        LogLevel.warn,
+        'immich',
+        'API failed: HandshakeException, ${timer.elapsedMilliseconds}ms',
+      );
       throw const ImmichConnectionException(ImmichConnectionError.unreachable);
     } on http.ClientException {
+      await LoggingService.log(
+        LogLevel.warn,
+        'immich',
+        'API failed: http.ClientException, ${timer.elapsedMilliseconds}ms',
+      );
       throw const ImmichConnectionException(ImmichConnectionError.unreachable);
     }
   }
 
   Future<void> verifyConnection(String baseUrl, String apiKey) async {
-    final readResponse = await _request(() => _client.post(
-          _uri(baseUrl, '/search/metadata'),
-          headers: _headers(apiKey),
-          body: jsonEncode({
-            'page': 1,
-            'size': 1,
-            'withExif': true,
-          }),
-        ));
+    final readResponse = await _request(
+      () => _client.post(
+        _uri(baseUrl, '/search/metadata'),
+        headers: _headers(apiKey),
+        body: jsonEncode({'page': 1, 'size': 1, 'withExif': true}),
+      ),
+    );
 
     if (readResponse.statusCode == 401 || readResponse.statusCode == 403) {
       throw StateError(
@@ -95,10 +116,12 @@ class ImmichService {
     if (items.isNotEmpty) {
       final assetId = items.first['id'] as String?;
       if (assetId != null) {
-        final viewResponse = await _request(() => _client.get(
-              _uri(baseUrl, '/assets/$assetId/thumbnail?size=thumbnail'),
-              headers: _headers(apiKey),
-            ));
+        final viewResponse = await _request(
+          () => _client.get(
+            _uri(baseUrl, '/assets/$assetId/thumbnail?size=thumbnail'),
+            headers: _headers(apiKey),
+          ),
+        );
 
         if (viewResponse.statusCode == 401 || viewResponse.statusCode == 403) {
           throw StateError(
@@ -114,11 +137,13 @@ class ImmichService {
     }
 
     const missingAssetId = '00000000-0000-0000-0000-000000000000';
-    final updateResponse = await _request(() => _client.put(
-          _uri(baseUrl, '/assets/$missingAssetId'),
-          headers: _headers(apiKey),
-          body: jsonEncode({'latitude': 0.0, 'longitude': 0.0}),
-        ));
+    final updateResponse = await _request(
+      () => _client.put(
+        _uri(baseUrl, '/assets/$missingAssetId'),
+        headers: _headers(apiKey),
+        body: jsonEncode({'latitude': 0.0, 'longitude': 0.0}),
+      ),
+    );
 
     if (updateResponse.statusCode == 401 || updateResponse.statusCode == 403) {
       throw StateError(
@@ -139,18 +164,20 @@ class ImmichService {
       var page = 1;
 
       while (true) {
-        final response = await _request(() => _client.post(
-              _uri(baseUrl, '/search/metadata'),
-              headers: _headers(apiKey),
-              body: jsonEncode({
-                'takenAfter': from.toUtc().toIso8601String(),
-                'takenBefore': to.toUtc().toIso8601String(),
-                'type': assetType,
-                'withExif': true,
-                'page': page,
-                'size': 500,
-              }),
-            ));
+        final response = await _request(
+          () => _client.post(
+            _uri(baseUrl, '/search/metadata'),
+            headers: _headers(apiKey),
+            body: jsonEncode({
+              'takenAfter': from.toUtc().toIso8601String(),
+              'takenBefore': to.toUtc().toIso8601String(),
+              'type': assetType,
+              'withExif': true,
+              'page': page,
+              'size': 500,
+            }),
+          ),
+        );
 
         if (response.statusCode < 200 || response.statusCode >= 300) {
           throw StateError(
@@ -192,10 +219,12 @@ class ImmichService {
     required String apiKey,
     required String assetId,
   }) async {
-    final response = await _request(() => _client.get(
-          _uri(baseUrl, '/assets/$assetId/thumbnail?size=thumbnail'),
-          headers: _headers(apiKey),
-        ));
+    final response = await _request(
+      () => _client.get(
+        _uri(baseUrl, '/assets/$assetId/thumbnail?size=thumbnail'),
+        headers: _headers(apiKey),
+      ),
+    );
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw StateError(
@@ -211,10 +240,12 @@ class ImmichService {
     required String apiKey,
     required String assetId,
   }) async {
-    final response = await _request(() => _client.get(
-          _uri(baseUrl, '/assets/${Uri.encodeComponent(assetId)}'),
-          headers: _headers(apiKey),
-        ));
+    final response = await _request(
+      () => _client.get(
+        _uri(baseUrl, '/assets/${Uri.encodeComponent(assetId)}'),
+        headers: _headers(apiKey),
+      ),
+    );
     if (response.statusCode == 404 || response.statusCode == 410) return null;
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw StateError(
@@ -234,23 +265,24 @@ class ImmichService {
     required double latitude,
     required double longitude,
   }) async {
-    final body = jsonEncode({
-      'latitude': latitude,
-      'longitude': longitude,
-    });
+    final body = jsonEncode({'latitude': latitude, 'longitude': longitude});
 
-    var response = await _request(() => _client.put(
+    var response = await _request(
+      () => _client.put(
+        _uri(baseUrl, '/assets/$assetId'),
+        headers: _headers(apiKey),
+        body: body,
+      ),
+    );
+
+    if (response.statusCode == 404 || response.statusCode == 405) {
+      response = await _request(
+        () => _client.patch(
           _uri(baseUrl, '/assets/$assetId'),
           headers: _headers(apiKey),
           body: body,
-        ));
-
-    if (response.statusCode == 404 || response.statusCode == 405) {
-      response = await _request(() => _client.patch(
-            _uri(baseUrl, '/assets/$assetId'),
-            headers: _headers(apiKey),
-            body: body,
-          ));
+        ),
+      );
     }
 
     if (response.statusCode < 200 || response.statusCode >= 300) {

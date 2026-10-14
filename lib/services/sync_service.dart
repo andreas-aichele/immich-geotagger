@@ -8,6 +8,7 @@ import 'immich_service.dart';
 import 'interpolation_service.dart';
 import 'settings_service.dart';
 import 'tracking_service.dart';
+import 'logging_service.dart';
 
 class SyncResult {
   const SyncResult({
@@ -30,11 +31,11 @@ class SyncService {
     ImmichService? immich,
     InterpolationService? interpolation,
     TrackingService? tracking,
-  })  : _database = database ?? DatabaseService.instance,
-        _settings = settings ?? SettingsService(),
-        _immich = immich ?? ImmichService(),
-        _interpolation = interpolation ?? const InterpolationService(),
-        _tracking = tracking ?? TrackingService();
+  }) : _database = database ?? DatabaseService.instance,
+       _settings = settings ?? SettingsService(),
+       _immich = immich ?? ImmichService(),
+       _interpolation = interpolation ?? const InterpolationService(),
+       _tracking = tracking ?? TrackingService();
 
   final DatabaseService _database;
   final SettingsService _settings;
@@ -43,6 +44,20 @@ class SyncService {
   final TrackingService _tracking;
 
   Future<SyncPreview> prepareSync() async {
+    await LoggingService.log(
+      LogLevel.info,
+      'sync',
+      'Preparing synchronization',
+    );
+    try {
+      return await _prepareSync();
+    } catch (error, stack) {
+      await LoggingService.error('sync', 'Preview failed', error, stack);
+      rethrow;
+    }
+  }
+
+  Future<SyncPreview> _prepareSync() async {
     final settings = await _settings.load();
     if (settings.immichUrl.isEmpty || settings.apiKey.isEmpty) {
       throw StateError('Immich URL and API key are required');
@@ -98,7 +113,8 @@ class SyncService {
           timestamp: asset.takenAt,
           points: points,
         );
-        final fallback = nearest ??
+        final fallback =
+            nearest ??
             _lastKnownLocationFallback(
               assetTime: asset.takenAt,
               points: points,
@@ -138,6 +154,20 @@ class SyncService {
       );
     }
 
+    await LoggingService.log(
+      LogLevel.info,
+      'sync',
+      'Preview completed: scanned=${assets.length}, candidates=${candidates.length}, '
+          'existing=$existing, unmatched=${unmatched.length}, points=${points.length}, '
+          'outliers=${rawPoints.length - points.length}',
+    );
+    for (final entry in unmatched) {
+      await LoggingService.log(
+        LogLevel.debug,
+        'sync',
+        'Unmatched: ${entry.reason.name}',
+      );
+    }
     return SyncPreview(
       candidates: candidates,
       scanned: assets.length,
@@ -225,7 +255,7 @@ class SyncService {
       );
       final stationary =
           movement <= InterpolationService.stationaryDistanceMeters &&
-              gap <= InterpolationService.stationaryMaxGap;
+          gap <= InterpolationService.stationaryMaxGap;
       if (gap > InterpolationService.maxInterpolationGap && !stationary) {
         return SyncUnmatched(
           asset: asset,
@@ -269,26 +299,44 @@ class SyncService {
       throw StateError('Immich URL and API key are required');
     }
 
+    await LoggingService.log(
+      LogLevel.info,
+      'sync',
+      'Applying selected locations',
+    );
     var updated = 0;
-
-    for (final candidate in selected) {
-      await _immich.updateLocation(
-        baseUrl: settings.immichUrl,
-        apiKey: settings.apiKey,
-        assetId: candidate.asset.id,
-        latitude: candidate.latitude,
-        longitude: candidate.longitude,
-      );
-
-      await _database.saveUpdatedAsset(
-        GeotaggedAsset(
+    try {
+      for (final candidate in selected) {
+        await _immich.updateLocation(
+          baseUrl: settings.immichUrl,
+          apiKey: settings.apiKey,
           assetId: candidate.asset.id,
-          updatedAt: DateTime.now().toUtc(),
-        ),
-      );
-      updated++;
-    }
+          latitude: candidate.latitude,
+          longitude: candidate.longitude,
+        );
 
+        await _database.saveUpdatedAsset(
+          GeotaggedAsset(
+            assetId: candidate.asset.id,
+            updatedAt: DateTime.now().toUtc(),
+          ),
+        );
+        updated++;
+      }
+    } catch (error, stack) {
+      await LoggingService.error(
+        'sync',
+        'Apply failed after $updated updates',
+        error,
+        stack,
+      );
+      rethrow;
+    }
+    await LoggingService.log(
+      LogLevel.info,
+      'sync',
+      'Synchronization completed: updated=$updated',
+    );
     return SyncResult(
       scanned: preview.scanned,
       updated: updated,

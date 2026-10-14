@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
 import '../services/database_service.dart';
+import '../services/logging_service.dart';
 import '../services/sync_service.dart';
 import '../services/settings_service.dart';
 import '../services/tracking_service.dart';
@@ -98,7 +99,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       if (mounted) {
         setState(() => _tracking = active);
       }
-    } catch (e) {
+    } catch (e, stack) {
+      await LoggingService.error('ui', 'Home action failed', e, stack);
       if (!mounted) return;
       setState(() => _error = e.toString().replaceFirst('Bad state: ', ''));
     }
@@ -124,7 +126,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       if (!mounted) return;
       setState(() => _tracking = !_tracking);
       await _refreshStats();
-    } catch (e) {
+    } catch (e, stack) {
+      await LoggingService.error('ui', 'Home action failed', e, stack);
       if (!mounted) return;
       setState(() => _error = e.toString().replaceFirst('Bad state: ', ''));
     } finally {
@@ -150,7 +153,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(context.l10n.t('manualPointSaved'))),
       );
-    } catch (e) {
+    } catch (e, stack) {
+      await LoggingService.error('ui', 'Home action failed', e, stack);
       if (!mounted) return;
       setState(() => _error = e.toString().replaceFirst('Bad state: ', ''));
     } finally {
@@ -178,7 +182,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       await _refreshStats();
       if (!mounted) return;
       setState(() => _lastSync = result);
-    } catch (e) {
+    } catch (e, stack) {
+      await LoggingService.error('ui', 'Home action failed', e, stack);
       if (!mounted) return;
       setState(() => _error = immichErrorMessage(context, e));
     } finally {
