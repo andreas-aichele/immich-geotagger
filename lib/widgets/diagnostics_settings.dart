@@ -139,7 +139,32 @@ class _DiagnosticsSettingsState extends State<DiagnosticsSettings> {
         )) {
       return;
     }
-    final path = await LoggingService.export();
+    var includeCrashReports = false;
+    if (config.crashReportCount > 0) {
+      if (!mounted) return;
+      final include = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: Text(context.l10n.t('crashReportsExportTitle')),
+          content: Text(context.l10n.t('crashReportsExportWarning')),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: Text(context.l10n.t('crashReportsLogsOnly')),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: Text(context.l10n.t('crashReportsInclude')),
+            ),
+          ],
+        ),
+      );
+      if (include == null) return;
+      includeCrashReports = include;
+    }
+    final path = await LoggingService.export(
+      includeCrashReports: includeCrashReports,
+    );
     if (share) {
       await Share.shareXFiles(
         [XFile(path, mimeType: 'application/zip')],
@@ -155,8 +180,9 @@ class _DiagnosticsSettingsState extends State<DiagnosticsSettings> {
         bytes: await File(path).readAsBytes(),
       );
       if (saved != null && mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(context.l10n.t('logsSaved'))));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(context.l10n.t('logsSaved'))));
       }
     }
   }

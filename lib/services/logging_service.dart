@@ -14,12 +14,14 @@ class LogConfiguration {
     this.sizeMb = 10,
     this.developerMode = false,
     this.containsTrace = false,
+    this.crashReportCount = 0,
   });
   final bool enabled;
   final LogLevel level;
   final int sizeMb;
   final bool developerMode;
   final bool containsTrace;
+  final int crashReportCount;
 
   factory LogConfiguration.fromMap(Map<dynamic, dynamic> map) {
     return LogConfiguration(
@@ -31,6 +33,7 @@ class LogConfiguration {
       sizeMb: map['sizeMb'] as int? ?? 10,
       developerMode: map['developerMode'] as bool? ?? false,
       containsTrace: map['containsTrace'] as bool? ?? false,
+      crashReportCount: map['crashReportCount'] as int? ?? 0,
     );
   }
 }
@@ -41,7 +44,7 @@ class LoggingService {
   static const channel = MethodChannel('immich_geotagger/diagnostics');
   static bool get supported =>
       !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
-  static Future<void> _pending = Future<void>.value();
+  static Future<void>? _pending;
   static bool _handlersInstalled = false;
 
   static Future<void> initialize() async {
@@ -99,7 +102,7 @@ class LoggingService {
     if (!supported) return Future<void>.value();
     // Preserve order and let export drain outstanding writes. Logger failures
     // must never break tracking, startup or the original exception handler.
-    _pending = _pending.then((_) async {
+    final queued = (_pending ?? Future<void>.value()).then((_) async {
       try {
         await channel.invokeMethod<void>('write', {
           'level': level.name.toUpperCase(),
@@ -110,7 +113,10 @@ class LoggingService {
         /* Best effort if storage is full or the plugin is absent. */
       }
     });
-    return _pending;
+    _pending = queued;
+    return queued.whenComplete(() {
+      if (identical(_pending, queued)) _pending = null;
+    });
   }
 
   static Future<void> error(
@@ -128,15 +134,19 @@ class LoggingService {
     );
   }
 
-  static Future<String> export() async {
-    await _pending;
-    final path = await channel.invokeMethod<String>('export');
+  static Future<String> export({bool includeCrashReports = false}) async {
+    final pending = _pending;
+    if (pending != null) await pending;
+    final path = await channel.invokeMethod<String>('export', {
+      'includeCrashReports': includeCrashReports,
+    });
     if (path == null) throw StateError('Log export unavailable');
     return path;
   }
 
   static Future<void> clear() async {
-    await _pending;
+    final pending = _pending;
+    if (pending != null) await pending;
     await channel.invokeMethod<void>('clear');
   }
 }

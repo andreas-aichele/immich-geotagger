@@ -31,3 +31,11 @@ jobs:
       - run: flutter build apk --debug
       - run: ./gradlew :diagnostic_logger:testDebugUnitTest
         working-directory: android
+
+  diagnostic-beta:
+    needs: [test, android-diagnostics]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/feat/rotating-diagnostic-logs'
+    permissions:
+      contents: read
+    uses: ./.github/workflows/beta.yml
+    secrets: inherit

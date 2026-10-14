@@ -37,25 +37,94 @@ public final class DiagnosticLoggerPlugin implements FlutterPlugin, MethodChanne
         worker.execute(() -> {
             try {
                 write("INFO", "android", "Process started");
-                if (Build.VERSION.SDK_INT >= 30) {
-                    ActivityManager manager = (ActivityManager) app.getSystemService(Context.ACTIVITY_SERVICE);
-                    long last = prefs().getLong("lastExit", 0);
-                    long newest = last;
-                    for (ApplicationExitInfo exit : manager.getHistoricalProcessExitReasons(app.getPackageName(), 0, 8)) {
-                        if (exit.getTimestamp() > last) {
-                            write("WARN", "android", "Previous process exit: timestamp=" + exit.getTimestamp()
-                                + " reason=" + exit.getReason() + " status=" + exit.getStatus()
-                                + " importance=" + exit.getImportance());
-                            newest = Math.max(newest, exit.getTimestamp());
-                        }
-                    }
-                    prefs().edit().putLong("lastExit", newest).commit();
-                }
-            } catch (Exception ignored) { }
+                collectProcessExits();
+            } catch (Exception error) {
+                try { write("WARN", "android", "Exit diagnostics unavailable: " + error.getClass().getName()); }
+                catch (Exception ignored) { }
+            }
         });
     }
     private static SharedPreferences prefs() { return app.getSharedPreferences("diagnostic_logging", Context.MODE_PRIVATE); }
-    private static long fileLimit() { return prefs().getInt("sizeMb", 10) * 1024L * 1024L / 5; }
+    private static long totalLimit() { return prefs().getInt("sizeMb", 10) * 1024L * 1024L; }
+    // Reserve 20% of the chosen total for two raw reports and their safe summary.
+    private static long fileLimit() { return (totalLimit() * 4 / 5) / 5; }
+    private static long reportLimit() { return (totalLimit() / 5 - CrashReportStore.SUMMARY_LIMIT) / CrashReportStore.COUNT; }
+
+    private static void collectProcessExits() throws Exception {
+        if (Build.VERSION.SDK_INT < 30 || !prefs().getBoolean("enabled", true)) return;
+        ActivityManager manager = (ActivityManager) app.getSystemService(Context.ACTIVITY_SERVICE);
+        long last = prefs().getLong("lastExit", 0);
+        long cleared = prefs().getLong("clearedBefore", 0);
+        long newest = last;
+        JSONArray summary = new JSONArray();
+        List<ApplicationExitInfo> exits = new ArrayList<>(manager.getHistoricalProcessExitReasons(app.getPackageName(), 0, 8));
+        exits.sort(Comparator.comparingLong(ApplicationExitInfo::getTimestamp).reversed());
+        for (ApplicationExitInfo exit : exits) {
+            if (exit.getTimestamp() <= cleared) continue;
+            JSONObject record = new JSONObject();
+            record.put("timestampEpochMs", exit.getTimestamp());
+            record.put("reason", exit.getReason());
+            record.put("reasonName", exitReason(exit.getReason()));
+            record.put("status", exit.getStatus());
+            record.put("importance", exit.getImportance());
+            record.put("pssKb", exit.getPss());
+            record.put("rssKb", exit.getRss());
+            if (exit.getTimestamp() > last) {
+                write("WARN", "android", "Previous process exit: timestamp=" + exit.getTimestamp()
+                    + " reason=" + exit.getReason() + " (" + exitReason(exit.getReason()) + ") status=" + exit.getStatus()
+                    + " importance=" + exit.getImportance());
+                newest = Math.max(newest, exit.getTimestamp());
+            }
+            String traceStatus = "not_applicable";
+            if (exit.getReason() == ApplicationExitInfo.REASON_ANR
+                || (Build.VERSION.SDK_INT >= 31 && exit.getReason() == ApplicationExitInfo.REASON_CRASH_NATIVE)) {
+                // Retry missing traces on later starts: Android may make them available after the first restart.
+                try {
+                    traceStatus = store.locked(() -> {
+                        store.crashReports.trim(reportLimit());
+                        if (store.crashReports.report(exit.getTimestamp()) != null) return "saved";
+                        try (InputStream input = exit.getTraceInputStream()) {
+                            return store.crashReports.save(exit.getTimestamp(),
+                                exit.getReason() == ApplicationExitInfo.REASON_CRASH_NATIVE, input, reportLimit());
+                        }
+                    });
+                } catch (Exception error) { traceStatus = "unavailable_" + error.getClass().getSimpleName(); }
+            }
+            record.put("traceStatus", traceStatus);
+            summary.put(record);
+        }
+        store.locked(() -> {
+            store.trim(fileLimit());
+            store.crashReports.trim(reportLimit());
+            store.crashReports.summary(summary.toString());
+            return null;
+        });
+        prefs().edit().putLong("lastExit", newest).commit();
+    }
+
+    private static String exitReason(int reason) {
+        switch (reason) {
+            case 1: return "EXIT_SELF";
+            case 2: return "SIGNALED";
+            case 3: return "LOW_MEMORY";
+            case 4: return "CRASH";
+            case 5: return "CRASH_NATIVE";
+            case 6: return "ANR";
+            case 7: return "INITIALIZATION_FAILURE";
+            case 8: return "PERMISSION_CHANGE";
+            case 9: return "EXCESSIVE_RESOURCE_USAGE";
+            case 10: return "USER_REQUESTED";
+            case 11: return "USER_STOPPED";
+            case 12: return "DEPENDENCY_DIED";
+            case 13: return "OTHER";
+            case 14: return "FREEZER";
+            case 15: return "PACKAGE_STATE_CHANGE";
+            case 16: return "PACKAGE_UPDATED";
+            case 17: return "MEMORY_LIMITER";
+            case 18: return "ANOMALY";
+            default: return "UNKNOWN_" + reason;
+        }
+    }
     private static String safeStack(Throwable error) {
         StringBuilder result = new StringBuilder();
         // Exception messages and causes may contain API bodies, keys or metadata.
@@ -95,6 +164,7 @@ public final class DiagnosticLoggerPlugin implements FlutterPlugin, MethodChanne
         config.put("sizeMb", prefs().getInt("sizeMb", 10));
         config.put("developerMode", prefs().getBoolean("developerMode", false));
         config.put("containsTrace", prefs().getBoolean("containsTrace", false));
+        config.put("crashReportCount", store.crashReports.count());
         return config;
     }
     @Override public void onMethodCall(MethodCall call, MethodChannel.Result result) {
@@ -125,14 +195,19 @@ public final class DiagnosticLoggerPlugin implements FlutterPlugin, MethodChanne
                             if (developer != null) edit.putBoolean("developerMode", developer);
                             if (!edit.commit()) throw new IOException("Settings could not be saved");
                             store.trim(fileLimit());
+                            store.crashReports.trim(reportLimit());
                             return configuration();
                         }); break;
                     case "clear":
-                        store.locked(() -> { store.clear(); prefs().edit().putBoolean("containsTrace", false).commit(); return null; });
+                        store.locked(() -> { if (!prefs().edit().putBoolean("containsTrace", false).putLong("clearedBefore", System.currentTimeMillis()).commit()) {
+                            throw new IOException("Could not save deletion marker");
+                        }
+                        store.clear(); store.crashReports.clear(); return null; });
                         File[] exports = new File(app.getCacheDir(), "log-exports").listFiles();
                         if (exports != null) for (File old : exports) old.delete();
                         value = null; break;
                     case "export":
+                        boolean includeCrashReports = Boolean.TRUE.equals(call.argument("includeCrashReports"));
                         value = store.locked(() -> {
                             File directory = new File(app.getCacheDir(), "log-exports");
                             directory.mkdirs();
@@ -153,8 +228,10 @@ public final class DiagnosticLoggerPlugin implements FlutterPlugin, MethodChanne
                                 diagnostics.put("batteryOptimizationIgnored", power.isIgnoringBatteryOptimizations(app.getPackageName()));
                                 diagnostics.put("locationPermission", app.checkSelfPermission("android.permission.ACCESS_FINE_LOCATION") == android.content.pm.PackageManager.PERMISSION_GRANTED);
                                 diagnostics.put("mayContainCoordinates", prefs().getBoolean("containsTrace", false));
+                                diagnostics.put("includesRawCrashReports", includeCrashReports);
+                                diagnostics.put("logBudgetBytes", totalLimit());
                             } catch (Exception ignored) { }
-                            try { store.export(target, diagnostics.toString(2)); }
+                            try { store.export(target, diagnostics.toString(2), includeCrashReports); }
                             catch (Exception error) { target.delete(); throw new IOException("Export failed", error); }
                             return target.getAbsolutePath();
                         }); break;

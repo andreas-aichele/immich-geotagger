@@ -22,6 +22,10 @@ class AppLocalizations {
 
   static const _values = <String, Map<String, String>>{
     'en': {
+      'crashReportsExportTitle': 'Include crash reports?',
+      'crashReportsExportWarning': 'Android crash reports may contain file paths, device details and sensitive memory contents, including credentials or location data. Include them only for trusted debugging.',
+      'crashReportsLogsOnly': 'Logs only',
+      'crashReportsInclude': 'Include reports',
       'settingsConnectionHint': 'Test changes before saving.',
       'settingsAutoSaveHint': 'Changes are saved automatically.',
       'settingsSamplingShort': 'GPS sampling adapts to movement and the system.',
@@ -219,6 +223,10 @@ class AppLocalizations {
       'appliedLocation': 'Applied photo location',
     },
     'de': {
+      'crashReportsExportTitle': 'Absturzberichte beifügen?',
+      'crashReportsExportWarning': 'Android-Absturzberichte können Dateipfade, Gerätedetails und sensible Speicherinhalte enthalten, auch Zugangsdaten oder Standortdaten. Füge sie nur zur vertrauenswürdigen Fehleranalyse bei.',
+      'crashReportsLogsOnly': 'Nur Logs',
+      'crashReportsInclude': 'Berichte beifügen',
       'settingsConnectionHint': 'Änderungen vor dem Speichern testen.',
       'settingsAutoSaveHint': 'Änderungen werden automatisch gespeichert.',
       'settingsSamplingShort': 'GPS-Abstände hängen von Bewegung und System ab.',
@@ -418,6 +426,10 @@ class AppLocalizations {
       'appliedLocation': 'Übernommener Fotostandort',
     },
     'fr': {
+      'crashReportsExportTitle': 'Joindre les rapports de plantage ?',
+      'crashReportsExportWarning': 'Les rapports Android peuvent contenir des chemins de fichiers, des détails de l’appareil et des données sensibles en mémoire, y compris des identifiants ou des positions. Réservez-les à une analyse de confiance.',
+      'crashReportsLogsOnly': 'Journaux seuls',
+      'crashReportsInclude': 'Joindre les rapports',
       'settingsConnectionHint': 'Testez les modifications avant de les enregistrer.',
       'settingsAutoSaveHint': 'Les modifications sont enregistrées automatiquement.',
       'settingsSamplingShort': 'Le rythme GPS dépend du mouvement et du système.',
@@ -596,6 +608,10 @@ class AppLocalizations {
       'appliedLocation': 'Position appliquée à la photo',
     },
     'es': {
+      'crashReportsExportTitle': '¿Incluir informes de fallos?',
+      'crashReportsExportWarning': 'Los informes de Android pueden contener rutas, datos del dispositivo y memoria sensible, incluidas credenciales o ubicaciones. Inclúyelos solo para un diagnóstico de confianza.',
+      'crashReportsLogsOnly': 'Solo registros',
+      'crashReportsInclude': 'Incluir informes',
       'settingsConnectionHint': 'Prueba los cambios antes de guardarlos.',
       'settingsAutoSaveHint': 'Los cambios se guardan automáticamente.',
       'settingsSamplingShort': 'La frecuencia GPS depende del movimiento y del sistema.',
@@ -775,6 +791,10 @@ class AppLocalizations {
       'appliedLocation': 'Ubicación aplicada a la foto',
     },
     'nl': {
+      'crashReportsExportTitle': 'Crashrapporten toevoegen?',
+      'crashReportsExportWarning': 'Android-crashrapporten kunnen bestandspaden, apparaatgegevens en gevoelige geheugeninhoud bevatten, waaronder inlog- of locatiegegevens. Voeg ze alleen toe voor vertrouwde foutanalyse.',
+      'crashReportsLogsOnly': 'Alleen logs',
+      'crashReportsInclude': 'Rapporten toevoegen',
       'settingsConnectionHint': 'Test wijzigingen voordat je ze opslaat.',
       'settingsAutoSaveHint': 'Wijzigingen worden automatisch opgeslagen.',
       'settingsSamplingShort': 'GPS-intervallen hangen af van beweging en het systeem.',

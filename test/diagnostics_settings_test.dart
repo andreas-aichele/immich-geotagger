@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:immich_geotagger/l10n/app_localizations.dart';
@@ -11,9 +12,13 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   var developer = false;
   var level = 'INFO';
+  var crashReportCount = 0;
+  final exports = <bool>[];
   setUp(() {
     developer = false;
     level = 'INFO';
+    crashReportCount = 0;
+    exports.clear();
     PackageInfo.setMockInitialValues(
       appName: 'Immich GeoTagger',
       packageName: 'immich',
@@ -23,6 +28,10 @@ void main() {
     );
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(LoggingService.channel, (call) async {
+          if (call.method == 'export') {
+            exports.add((call.arguments as Map)['includeCrashReports'] as bool);
+            return '/private/logs.zip';
+          }
           if (call.method == 'configure') {
             final args = call.arguments as Map;
             developer = args['developerMode'] as bool? ?? developer;
@@ -34,11 +43,22 @@ void main() {
             'enabled': true,
             'sizeMb': 10,
             'containsTrace': false,
+            'crashReportCount': crashReportCount,
           };
         });
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+          const MethodChannel('dev.fluttercommunity.plus/share'),
+          (call) async => 'dev.fluttercommunity.plus/share/unavailable',
+        );
   });
   tearDown(() {
     debugDefaultTargetPlatformOverride = null;
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+          const MethodChannel('dev.fluttercommunity.plus/share'),
+          null,
+        );
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(LoggingService.channel, null);
   });
@@ -98,4 +118,40 @@ void main() {
       debugDefaultTargetPlatformOverride = null;
     }
   });
+  for (final include in [false, true]) {
+    testWidgets(
+      'crash report dialog exports raw attachments only with consent: $include',
+      (tester) async {
+        debugDefaultTargetPlatformOverride = TargetPlatform.android;
+        try {
+          developer = true;
+          crashReportCount = 1;
+          tester.view.physicalSize = const Size(360, 1000);
+          tester.view.devicePixelRatio = 1;
+          addTearDown(tester.view.resetPhysicalSize);
+          addTearDown(tester.view.resetDevicePixelRatio);
+          await tester.pumpWidget(app());
+          await tester.pumpAndSettle();
+          await tester.ensureVisible(find.text('Logs teilen (ZIP)'));
+          await tester.tap(find.text('Logs teilen (ZIP)'));
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 300));
+          expect(find.text('Absturzberichte beifügen?'), findsOneWidget);
+          expect(find.textContaining('Zugangsdaten'), findsOneWidget);
+          expect(exports, isEmpty);
+          await tester.tap(
+            find.text(include ? 'Berichte beifügen' : 'Nur Logs'),
+          );
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 500));
+          expect(find.byType(AlertDialog), findsNothing);
+          expect(exports, [include]);
+          expect(find.byType(LinearProgressIndicator), findsNothing);
+          expect(tester.takeException(), isNull);
+        } finally {
+          debugDefaultTargetPlatformOverride = null;
+        }
+      },
+    );
+  }
 }

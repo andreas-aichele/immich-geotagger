@@ -20,6 +20,7 @@ void main() {
               'sizeMb': 5,
               'developerMode': true,
               'containsTrace': true,
+              'crashReportCount': 2,
             };
           }
           return null;
@@ -85,11 +86,18 @@ void main() {
     );
     expect(config.level, LogLevel.debug);
     expect(config.containsTrace, true);
+    expect(config.crashReportCount, 2);
     expect(config.developerMode, true);
     expect(calls.single.arguments, {
       'level': 'DEBUG',
       'sizeMb': 5,
       'developerMode': true,
     });
+  });
+  test('raw crash attachments require an explicit export argument', () async {
+    await LoggingService.export();
+    expect(calls.last.arguments, {'includeCrashReports': false});
+    await LoggingService.export(includeCrashReports: true);
+    expect(calls.last.arguments, {'includeCrashReports': true});
   });
 }

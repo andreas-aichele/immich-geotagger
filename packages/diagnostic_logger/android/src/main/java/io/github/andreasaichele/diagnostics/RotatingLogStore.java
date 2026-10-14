@@ -11,9 +11,11 @@ import java.util.zip.*;
 public final class RotatingLogStore {
     private final File directory;
     private final int count;
+    final CrashReportStore crashReports;
     public RotatingLogStore(File directory, int count) {
         this.directory = directory;
         this.count = count;
+        this.crashReports = new CrashReportStore(directory);
     }
     private File file(int index) {
         return new File(directory, index == 0 ? "app.log" : "app.log." + index);
@@ -56,6 +58,9 @@ public final class RotatingLogStore {
         if (file.exists() && !file.delete()) throw new IOException("Log removal failed");
     }
     public void export(File destination, String diagnostics) throws IOException {
+        export(destination, diagnostics, false);
+    }
+    public void export(File destination, String diagnostics, boolean includeCrashReports) throws IOException {
         try (ZipOutputStream zip = new ZipOutputStream(new FileOutputStream(destination))) {
             for (int i = 0; i < count; i++) {
                 File source = file(i);
@@ -68,6 +73,7 @@ public final class RotatingLogStore {
                 }
                 zip.closeEntry();
             }
+            crashReports.export(zip, includeCrashReports);
             zip.putNextEntry(new ZipEntry("diagnostics.json"));
             zip.write(diagnostics.getBytes(StandardCharsets.UTF_8));
             zip.closeEntry();

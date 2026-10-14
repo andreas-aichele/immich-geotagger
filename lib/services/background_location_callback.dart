@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/widgets.dart';
@@ -6,11 +7,35 @@ import 'package:libre_location/libre_location.dart' hide LogLevel;
 import '../models/location_point.dart';
 import 'database_service.dart';
 import 'logging_service.dart';
+import 'headless_location_channel.dart';
 
 @pragma('vm:entry-point')
 void libreLocationHeadlessDispatcher() {
   WidgetsFlutterBinding.ensureInitialized();
   DartPluginRegistrant.ensureInitialized();
+  unawaited(_initializeHeadlessDispatcher());
+}
+
+Future<void> _initializeHeadlessDispatcher() async {
+  try {
+    // Signal readiness immediately, independently of diagnostic file I/O.
+    await initializeHeadlessLocationChannel(
+      savePosition: saveLibreLocationPosition,
+    );
+    await LoggingService.initialize();
+    await LoggingService.log(
+      LogLevel.info,
+      'tracking',
+      'Headless dispatcher ready',
+    );
+  } catch (error, stack) {
+    await LoggingService.error(
+      'tracking',
+      'Headless dispatcher initialization failed',
+      error,
+      stack,
+    );
+  }
 }
 
 @pragma('vm:entry-point')
