@@ -1,0 +1,17 @@
+group = 'io.github.andreasaichele.diagnostics'
+version = '1.0'
+
+apply plugin: 'com.android.library'
+
+android {
+    namespace = 'io.github.andreasaichele.diagnostics'
+    compileSdk = 36
+    defaultConfig { minSdk = 24 }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+    testOptions { unitTests.returnDefaultValues = true }
+}
+
+dependencies { testImplementation 'junit:junit:4.13.2' }

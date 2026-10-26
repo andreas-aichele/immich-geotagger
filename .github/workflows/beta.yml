@@ -2,6 +2,7 @@ name: Beta Build
 
 on:
   workflow_dispatch:
+  workflow_call:
 
 permissions:
   contents: read
@@ -110,6 +111,13 @@ jobs:
           fi
 
           cp "$APK" "$OUT"
+
+          # Keep symbolication data for the exact signed beta being tested.
+          MAPPING="$BUILD_ROOT/build/app/outputs/mapping/release/mapping.txt"
+          if [[ -f "$MAPPING" ]]; then
+            cp "$MAPPING" dist/R8-mapping.txt
+          fi
+          flutter --version --machine > dist/FLUTTER-VERSION.json
 
           {
             echo "Immich GeoTagger beta"
